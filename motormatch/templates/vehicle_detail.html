@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}{{ car.title }} - Motor Match{% endblock %}
+
+{% block nav_links %}
+<ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-1">
+    <li class="nav-item"><a class="nav-link px-3" href="#">Buy</a></li>
+    <li class="nav-item"><a class="nav-link px-3" href="/sell/">Sell</a></li>
+    <li class="nav-item"><a class="nav-link px-3" href="#">Finance</a></li>
+    <li class="nav-item"><a class="nav-link px-3" href="#">More</a></li>
+</ul>
+<div class="d-flex align-items-center gap-2 ms-3 me-3">
+    <div class="input-group input-group-sm">
+        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" class="form-control bg-light border-start-0" placeholder="Search cars, brands...">
+    </div>
+</div>
+<div class="d-flex align-items-center gap-2">
+    <a href="/login/" class="btn btn-outline-secondary btn-sm px-3">Log In</a>
+    <a href="/register/" class="btn btn-primary btn-sm px-3">Sign Up</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-primary">Home</a></li>
+            <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-primary">Used Cars</a></li>
+            <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-primary">Toyota</a></li>
+            <li class="breadcrumb-item active">2021 Toyota Camry SE</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+
+        <div class="col-lg-8">
+
+            <div class="rounded overflow-hidden mb-3 bg-white border" style="max-height:400px;">
+                <img src="https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=900&h=420&fit=crop"
+                     class="w-100" alt="Car" style="height:380px; object-fit:cover;">
+                <div class="position-relative" style="margin-top:-36px;">
+                    <span class="badge bg-dark bg-opacity-60 text-white ms-3" style="font-size:.75rem;"><i class="bi bi-camera me-1"></i>1 / 15</span>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mb-4 overflow-auto pb-1">
+                {% for i in thumbs %}
+                <div class="rounded overflow-hidden border flex-shrink-0" style="width:90px; height:65px; cursor:pointer;">
+                    <img src="{{ i.src }}" class="w-100 h-100" style="object-fit:cover;" alt="thumb">
+                </div>
+                {% endfor %}
+                <div class="rounded border flex-shrink-0 d-flex align-items-center justify-content-center bg-light text-muted small fw-semibold" style="width:90px; height:65px; cursor:pointer;">
+                    +10
+                </div>
+            </div>
+
+            <div class="card border-0 bg-white shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">Description</h5>
+                    <p class="text-muted mb-1" style="font-size:.92rem;">Well maintained 2021 Toyota Camry SE. Single owner, garage kept, and non-smoker. Features include leather seats, sunroof, navigation system, and advanced safety features. All scheduled maintenance completed at the dealership. Tires were replaced 5k miles ago. Great fuel economy for city and highway driving.</p>
+                    <a href="#" class="text-primary text-decoration-none small">Read more <i class="bi bi-chevron-down"></i></a>
+                </div>
+            </div>
+
+            <div class="card border-0 bg-white shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">Key Features</h5>
+                    <div class="row row-cols-1 row-cols-md-2 g-2">
+                        <div class="col d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-primary"></i><span style="font-size:.9rem;">Bluetooth Connectivity</span></div>
+                        <div class="col d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-primary"></i><span style="font-size:.9rem;">Apple CarPlay / Android Auto</span></div>
+                        <div class="col d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-primary"></i><span style="font-size:.9rem;">Backup Camera</span></div>
+                        <div class="col d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-primary"></i><span style="font-size:.9rem;">Lane Departure Warning</span></div>
+                        <div class="col d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-primary"></i><span style="font-size:.9rem;">Adaptive Cruise Control</span></div>
+                        <div class="col d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-primary"></i><span style="font-size:.9rem;">Heated Seats</span></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 bg-white shadow-sm sticky-top" style="top:80px;">
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div>
+                            <h1 class="h4 fw-bold mb-0">2021 Toyota Camry SE</h1>
+                            <p class="text-muted small mb-0"><i class="bi bi-geo-alt me-1"></i>Truro, TR1</p>
+                        </div>
+                        <button class="btn btn-light border-0"><i class="bi bi-heart text-muted"></i></button>
+                    </div>
+
+                    <h2 class="fw-bold my-3" style="font-size:1.7rem;">£24,000</h2>
+
+                    <p class="text-muted fw-semibold mb-2" style="font-size:.75rem; letter-spacing:.05em;">VEHICLE DETAILS</p>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6 p-2 border rounded">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-calendar3 text-primary"></i>
+                                <div>
+                                    <p class="mb-0 text-muted" style="font-size:.72rem;">Year</p>
+                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">2021</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 p-2 border rounded">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-speedometer2 text-primary"></i>
+                                <div>
+                                    <p class="mb-0 text-muted" style="font-size:.72rem;">Mileage</p>
+                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">34,200 mi</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 p-2 border rounded">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-fuel-pump text-primary"></i>
+                                <div>
+                                    <p class="mb-0 text-muted" style="font-size:.72rem;">Fuel Type</p>
+                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">Hybrid</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 p-2 border rounded">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-gear text-primary"></i>
+                                <div>
+                                    <p class="mb-0 text-muted" style="font-size:.72rem;">Transmission</p>
+                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">Automatic</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:38px;height:38px;">
+                            <i class="bi bi-person-fill small"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-0 fw-semibold" style="font-size:.85rem;">Alex Johnson</p>
+                            <p class="mb-0 text-warning" style="font-size:.72rem;">&#9733;&#9733;&#9733;&#9733;&#9733; <span class="text-muted">(124 reviews)</span></p>
+                        </div>
+                        <span class="badge text-success border border-success bg-white" style="font-size:.72rem;">Verified</span>
+                    </div>
+
+                    <button class="btn btn-primary w-100 mb-2 fw-semibold">
+                        <i class="bi bi-chat-dots me-1"></i> Message Seller
+                    </button>
+                    <button class="btn btn-outline-secondary w-100 mb-3">
+                        <i class="bi bi-telephone me-1"></i> Call Seller
+                    </button>
+                    <p class="text-muted text-center mb-0" style="font-size:.72rem;">By contacting, you agree to our <a href="#" class="text-muted">Terms</a> and <a href="#" class="text-muted">Privacy Policy</a>.</p>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
