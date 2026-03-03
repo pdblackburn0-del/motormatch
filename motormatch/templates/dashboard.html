@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Motor Match</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background:#f4f6f9; }
+        .sidebar { width: 220px; min-height: 100vh; background: #fff; border-right: 1px solid #e9ecef; }
+        .sidebar .nav-link { color: #555; font-size: .88rem; border-radius: 8px; padding: .55rem .9rem; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background: #eff3ff; color: #0d6efd; }
+        .sidebar .nav-link .badge { font-size: .65rem; }
+        .topbar { background: #fff; border-bottom: 1px solid #e9ecef; height: 58px; }
+        .stat-card { border-radius: 12px; background: #fff; border: none; }
+        .upgrade-card { background: linear-gradient(135deg, #1e3a8a, #2563eb); border-radius: 12px; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="d-flex">
+
+    <div class="sidebar d-flex flex-column p-3 position-fixed" style="top:0;bottom:0;left:0; overflow-y:auto;">
+        <a class="d-flex align-items-center gap-2 text-decoration-none mb-4 mt-1 px-1" href="/">
+            <i class="bi bi-car-front-fill text-primary fs-5"></i>
+            <span class="fw-bold text-dark" style="font-size:1rem;">Motor Match</span>
+        </a>
+
+        <nav class="nav flex-column gap-1">
+            <a class="nav-link active d-flex align-items-center gap-2" href="/dashboard/">
+                <i class="bi bi-grid-1x2"></i> Overview
+            </a>
+            <a class="nav-link d-flex align-items-center gap-2 justify-content-between" href="#">
+                <span class="d-flex align-items-center gap-2"><i class="bi bi-tag"></i> My Bids</span>
+                <span class="badge bg-primary rounded-pill">4</span>
+            </a>
+            <a class="nav-link d-flex align-items-center gap-2 justify-content-between" href="/offers/">
+                <span class="d-flex align-items-center gap-2"><i class="bi bi-car-front"></i> Selling</span>
+                <span class="badge bg-primary rounded-pill">2</span>
+            </a>
+            <a class="nav-link d-flex align-items-center gap-2" href="#">
+                <i class="bi bi-chat-dots"></i> Messages
+            </a>
+            <a class="nav-link d-flex align-items-center gap-2" href="/saved/">
+                <i class="bi bi-heart"></i> Saved
+            </a>
+            <a class="nav-link d-flex align-items-center gap-2" href="#">
+                <i class="bi bi-gear"></i> Settings
+            </a>
+        </nav>
+
+        <div class="mt-auto">
+            <div class="upgrade-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-star-fill text-warning"></i>
+                    <span class="fw-semibold small">Upgrade to Pro</span>
+                </div>
+                <p class="mb-2" style="font-size:.75rem; opacity:.85;">Get unlimited listings and priority support.</p>
+                <a href="#" class="btn btn-light btn-sm w-100 fw-semibold text-primary">Upgrade Now</a>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-left:220px; width:calc(100% - 220px);">
+
+        <div class="topbar d-flex align-items-center justify-content-between px-4 sticky-top">
+            <div class="input-group input-group-sm" style="max-width:260px;">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" class="form-control bg-light border-start-0" placeholder="Search...">
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-light btn-sm border-0 position-relative">
+                    <i class="bi bi-bell fs-5"></i>
+                    <span class="badge bg-danger position-absolute top-0 end-0 p-1" style="font-size:.55rem; border-radius:50%;">8</span>
+                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:34px;height:34px;">
+                        <span class="small fw-bold">AM</span>
+                    </div>
+                    <div>
+                        <p class="mb-0 fw-semibold" style="font-size:.82rem;">Alex Morgan</p>
+                        <p class="mb-0 text-muted" style="font-size:.7rem;">Premium Member</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4">
+
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h1 class="h5 fw-bold mb-0">Dashboard Overview</h1>
+                    <p class="text-muted small mb-0">Welcome back, here's what's happening with your garage.</p>
+                </div>
+                <a href="/sell/" class="btn btn-primary px-3 fw-semibold"><i class="bi bi-plus-lg me-1"></i> List a Car</a>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card stat-card shadow-sm p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted small mb-1">Active Bids</p>
+                                <h3 class="fw-bold mb-0">4</h3>
+                            </div>
+                            <div>
+                                <span class="badge bg-success bg-opacity-10 text-success small">+12%</span>
+                                <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center mt-1" style="width:36px;height:36px;">
+                                    <i class="bi bi-tag-fill text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card shadow-sm p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted small mb-1">Cars Selling</p>
+                                <h3 class="fw-bold mb-0">2</h3>
+                            </div>
+                            <div>
+                                <span class="badge bg-success bg-opacity-10 text-success small">+2</span>
+                                <div class="rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center mt-1" style="width:36px;height:36px;">
+                                    <i class="bi bi-tag-fill text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card shadow-sm p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="text-muted small mb-1">Total Views</p>
+                                <h3 class="fw-bold mb-0">1,284</h3>
+                            </div>
+                            <div>
+                                <span class="badge bg-success bg-opacity-10 text-success small">+24%</span>
+                                <div class="rounded-circle bg-purple bg-opacity-10 d-flex align-items-center justify-content-center mt-1" style="width:36px;height:36px; background:#ede9fe;">
+                                    <i class="bi bi-eye-fill" style="color:#7c3aed;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm p-4" style="border-radius:12px;">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h6 class="fw-bold mb-0">Active Bids</h6>
+                            <a href="#" class="text-primary text-decoration-none small">View All</a>
+                        </div>
+                        {% for bid in active_bids %}
+                        <div class="d-flex align-items-center gap-3 py-3 border-bottom">
+                            <img src="{{ bid.image }}" class="rounded" style="width:64px;height:48px;object-fit:cover;" alt="car">
+                            <div class="flex-grow-1">
+                                <p class="fw-semibold mb-0 small">{{ bid.title }}</p>
+                                <p class="text-muted mb-0" style="font-size:.75rem;">{{ bid.variant }} &middot; {{ bid.mileage }}</p>
+                                <p class="text-muted mb-0" style="font-size:.72rem;"><i class="bi bi-clock me-1"></i>{{ bid.ends }}</p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge {% if bid.status == 'Outbid' %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10 {% if bid.status == 'Outbid' %}text-danger{% else %}text-success{% endif %} mb-1 d-block" style="font-size:.72rem;">
+                                    <i class="bi {% if bid.status == 'Outbid' %}bi-exclamation-triangle{% else %}bi-check-circle{% endif %} me-1"></i>{{ bid.status }}
+                                </span>
+                                {% if bid.highest %}
+                                <p class="text-muted mb-0" style="font-size:.72rem;">Highest: {{ bid.highest }}</p>
+                                {% endif %}
+                                <p class="fw-semibold mb-0 small">Your bid: {{ bid.your_bid }}</p>
+                                {% if bid.status == 'Outbid' %}
+                                <a href="#" class="text-primary text-decoration-none" style="font-size:.78rem; font-weight:600;">Increase Bid</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <h6 class="fw-bold mt-4 mb-3">Your Listings</h6>
+                        <div class="d-flex justify-content-end mb-2">
+                            <a href="#" class="text-primary text-decoration-none small">Manage Listings</a>
+                        </div>
+                        <div class="row g-3">
+                            {% for listing in your_listings %}
+                            <div class="col-6">
+                                <div class="position-relative rounded overflow-hidden" style="height:110px;">
+                                    <img src="{{ listing.image }}" class="w-100 h-100" style="object-fit:cover;" alt="listing">
+                                    <span class="badge bg-success position-absolute bottom-0 start-0 m-2" style="font-size:.7rem;">&#9679; Live</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm p-4 h-100" style="border-radius:12px;">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h6 class="fw-bold mb-0">Messages</h6>
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-envelope text-muted" style="cursor:pointer;"></i>
+                                <i class="bi bi-pencil-square text-muted" style="cursor:pointer;"></i>
+                            </div>
+                        </div>
+                        {% for msg in messages_list %}
+                        <div class="d-flex gap-2 py-2 border-bottom">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 text-white fw-bold"
+                                 style="width:36px;height:36px; background:{{ msg.color }}; font-size:.72rem;">{{ msg.initials }}</div>
+                            <div class="flex-grow-1 min-width-0">
+                                <div class="d-flex justify-content-between">
+                                    <p class="fw-semibold mb-0" style="font-size:.8rem;">{{ msg.name }}</p>
+                                    <span class="text-muted" style="font-size:.7rem;">{{ msg.time }}</span>
+                                </div>
+                                <p class="text-muted mb-0" style="font-size:.72rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ msg.preview }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div class="text-center mt-3">
+                            <a href="#" class="text-primary text-decoration-none small">View All Messages</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
