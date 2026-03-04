@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Enquiry Sent - Motor Match{% endblock %}
+
+{% block nav_links %}
+<ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-1">
+    <li class="nav-item"><a class="nav-link px-3" href="#">Buy</a></li>
+    <li class="nav-item"><a class="nav-link px-3" href="/sell/">Sell</a></li>
+</ul>
+<div class="d-flex align-items-center gap-2 ms-3">
+    <a href="/login/" class="btn btn-outline-secondary btn-sm px-3">Log In</a>
+    <a href="/register/" class="btn btn-primary btn-sm px-3">Sign Up</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-center py-5" style="min-height:calc(100vh - 160px);">
+    <div class="card border-0 shadow-sm p-5 text-center" style="max-width:480px; width:100%; border-radius:16px;">
+
+        <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-4" style="width:64px;height:64px;">
+            <i class="bi bi-check-lg text-success fs-3 fw-bold"></i>
+        </div>
+
+        <h2 class="fw-bold mb-2">Enquiry Sent Successfully!</h2>
+        <p class="text-muted mb-4 small">The seller has been notified and will get back to you soon regarding your interest.</p>
+
+        <div class="card border p-3 mb-4 text-start" style="border-radius:10px;">
+            <div class="d-flex align-items-center gap-3">
+                <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=160&h=100&fit=crop"
+                     class="rounded" style="width:72px;height:52px;object-fit:cover;" alt="Car">
+                <div class="flex-grow-1">
+                    <p class="text-primary fw-semibold mb-0" style="font-size:.72rem; letter-spacing:.04em;">ENQUIRED VEHICLE</p>
+                    <p class="fw-semibold mb-0 small">2021 Tesla Model 3</p>
+                    <p class="text-primary fw-bold mb-0 small">£34,900</p>
+                </div>
+                <i class="bi bi-chevron-right text-muted"></i>
+            </div>
+        </div>
+
+        <a href="#" class="btn btn-primary w-100 mb-2 fw-semibold">View My Enquiries</a>
+        <a href="/" class="btn btn-outline-secondary w-100 mb-4">Back to Browse</a>
+
+        <p class="text-muted mb-0" style="font-size:.75rem;">
+            Did not receive a confirmation email?
+            <a href="#" class="text-primary text-decoration-none">Check your spam folder</a> or
+            <a href="#" class="text-primary text-decoration-none">contact support</a>.
+        </p>
+
+    </div>
+</div>
+{% endblock %}
