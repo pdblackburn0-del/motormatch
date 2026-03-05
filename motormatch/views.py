@@ -836,11 +836,13 @@ def hard_delete_vehicle(request, pk):
 @login_required
 def notifications_poll(request):
     from django.core.cache import cache
-    unread_notifs = Notification.objects.filter(user=request.user, is_read=False).count()
+    unread_notifs = Notification.objects.filter(user=request.user, is_read=False).exclude(title='New message').count()
     unread_msgs = Message.objects.filter(recipient=request.user, is_read=False).count()
-    # Return latest 10 unread notifications so the dropdown can show them
+    # Return latest 10 unread non-message notifications for the bell dropdown
+    # Message notifications are handled separately by the green chat badge
     latest = list(
         Notification.objects.filter(user=request.user, is_read=False)
+        .exclude(title='New message')
         .order_by('-created_at')[:10]
         .values('id', 'title', 'message', 'notif_type', 'url', 'created_at')
     )
