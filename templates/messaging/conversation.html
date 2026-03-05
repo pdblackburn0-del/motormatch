@@ -192,11 +192,10 @@
 {% block extra_js %}
 {# Globals needed by chat.js — rendered as JSON to avoid linter false positives #}
 {{ other.pk|json_script:"data-other-pk" }}
-{{ csrf_token|json_script:"data-csrf" }}
 {{ my_initials|json_script:"data-my-inits" }}
 <script>
 var OTHER_PK   = JSON.parse(document.getElementById('data-other-pk').textContent);
-var CSRF       = JSON.parse(document.getElementById('data-csrf').textContent);
+var CSRF       = (document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||'';
 var MY_INITS   = JSON.parse(document.getElementById('data-my-inits').textContent);
 var SEND_URL   = '/inbox/' + OTHER_PK + '/send/';
 var POLL_URL   = '/inbox/' + OTHER_PK + '/poll/';
