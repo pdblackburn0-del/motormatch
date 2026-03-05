@@ -135,7 +135,9 @@
                         </div>
                         <div class="flex-grow-1">
                             <p class="mb-0 fw-semibold" style="font-size:.85rem;">
-                                {% with p=car.owner.profile %}{{ p.get_display_name }}{% endwith %}
+                                <a href="{% url 'seller_profile' car.owner.pk %}" class="text-dark text-decoration-none">
+                                    {% with p=car.owner.profile %}{{ p.get_display_name }}{% endwith %}
+                                </a>
                             </p>
                             {% if seller_avg %}
                             <p class="mb-0" style="font-size:.72rem;">
@@ -189,7 +191,7 @@
                     </a>
                     {% elif car.owner == request.user %}
                     <div class="alert alert-info py-2 mb-2 small text-center">This is your listing.</div>
-                    <a href="{% url 'sell' %}" class="btn btn-outline-primary btn-sm w-100 mb-1"><i class="bi bi-pencil me-1"></i>Edit Listing</a>
+                    <a href="{% url 'edit_vehicle' car.pk %}" class="btn btn-outline-primary btn-sm w-100 mb-1"><i class="bi bi-pencil me-1"></i>Edit Listing</a>
                     <form method="post" action="{% url 'delete_vehicle' car.pk %}" onsubmit="return confirm('Permanently remove this listing?')">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-outline-danger btn-sm w-100"><i class="bi bi-trash me-1"></i>Remove Listing</button>

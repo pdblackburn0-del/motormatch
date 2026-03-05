@@ -198,6 +198,7 @@
                                         <p class="text-muted mb-0" style="font-size:.75rem;">{{ car.price }}</p>
                                         <div class="d-flex gap-1 mt-1" style="position:relative; z-index:1;">
                                             <a href="{% url 'vehicle_detail' car.pk %}" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size:.7rem;">View</a>
+                                            <a href="{% url 'edit_vehicle' car.pk %}" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size:.7rem;">Edit</a>
                                             <form method="post" action="{% url 'delete_vehicle' car.pk %}" onsubmit="return confirm('Remove this listing?')">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size:.7rem;">Remove</button>

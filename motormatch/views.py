@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .forms import ProfileForm, SellForm
+from .forms import ProfileForm, SellForm, VehicleEditForm
 from .models import Bid, LoginEvent, Message, Notification, Review, SavedVehicle, UserProfile, Vehicle
 
 
@@ -446,6 +446,37 @@ def delete_vehicle(request, pk):
     vehicle.delete()
     messages.success(request, 'Listing removed successfully.')
     return redirect('dashboard')
+
+
+@login_required
+def edit_vehicle(request, pk):
+    vehicle = get_object_or_404(Vehicle, pk=pk, owner=request.user)
+    if request.method == 'POST':
+        form = VehicleEditForm(request.POST, request.FILES, instance=vehicle)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Listing updated successfully.')
+            return redirect('vehicle_detail', pk=vehicle.pk)
+    else:
+        form = VehicleEditForm(instance=vehicle)
+    return render(request, 'edit_vehicle.html', {'form': form, 'vehicle': vehicle})
+
+
+def seller_profile(request, pk):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    seller = get_object_or_404(User, pk=pk)
+    seller_profile_obj = getattr(seller, 'profile', None)
+    listings = Vehicle.objects.filter(owner=seller).order_by('-created_at')
+    reviews = seller.reviews_received.select_related('reviewer__profile').order_by('-created_at')
+    avg = seller_profile_obj.average_rating() if seller_profile_obj else None
+    return render(request, 'seller_profile.html', {
+        'seller': seller,
+        'seller_profile': seller_profile_obj,
+        'listings': listings,
+        'reviews': reviews,
+        'avg': avg,
+    })
 
 
 @login_required

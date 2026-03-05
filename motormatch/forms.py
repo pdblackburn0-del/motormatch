@@ -17,6 +17,29 @@ TRANSMISSION_CHOICES = [
 ]
 
 
+class VehicleEditForm(forms.ModelForm):
+    class Meta:
+        model = Vehicle
+        fields = ['title', 'variant', 'price', 'mileage', 'year', 'fuel',
+                  'transmission', 'location', 'description', 'image_file', 'image']
+        widgets = {
+            'title':        forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 2019 Ford Focus'}),
+            'variant':      forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. ST-Line 5dr'}),
+            'price':        forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. £7,500'}),
+            'mileage':      forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 32,000 miles'}),
+            'year':         forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 2019'}),
+            'fuel':         forms.Select(choices=FUEL_CHOICES, attrs={'class': 'form-select'}),
+            'transmission': forms.Select(choices=TRANSMISSION_CHOICES, attrs={'class': 'form-select'}),
+            'location':     forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. London, UK'}),
+            'description':  forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'image_file':   forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'image':        forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://...'}),
+        }
+        labels = {
+            'image': 'Image URL (alternative to upload)',
+        }
+
+
 class SellForm(forms.Form):
     make         = forms.CharField(max_length=100, label='Make', widget=forms.TextInput(attrs={'placeholder': 'e.g., Ford', 'class': 'form-control'}))
     model        = forms.CharField(max_length=100, label='Model', widget=forms.TextInput(attrs={'placeholder': 'e.g., Fiesta', 'class': 'form-control'}))
