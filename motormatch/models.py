@@ -190,13 +190,14 @@ class Bid(models.Model):
         (STATUS_COUNTERED, 'Countered'),
     ]
 
-    vehicle    = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='bids')
-    bidder     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bids_placed')
-    amount     = models.DecimalField(max_digits=12, decimal_places=2)
-    status     = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
-    note       = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    vehicle        = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='bids')
+    bidder         = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bids_placed')
+    amount         = models.DecimalField(max_digits=12, decimal_places=2)
+    counter_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    status         = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    note           = models.TextField(blank=True)
+    created_at     = models.DateTimeField(auto_now_add=True)
+    updated_at     = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']

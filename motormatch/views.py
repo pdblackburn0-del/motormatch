@@ -125,7 +125,7 @@ def dashboard(request):
 
     my_listings = Vehicle.objects.filter(owner=request.user).order_by('-created_at')
     saved_count = SavedVehicle.objects.filter(user=request.user).count()
-    my_bids     = Bid.objects.filter(bidder=request.user).select_related('vehicle').order_by('-created_at')[:10]
+    my_bids     = Bid.objects.filter(bidder=request.user).select_related('vehicle', 'vehicle__owner').order_by('-updated_at')
     my_messages = Message.objects.filter(recipient=request.user).select_related('sender', 'vehicle').order_by('-created_at')[:5]
     unread_notifications = Notification.objects.filter(user=request.user, is_read=False).count()
 
@@ -252,10 +252,76 @@ def add_review(request, pk):
 
 @login_required
 def inbox(request):
-    received = Message.objects.filter(recipient=request.user).select_related('sender', 'vehicle').order_by('-created_at')
-    sent     = Message.objects.filter(sender=request.user).select_related('recipient', 'vehicle').order_by('-created_at')
-    received.filter(is_read=False).update(is_read=True)
-    return render(request, 'inbox.html', {'received': received, 'sent': sent})
+    from django.contrib.auth import get_user_model as _gum
+    _User = _gum()
+    all_msgs = (
+        Message.objects
+        .filter(Q(sender=request.user) | Q(recipient=request.user))
+        .select_related('sender', 'sender__profile', 'recipient', 'recipient__profile', 'vehicle')
+        .order_by('-created_at')
+    )
+    seen = set()
+    conversations = []
+    for msg in all_msgs:
+        other = msg.recipient if msg.sender == request.user else msg.sender
+        if other.pk not in seen:
+            seen.add(other.pk)
+            unread = Message.objects.filter(
+                sender=other, recipient=request.user, is_read=False
+            ).count()
+            conversations.append({
+                'user': other,
+                'last_message': msg,
+                'unread': unread,
+            })
+    return render(request, 'inbox.html', {'conversations': conversations})
+
+
+@login_required
+def conversation(request, user_pk):
+    from django.contrib.auth import get_user_model as _gum
+    _User = _gum()
+    other = get_object_or_404(_User, pk=user_pk)
+
+    if request.method == 'POST':
+        body       = request.POST.get('body', '').strip()
+        vehicle_id = request.POST.get('vehicle_id')
+        if body:
+            vehicle = Vehicle.objects.filter(pk=vehicle_id).first() if vehicle_id else None
+            Message.objects.create(
+                sender=request.user,
+                recipient=other,
+                vehicle=vehicle,
+                subject='',
+                body=body,
+            )
+            sender_name = request.user.profile.get_display_name() if hasattr(request.user, 'profile') else request.user.email.split('@')[0]
+            Notification.objects.create(
+                user=other,
+                title='New message',
+                message=f'{sender_name} sent you a message.',
+                notif_type='info',
+                url=f'/inbox/{request.user.pk}/',
+            )
+        return redirect('conversation', user_pk=user_pk)
+
+    thread = (
+        Message.objects
+        .filter(Q(sender=request.user, recipient=other) | Q(sender=other, recipient=request.user))
+        .select_related('sender', 'sender__profile', 'vehicle')
+        .order_by('created_at')
+    )
+    thread.filter(recipient=request.user, is_read=False).update(is_read=True)
+
+    vehicle = next((m.vehicle for m in thread if m.vehicle), None)
+    other_profile = getattr(other, 'profile', None)
+
+    return render(request, 'conversation.html', {
+        'other': other,
+        'other_profile': other_profile,
+        'thread': thread,
+        'vehicle': vehicle,
+    })
 
 
 @login_required
@@ -342,25 +408,28 @@ def respond_bid(request, pk):
         messages.error(request, 'Invalid action.')
         return redirect('dashboard')
 
+    seller_name = request.user.profile.get_display_name() if hasattr(request.user, 'profile') else request.user.email.split('@')[0]
+
     if action == 'counter':
-        counter_amount = request.POST.get('counter_amount', '').strip()
+        counter_str = request.POST.get('counter_amount', '').strip()
         try:
             from decimal import Decimal
-            ca = Decimal(counter_amount.replace(',', '').replace('£', ''))
+            ca = Decimal(counter_str.replace(',', '').replace('£', ''))
         except Exception:
             messages.error(request, 'Enter a valid counter amount.')
             return redirect('dashboard')
-        bid.status = 'countered'
-        bid.note   = f'Counter offer: £{ca:,.0f}. ' + (bid.note or '')
+        bid.status         = 'countered'
+        bid.counter_amount = ca
+        bid.note           = request.POST.get('counter_note', '').strip() or bid.note
         bid.save()
         Notification.objects.create(
             user=bid.bidder,
             title='Counter offer received',
-            message=f'A counter offer of £{ca:,.0f} was made on {bid.vehicle.title}.',
+            message=f'{seller_name} countered with £{ca:,.0f} on {bid.vehicle.title}. Go to your dashboard to respond.',
             notif_type='info',
-            url=f'/vehicle/{bid.vehicle.pk}/',
+            url='/dashboard/#bids-section',
         )
-        messages.success(request, 'Counter offer sent.')
+        messages.success(request, f'Counter offer of £{ca:,.0f} sent to {bid.bidder.profile.get_display_name() if hasattr(bid.bidder, "profile") else bid.bidder.email}.')
     else:
         bid.status = 'accepted' if action == 'accept' else 'declined'
         bid.save()
@@ -368,11 +437,52 @@ def respond_bid(request, pk):
         Notification.objects.create(
             user=bid.bidder,
             title=f'Bid {verb}',
-            message=f'Your bid on {bid.vehicle.title} was {verb}.',
+            message=f'{seller_name} {verb} your bid of £{bid.amount:,.0f} on {bid.vehicle.title}.',
             notif_type='success' if action == 'accept' else 'warning',
             url=f'/vehicle/{bid.vehicle.pk}/',
         )
         messages.success(request, f'Bid {verb}.')
+
+    return redirect('dashboard')
+
+
+@login_required
+@require_POST
+def bidder_respond_bid(request, pk):
+    bid    = get_object_or_404(Bid, pk=pk, bidder=request.user, status='countered')
+    action = request.POST.get('action')
+
+    bidder_name = request.user.profile.get_display_name() if hasattr(request.user, 'profile') else request.user.email.split('@')[0]
+
+    if action == 'accept_counter':
+        if bid.counter_amount:
+            bid.amount = bid.counter_amount
+        bid.status         = 'accepted'
+        bid.counter_amount = None
+        bid.save()
+        if bid.vehicle.owner:
+            Notification.objects.create(
+                user=bid.vehicle.owner,
+                title='Counter offer accepted',
+                message=f'{bidder_name} accepted your counter offer of £{bid.amount:,.0f} on {bid.vehicle.title}.',
+                notif_type='success',
+                url=f'/vehicle/{bid.vehicle.pk}/',
+            )
+        messages.success(request, f'You accepted the counter offer of £{bid.amount:,.0f}.')
+    elif action == 'decline':
+        bid.status = 'declined'
+        bid.save()
+        if bid.vehicle.owner:
+            Notification.objects.create(
+                user=bid.vehicle.owner,
+                title='Counter offer declined',
+                message=f'{bidder_name} declined your counter offer on {bid.vehicle.title}.',
+                notif_type='warning',
+                url=f'/vehicle/{bid.vehicle.pk}/',
+            )
+        messages.success(request, 'You declined the counter offer.')
+    else:
+        messages.error(request, 'Invalid action.')
 
     return redirect('dashboard')
 

@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Chat with {{ other_profile.get_display_name }} - Motor Match{% endblock %}
+
+{% block extra_css %}
+<style>
+.chat-outer {
+    max-width: 760px;
+    margin: 0 auto;
+}
+.chat-header {
+    background: #fff;
+    border-bottom: 1px solid #e9ecef;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-radius: 14px 14px 0 0;
+    position: sticky;
+    top: 72px;
+    z-index: 10;
+}
+.chat-messages {
+    background: #f8f9ff;
+    padding: 24px 20px;
+    min-height: 380px;
+    max-height: 520px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.bubble-wrap { display: flex; gap: 10px; align-items: flex-end; }
+.bubble-wrap.mine { flex-direction: row-reverse; }
+.bubble {
+    max-width: 65%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: .875rem;
+    line-height: 1.45;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+.bubble.theirs { background: #fff; border: 1px solid #e9ecef; border-bottom-left-radius: 4px; }
+.bubble.mine   { background: #4f46e5; color: #fff; border-bottom-right-radius: 4px; }
+.bubble-time   { font-size: .68rem; color: #adb5bd; margin-top: 4px; text-align: right; }
+.bubble-time.theirs-t { text-align: left; }
+.avatar-sm {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .72rem; font-weight: 600; flex-shrink: 0;
+}
+.chat-footer {
+    background: #fff;
+    border-top: 1px solid #e9ecef;
+    padding: 14px 20px;
+    border-radius: 0 0 14px 14px;
+}
+.date-divider {
+    text-align: center;
+    font-size: .72rem;
+    color: #adb5bd;
+    margin: 8px 0;
+    position: relative;
+}
+.date-divider::before, .date-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: calc(50% - 50px);
+    height: 1px;
+    background: #e9ecef;
+}
+.date-divider::before { left: 0; }
+.date-divider::after  { right: 0; }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="chat-outer">
+
+    <!-- Back + header -->
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <a href="{% url 'inbox' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <span class="text-muted small">All Messages</span>
+    </div>
+
+    <div class="shadow-sm" style="border-radius:14px; overflow:hidden;">
+
+        <!-- Chat header -->
+        <div class="chat-header shadow-sm">
+            {% if other_profile and other_profile.avatar %}
+                <img src="{{ other_profile.avatar.url }}" class="rounded-circle border"
+                     style="width:44px;height:44px;object-fit:cover;" alt="">
+            {% else %}
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white flex-shrink-0"
+                     style="width:44px;height:44px;background:#4f46e5;font-size:.95rem;">
+                    {{ other_profile.get_initials }}
+                </div>
+            {% endif %}
+            <div class="flex-grow-1">
+                <p class="fw-bold mb-0" style="font-size:.95rem;">{{ other_profile.get_display_name }}</p>
+                {% if other_profile.location %}
+                <p class="text-muted mb-0" style="font-size:.75rem;"><i class="bi bi-geo-alt me-1"></i>{{ other_profile.location }}</p>
+                {% endif %}
+            </div>
+            {% if vehicle %}
+            <a href="{% url 'vehicle_detail' vehicle.pk %}" class="text-decoration-none d-flex align-items-center gap-2 border rounded-3 px-3 py-2">
+                <div style="width:36px;height:28px;overflow:hidden;border-radius:4px;background:#f0f0f5;flex-shrink:0;">
+                    {% if vehicle.get_image %}<img src="{{ vehicle.get_image }}" style="width:100%;height:100%;object-fit:cover;" alt="">{% endif %}
+                </div>
+                <div>
+                    <p class="mb-0 text-dark fw-semibold" style="font-size:.78rem;">{{ vehicle.title }}</p>
+                    <p class="mb-0 text-primary" style="font-size:.72rem;">£{{ vehicle.price }}</p>
+                </div>
+            </a>
+            {% endif %}
+            <a href="{% url 'seller_profile' other.pk %}" class="btn btn-outline-secondary btn-sm ms-1" title="View profile">
+                <i class="bi bi-person"></i>
+            </a>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages" id="chatMessages">
+            {% if thread %}
+            {% for msg in thread %}
+            {% if forloop.first %}
+            <div class="date-divider">{{ msg.created_at|date:'j M Y' }}</div>
+            {% endif %}
+            <div class="bubble-wrap {% if msg.sender == request.user %}mine{% else %}theirs{% endif %}">
+                {% if msg.sender != request.user %}
+                <div class="avatar-sm bg-secondary text-white" style="background:#4f46e5!important;">
+                    {{ other_profile.get_initials }}
+                </div>
+                {% endif %}
+                <div>
+                    <div class="bubble {% if msg.sender == request.user %}mine{% else %}theirs{% endif %}">{{ msg.body }}</div>
+                    <div class="bubble-time {% if msg.sender != request.user %}theirs-t{% endif %}">
+                        {{ msg.created_at|date:'H:i' }}
+                        {% if msg.sender == request.user and msg.is_read %}<i class="bi bi-check2-all ms-1" style="color:#a5b4fc;"></i>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-chat display-5 d-block mb-3 opacity-25"></i>
+                <p class="small">No messages yet. Say hi!</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Compose -->
+        <div class="chat-footer">
+            <form method="post" action="{% url 'conversation' other.pk %}">
+                {% csrf_token %}
+                {% if vehicle %}<input type="hidden" name="vehicle_id" value="{{ vehicle.pk }}">{% endif %}
+                <div class="d-flex gap-2 align-items-end">
+                    <textarea name="body" rows="2" id="msgInput"
+                              class="form-control border-0 bg-light"
+                              style="border-radius:12px; resize:none; font-size:.88rem;"
+                              placeholder="Type a message…" required></textarea>
+                    <button type="submit" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                            style="width:42px;height:42px;">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div><!-- /shadow -->
+</div><!-- /chat-outer -->
+</div><!-- /container -->
+
+<script>
+    const box = document.getElementById('chatMessages');
+    if (box) box.scrollTop = box.scrollHeight;
+
+    const ta = document.getElementById('msgInput');
+    if (ta) {
+        ta.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.form.submit();
+            }
+        });
+    }
+</script>
+{% endblock %}
