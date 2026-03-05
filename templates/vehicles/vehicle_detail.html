@@ -168,7 +168,7 @@
                             {% endif %}
                         </div>
                         {% if seller_badge_info %}
-                        <span class="badge" style="font-size:.72rem; background:{{ seller_badge_info.2 }};color:#fff;">{{ seller_badge_info.0 }}</span>
+                        <span class="badge dyn-badge" style="--c:{{ seller_badge_info.2 }}">{{ seller_badge_info.0 }}</span>
                         {% else %}
                         <span class="badge text-success border border-success bg-white" style="font-size:.72rem;">Member</span>
                         {% endif %}
@@ -241,8 +241,7 @@
             <div class="card border-0 shadow-sm" style="border-radius:12px; overflow:hidden;">
                 {% for bid in car_bids %}
                 <div class="d-flex align-items-center gap-3 px-4 py-3 border-bottom {% if forloop.first %}bg-success bg-opacity-10{% endif %}">
-                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
-                         style="width:36px;height:36px;font-size:.78rem;background:{% if forloop.first %}#16a34a{% else %}#4f46e5{% endif %};">
+                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold flex-shrink-0 bid-avatar {% if forloop.first %}bid-avatar--top{% else %}bid-avatar--other{% endif %}">
                         {% with bp=bid.bidder.profile %}{{ bp.get_initials }}{% endwith %}
                     </div>
                     <div class="flex-grow-1">

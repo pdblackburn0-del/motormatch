@@ -534,3 +534,18 @@ footer a:hover {
     from { opacity: 1; transform: translateX(0) scale(1); }
     to   { opacity: 0; transform: translateX(2rem) scale(.95); }
 }
+
+/* ── Offer badges ─────────────────────────────────────────── */
+.offer-badge { font-size: .68rem; }
+.offer-badge--new       { background: #dbeafe; color: #1d4ed8; }
+.offer-badge--countered { background: #fed7aa; color: #c2410c; }
+.offer-badge--other     { background: #fee2e2; color: #b91c1c; }
+
+/* ── Bid avatar circles ───────────────────────────────────── */
+.bid-avatar       { width: 36px; height: 36px; font-size: .78rem; }
+.bid-avatar--top  { background: #16a34a; }
+.bid-avatar--other { background: #4f46e5; }
+
+/* ── Dynamic colour helpers (CSS custom property --c set inline) ── */
+.offer-avatar { width: 34px; height: 34px; font-size: .75rem; background: var(--c); }
+.dyn-badge    { font-size: .72rem; background: var(--c); color: #fff; }

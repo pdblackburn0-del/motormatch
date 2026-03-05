@@ -54,14 +54,14 @@
             {% for offer in offers %}
             <div class="card border-0 shadow-sm mb-2 p-3 {% if offer.selected %}border-start border-3 border-primary{% endif %}" style="cursor:pointer; border-radius:10px;">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0"
-                         style="width:34px;height:34px; background:{{ offer.color }}; font-size:.75rem;">{{ offer.initials }}</div>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0 offer-avatar"
+                             style="--c:{{ offer.color }}">{{ offer.initials }}</div>
                     <div class="flex-grow-1">
                         <p class="fw-semibold mb-0 small">{{ offer.name }}</p>
                         <p class="text-muted mb-0" style="font-size:.72rem;">{{ offer.time }}</p>
                     </div>
                     {% if offer.badge %}
-                    <span class="badge px-2 py-1" style="font-size:.68rem; background:{% if offer.badge == 'New' %}#dbeafe{% elif offer.badge == 'Countered' %}#fed7aa{% else %}#fee2e2{% endif %}; color:{% if offer.badge == 'New' %}#1d4ed8{% elif offer.badge == 'Countered' %}#c2410c{% else %}#b91c1c{% endif %};">{{ offer.badge }}</span>
+                    <span class="badge px-2 py-1 offer-badge {% if offer.badge == 'New' %}offer-badge--new{% elif offer.badge == 'Countered' %}offer-badge--countered{% else %}offer-badge--other{% endif %}">{{ offer.badge }}</span>
                     {% endif %}
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
