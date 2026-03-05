@@ -25,6 +25,7 @@
         </p>
         <div class="row justify-content-center">
             <div class="col-lg-7">
+                <form method="get" action="{% url 'home' %}">
                 <div class="input-group shadow">
                     <span
                         class="input-group-text bg-white border-end-0 text-muted"
@@ -32,16 +33,19 @@
                     ></span>
                     <input
                         type="text"
+                        name="q"
+                        value="{{ query }}"
                         class="form-control border-start-0 ps-0 py-3"
                         placeholder="Search by make, model, or keyword"
                     />
                     <button
                         class="btn btn-primary px-4 fw-semibold"
-                        type="button"
+                        type="submit"
                     >
                         Search Cars
                     </button>
                 </div>
+                </form>
             </div>
         </div>
     </div>
