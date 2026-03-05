@@ -21,7 +21,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("accounts/", include("allauth.urls")),
-    path("", include("motormatch.urls")),
+    path('admin/', admin.site.urls),
+    path('accounts/', include('allauth.urls')),
+
+    # ── Apps ──────────────────────────────────────────────────────────────
+    path('', include('apps.vehicles.urls')),
+    path('', include('apps.messaging.urls')),
+    path('', include('apps.notifications.urls')),
+    path('', include('apps.users.urls')),
+    path('', include('apps.offers.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

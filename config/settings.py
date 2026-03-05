@@ -61,7 +61,14 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    # Legacy app — keep registered so existing migrations stay valid
     'motormatch',
+    # New structured apps
+    'apps.users',
+    'apps.vehicles',
+    'apps.messaging',
+    'apps.offers',
+    'apps.notifications',
 ]
 
 MIDDLEWARE = [
@@ -80,7 +87,10 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'motormatch' / 'templates'],
+        'DIRS': [
+            BASE_DIR / 'templates',
+            BASE_DIR / 'motormatch' / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -147,7 +157,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'motormatch' / 'static']
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+    BASE_DIR / 'motormatch' / 'static',
+]
 
 # Media files (user uploads)
 MEDIA_URL = '/media/'
@@ -171,9 +184,9 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
 ACCOUNT_LOGIN_ON_SIGNUP = True
-ACCOUNT_FORMS = {'signup': 'motormatch.forms.CustomSignupForm'}
+ACCOUNT_FORMS = {'signup': 'apps.users.forms.CustomSignupForm'}
 LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/dashboard/'
+LOGIN_REDIRECT_URL = '/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 
 CSRF_TRUSTED_ORIGINS = [
