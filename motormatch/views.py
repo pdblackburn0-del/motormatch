@@ -24,7 +24,7 @@ def index(request):
         {'name': 'Convertible', 'icon': 'bi bi-wind'},
     ]
 
-    vehicles = Vehicle.objects.all()
+    vehicles = Vehicle.objects.filter(is_removed=False)
 
     if query:
         vehicles = vehicles.filter(
@@ -87,6 +87,8 @@ def vehicle_detail(request, pk):
         if request.user.is_authenticated else None
     )
 
+    accepted_bid = car.bids.filter(status='accepted').select_related('bidder', 'bidder__profile').first()
+
     return render(request, 'vehicle_detail.html', {
         'car': car,
         'is_saved': is_saved,
@@ -95,6 +97,7 @@ def vehicle_detail(request, pk):
         'user_already_reviewed': user_already_reviewed,
         'car_bids': car_bids,
         'user_bid': user_bid,
+        'accepted_bid': accepted_bid,
     })
 
 
@@ -341,14 +344,18 @@ def send_message_ajax(request, user_pk):
         attachment=attach or None,
     )
 
-    sender_name = request.user.profile.get_display_name() if hasattr(request.user, 'profile') else request.user.email.split('@')[0]
-    Notification.objects.create(
-        user=other,
-        title='New message',
-        message=f'{sender_name} sent you a message.',
-        notif_type='info',
-        url=f'/inbox/{request.user.pk}/',
-    )
+    # Only send a notification if the recipient is NOT currently viewing this chat
+    referer = request.META.get('HTTP_REFERER', '')
+    recipient_on_chat = f'/inbox/{request.user.pk}/' in referer
+    if not recipient_on_chat:
+        sender_name = request.user.profile.get_display_name() if hasattr(request.user, 'profile') else request.user.email.split('@')[0]
+        Notification.objects.create(
+            user=other,
+            title='New message',
+            message=f'{sender_name} sent you a message.',
+            notif_type='info',
+            url=f'/inbox/{request.user.pk}/',
+        )
 
     initials = request.user.profile.get_initials() if hasattr(request.user, 'profile') else request.user.email[:2].upper()
     return JsonResponse({
@@ -471,6 +478,15 @@ def send_message(request, pk=None):
 @require_POST
 def place_bid(request, pk):
     vehicle = get_object_or_404(Vehicle, pk=pk)
+
+    if vehicle.is_removed:
+        messages.error(request, 'This listing has been removed and is no longer accepting bids.')
+        return redirect('vehicle_detail', pk=pk)
+
+    if vehicle.bids.filter(status='accepted').exists():
+        messages.error(request, 'A bid has already been accepted on this listing.')
+        return redirect('vehicle_detail', pk=pk)
+
     amount  = request.POST.get('amount', '').strip()
     note    = request.POST.get('note', '').strip()
 
@@ -479,6 +495,19 @@ def place_bid(request, pk):
         amount_dec = Decimal(amount.replace(',', '').replace('£', ''))
     except Exception:
         messages.error(request, 'Please enter a valid bid amount.')
+        return redirect('vehicle_detail', pk=pk)
+
+    # Must beat the current highest bid from anyone else
+    highest = (
+        vehicle.bids
+        .exclude(bidder=request.user)
+        .exclude(status__in=['declined'])
+        .order_by('-amount')
+        .values_list('amount', flat=True)
+        .first()
+    )
+    if highest and amount_dec <= highest:
+        messages.error(request, f'Your bid must be higher than the current top bid of £{highest:,.0f}.')
         return redirect('vehicle_detail', pk=pk)
 
     bid, created = Bid.objects.update_or_create(
@@ -654,11 +683,44 @@ def login_event_detail(request, pk):
 
 @login_required
 @require_POST
+def delete_conversation(request, user_pk):
+    """Soft-delete: hides all messages in this thread for the requesting user."""
+    from django.contrib.auth import get_user_model as _gum
+    _User = _gum()
+    other = get_object_or_404(_User, pk=user_pk)
+    # Delete messages where this user is sender OR recipient
+    Message.objects.filter(
+        Q(sender=request.user, recipient=other) |
+        Q(sender=other, recipient=request.user)
+    ).delete()
+    messages.success(request, 'Conversation deleted.')
+    return redirect('inbox')
+
+
+@login_required
+@require_POST
 def delete_vehicle(request, pk):
     vehicle = get_object_or_404(Vehicle, pk=pk, owner=request.user)
-    vehicle.delete()
+    vehicle.is_removed = True
+    vehicle.save(update_fields=['is_removed'])
     messages.success(request, 'Listing removed successfully.')
     return redirect('dashboard')
+
+
+@login_required
+def notifications_poll(request):
+    from django.core.cache import cache
+    unread_notifs = Notification.objects.filter(user=request.user, is_read=False).count()
+    unread_msgs = Message.objects.filter(recipient=request.user, is_read=False).count()
+    # Return latest 3 unread notifications so the dropdown can show them
+    latest = list(
+        Notification.objects.filter(user=request.user, is_read=False)
+        .order_by('-created_at')[:3]
+        .values('id', 'title', 'message', 'notif_type', 'url', 'created_at')
+    )
+    for n in latest:
+        n['created_at'] = n['created_at'].strftime('%-d %b %H:%M')
+    return JsonResponse({'unread_notifs': unread_notifs, 'unread_msgs': unread_msgs, 'latest': latest})
 
 
 @login_required
@@ -680,7 +742,7 @@ def seller_profile(request, pk):
     User = get_user_model()
     seller = get_object_or_404(User, pk=pk)
     seller_profile_obj = getattr(seller, 'profile', None)
-    listings = Vehicle.objects.filter(owner=seller).order_by('-created_at')
+    listings = Vehicle.objects.filter(owner=seller, is_removed=False).order_by('-created_at')
     reviews = seller.reviews_received.select_related('reviewer__profile').order_by('-created_at')
     avg = seller_profile_obj.average_rating() if seller_profile_obj else None
     return render(request, 'seller_profile.html', {

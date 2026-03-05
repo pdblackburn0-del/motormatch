@@ -62,6 +62,7 @@ class Vehicle(models.Model):
     image_file   = models.ImageField(upload_to='car_images/', blank=True, null=True)
     location     = models.CharField(max_length=100, blank=True)
     description  = models.TextField(blank=True)
+    is_removed   = models.BooleanField(default=False)
     created_at   = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     _BADGE_CLASS_MAP = {
