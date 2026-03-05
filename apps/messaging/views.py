@@ -18,6 +18,9 @@ User = get_user_model()
 
 @login_required
 def inbox(request):
+    # Mark all received messages as read the moment the user opens the inbox
+    Message.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+
     all_msgs = (
         Message.objects
         .filter(Q(sender=request.user) | Q(recipient=request.user))

@@ -13,16 +13,18 @@ def dashboard(request):
     my_listings          = Vehicle.objects.filter(owner=request.user).order_by('-created_at')
     saved_count          = SavedVehicle.objects.filter(user=request.user).count()
     my_bids              = Bid.objects.filter(bidder=request.user).select_related('vehicle', 'vehicle__owner').order_by('-updated_at')
-    my_messages          = Message.objects.filter(recipient=request.user).select_related('sender', 'vehicle').order_by('-created_at')[:5]
-    unread_notifications = Notification.objects.filter(user=request.user, is_read=False).count()
+    my_messages           = Message.objects.filter(recipient=request.user).select_related('sender', 'vehicle').order_by('-created_at')[:5]
+    unread_messages_count = Message.objects.filter(recipient=request.user, is_read=False).count()
+    unread_notifications  = Notification.objects.filter(user=request.user, is_read=False).count()
 
     return render(request, 'pages/dashboard.html', {
-        'profile':              profile,
-        'my_listings':          my_listings,
-        'saved_count':          saved_count,
-        'my_bids':              my_bids,
-        'my_messages':          my_messages,
-        'unread_notifications': unread_notifications,
+        'profile':               profile,
+        'my_listings':           my_listings,
+        'saved_count':           saved_count,
+        'my_bids':               my_bids,
+        'my_messages':           my_messages,
+        'unread_messages_count': unread_messages_count,
+        'unread_notifications':  unread_notifications,
     })
 
 
