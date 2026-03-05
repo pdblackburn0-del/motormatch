@@ -22,16 +22,18 @@
 }
 
 /* --- Base -------------------------------------------------- */
-html, body {
-    height: 100%;
-    margin: 0;
-}
-
+html { height: 100%; margin: 0; }
 body {
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
     background-color: var(--mm-bg);
     color: var(--mm-text);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
+
+body > main { flex: 1; }
 
 body.dashboard-body {
     background-color: var(--mm-bg-alt);

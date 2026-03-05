@@ -149,6 +149,65 @@ def clear_saved_vehicles(request):
     return JsonResponse({'ok': True})
 
 
+def browse(request):
+    qs = Vehicle.objects.filter(is_removed=False)
+
+    q            = request.GET.get('q', '').strip()
+    fuel         = request.GET.get('fuel', '').strip()
+    transmission = request.GET.get('transmission', '').strip()
+    year_from    = request.GET.get('year_from', '').strip()
+    year_to      = request.GET.get('year_to', '').strip()
+    badge        = request.GET.get('badge', '').strip()
+    sort         = request.GET.get('sort', '-created_at')
+
+    if q:
+        qs = qs.filter(Q(title__icontains=q) | Q(variant__icontains=q) | Q(description__icontains=q) | Q(location__icontains=q))
+    if fuel:
+        qs = qs.filter(fuel__iexact=fuel)
+    if transmission:
+        qs = qs.filter(transmission__iexact=transmission)
+    if year_from:
+        qs = qs.filter(year__gte=year_from)
+    if year_to:
+        qs = qs.filter(year__lte=year_to)
+    if badge:
+        qs = qs.filter(badge__icontains=badge)
+
+    sort_options = {
+        '-created_at': '-created_at',
+        'created_at':  'created_at',
+        '-year':       '-year',
+        'year':        'year',
+        'title':       'title',
+    }
+    qs = qs.order_by(sort_options.get(sort, '-created_at'))
+
+    saved_pks = set()
+    if request.user.is_authenticated:
+        saved_pks = set(SavedVehicle.objects.filter(user=request.user).values_list('vehicle_id', flat=True))
+
+    base_qs = Vehicle.objects.filter(is_removed=False)
+    fuels         = sorted(set(base_qs.exclude(fuel='').values_list('fuel', flat=True)))
+    transmissions = sorted(set(base_qs.exclude(transmission__isnull=True).exclude(transmission='').values_list('transmission', flat=True)))
+    years         = sorted(set(base_qs.exclude(year__isnull=True).exclude(year='').values_list('year', flat=True)), reverse=True)
+
+    return render(request, 'vehicles/browse.html', {
+        'vehicles':      qs,
+        'saved_pks':     saved_pks,
+        'fuels':         fuels,
+        'transmissions': transmissions,
+        'years':         years,
+        'q':             q,
+        'fuel':          fuel,
+        'transmission':  transmission,
+        'year_from':     year_from,
+        'year_to':       year_to,
+        'badge':         badge,
+        'sort':          sort,
+        'total':         qs.count(),
+    })
+
+
 @login_required
 def sell(request):
     from apps.vehicles.forms import SellForm

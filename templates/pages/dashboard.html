@@ -36,7 +36,7 @@
 
         <nav class="db-nav">
             <span class="db-nav__label">Menu</span>
-            <a href="{% url 'home' %}" class="db-nav__link">
+            <a href="{% url 'browse' %}" class="db-nav__link">
                 <span class="db-nav__link-inner"><i class="bi bi-house"></i> Browse Cars</span>
             </a>
             <a href="{% url 'dashboard' %}" class="db-nav__link active">
@@ -301,7 +301,7 @@
                     <i class="bi bi-tag"></i>
                     <p class="db-empty__title">No bids yet</p>
                     <p class="db-empty__sub">See a car you like? Make an offer.</p>
-                    <a href="{% url 'home' %}" class="db-btn-sm">Browse cars</a>
+                    <a href="{% url 'browse' %}" class="db-btn-sm">Browse cars</a>
                 </div>
                 {% endif %}
             </div>

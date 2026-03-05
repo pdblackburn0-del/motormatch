@@ -171,7 +171,7 @@
             <i class="bi bi-heart fs-1 d-block mb-3 text-secondary"></i>
             <h5 class="fw-semibold">No saved vehicles yet</h5>
             <p class="small mb-3">Browse cars and click the heart icon to save them here.</p>
-            <a href="{% url 'home' %}" class="btn btn-primary">Browse Cars</a>
+            <a href="{% url 'browse' %}" class="btn btn-primary">Browse Cars</a>
         </div>
     </div>
     {% endif %}
@@ -268,28 +268,32 @@
     var clearAllBtn = document.getElementById('clearAllBtn');
     if (clearAllBtn) {
         clearAllBtn.addEventListener('click', function () {
-            if (!confirm('Remove all saved vehicles?')) return;
-            fetch('{% url "clear_saved_vehicles" %}', {
-                method: 'POST',
-                headers: { 'X-CSRFToken': getCsrf(), 'X-Requested-With': 'XMLHttpRequest' }
-            }).then(function (r) { return r.json(); }).then(function (data) {
-                if (data.ok) {
-                    document.getElementById('savedGrid').innerHTML = '';
-                    clearAllBtn.remove();
-                    selected = [];
-                    selectedTitles = {};
-                    updateCompareBar();
-                    // Show empty state
-                    var grid = document.getElementById('savedGrid');
-                    if (grid) {
-                        grid.outerHTML = '<div class="text-center py-5 text-muted">' +
-                            '<i class="bi bi-heart fs-1 d-block mb-3 text-secondary"></i>' +
-                            '<h5 class="fw-semibold">No saved vehicles yet</h5>' +
-                            '<p class="small mb-3">Browse cars and click the heart icon to save them here.</p>' +
-                            '<a href="/" class="btn btn-primary">Browse Cars</a></div>';
-                    }
+            showConfirm(
+                'Remove all saved vehicles?',
+                'This will clear your entire saved list and cannot be undone.',
+                function () {
+                    fetch('{% url "clear_saved_vehicles" %}', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCsrf(), 'X-Requested-With': 'XMLHttpRequest' }
+                    }).then(function (r) { return r.json(); }).then(function (data) {
+                        if (data.ok) {
+                            var grid = document.getElementById('savedGrid');
+                            if (grid) {
+                                grid.outerHTML = '<div class="text-center py-5 text-muted" id="emptyState">' +
+                                    '<i class="bi bi-heart fs-1 d-block mb-3 text-secondary"></i>' +
+                                    '<h5 class="fw-semibold">No saved vehicles yet</h5>' +
+                                    '<p class="small mb-3">Browse cars and click the heart icon to save them here.</p>' +
+                                    '<a href="{% url "browse" %}" class="btn btn-primary">Browse Cars</a></div>';
+                            }
+                            clearAllBtn.remove();
+                            selected = [];
+                            selectedTitles = {};
+                            updateCompareBar();
+                            showToast('success', 'All saved vehicles removed.');
+                        }
+                    });
                 }
-            });
+            );
         });
     }
 
@@ -298,7 +302,74 @@
         return m ? m[1] : '';
     }
 
+    /* ── Toast helper (injects into base.html mm-toast system) ── */
+    function showToast(type, msg) {
+        var iconMap = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', warning: 'bi-exclamation-triangle-fill', info: 'bi-info-circle-fill' };
+        var icon = iconMap[type] || iconMap.info;
+        var container = document.querySelector('.mm-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'mm-toast-container';
+            container.setAttribute('aria-live', 'polite');
+            document.body.appendChild(container);
+        }
+        var toast = document.createElement('div');
+        toast.className = 'mm-toast mm-toast--' + type;
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = '<div class="mm-toast__icon"><i class="bi ' + icon + '"></i></div>' +
+            '<span class="mm-toast__msg">' + msg + '</span>' +
+            '<button class="mm-toast__close" onclick="this.closest(\'.mm-toast\').remove()" aria-label="Close">&times;</button>';
+        container.appendChild(toast);
+        setTimeout(function () {
+            toast.style.animation = 'mmToastOut .3s ease forwards';
+            setTimeout(function () { toast.remove(); }, 300);
+        }, 3500);
+    }
+
+    /* ── Confirm modal helper ── */
+    function showConfirm(title, subtitle, onConfirm) {
+        var modal = document.getElementById('mmConfirmModal');
+        document.getElementById('mmConfirmTitle').textContent = title;
+        document.getElementById('mmConfirmSubtitle').textContent = subtitle;
+        var confirmBtn = document.getElementById('mmConfirmOk');
+        var newBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+        newBtn.addEventListener('click', function () {
+            closeConfirmModal();
+            onConfirm();
+        });
+        modal.style.display = 'flex';
+        setTimeout(function () { modal.classList.add('mm-modal--in'); }, 10);
+    }
+    function closeConfirmModal() {
+        var modal = document.getElementById('mmConfirmModal');
+        modal.classList.remove('mm-modal--in');
+        setTimeout(function () { modal.style.display = 'none'; }, 200);
+    }
+    document.getElementById('mmConfirmCancel').addEventListener('click', closeConfirmModal);
+    document.getElementById('mmConfirmModal').addEventListener('click', function (e) {
+        if (e.target === this) closeConfirmModal();
+    });
+
     updateCompareBar();
 })();
 </script>
+
+<!-- ── Custom confirm modal ── -->
+<div id="mmConfirmModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(15,23,42,.45); backdrop-filter:blur(3px); transition:opacity .2s;">
+    <div style="background:#fff; border-radius:16px; padding:2rem 2rem 1.5rem; max-width:380px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,.18); transform:scale(.96); transition:transform .2s;" id="mmConfirmBox">
+        <div style="width:44px; height:44px; border-radius:50%; background:#fef2f2; display:flex; align-items:center; justify-content:center; margin-bottom:1rem;">
+            <i class="bi bi-trash3-fill" style="color:#ef4444; font-size:1.1rem;"></i>
+        </div>
+        <h5 class="fw-bold mb-1" id="mmConfirmTitle" style="font-size:1rem; color:#0f172a;"></h5>
+        <p class="text-muted mb-0" id="mmConfirmSubtitle" style="font-size:.85rem;"></p>
+        <div class="d-flex gap-2 mt-3 justify-content-end">
+            <button id="mmConfirmCancel" class="btn btn-sm btn-outline-secondary px-4" style="border-radius:8px;">Cancel</button>
+            <button id="mmConfirmOk" class="btn btn-sm btn-danger px-4" style="border-radius:8px;">Remove All</button>
+        </div>
+    </div>
+</div>
+<style>
+    .mm-modal--in #mmConfirmBox { transform: scale(1) !important; }
+</style>
 {% endblock %}

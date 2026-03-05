@@ -1,0 +1,432 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Cars – Motor Match{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════
+   HERO BANNER
+═══════════════════════════════════════ */
+.browse-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 2.25rem 0 2rem;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.browse-hero__title {
+    font-size: 1.75rem; font-weight: 800; color: #fff;
+    margin-bottom: .25rem; letter-spacing: -.02em;
+}
+.browse-hero__sub { font-size: .85rem; color: #94a3b8; margin-bottom: 0; }
+.browse-hero__search { position: relative; max-width: 520px; }
+.browse-hero__search input {
+    width: 100%;
+    background: rgba(255,255,255,.07);
+    border: 1.5px solid rgba(255,255,255,.14);
+    border-radius: 10px;
+    padding: .7rem 5.5rem .7rem 2.8rem;
+    color: #fff; font-size: .9rem;
+    transition: border-color .15s, background .15s;
+}
+.browse-hero__search input::placeholder { color: #64748b; }
+.browse-hero__search input:focus {
+    outline: none; background: rgba(255,255,255,.1);
+    border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.18);
+}
+.browse-hero__search .s-icon {
+    position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
+    color: #64748b; font-size: .95rem; pointer-events: none;
+}
+.browse-hero__search .s-btn {
+    position: absolute; right: .45rem; top: 50%; transform: translateY(-50%);
+    background: #2563eb; color: #fff; border: none; border-radius: 7px;
+    padding: .34rem .9rem; font-size: .78rem; font-weight: 600; cursor: pointer;
+    transition: background .15s;
+}
+.browse-hero__search .s-btn:hover { background: #1d4ed8; }
+
+/* ═══════════════════════════════════════
+   ACTIVE FILTER CHIPS
+═══════════════════════════════════════ */
+.active-chips {
+    display: flex; flex-wrap: wrap; gap: .45rem;
+    align-items: center; padding: .85rem 0 .1rem;
+}
+.chip-label { font-size: .72rem; color: #64748b; font-weight: 500; }
+.active-chip {
+    display: inline-flex; align-items: center; gap: .32rem;
+    background: #eff6ff; border: 1.5px solid #bfdbfe;
+    color: #1e40af; border-radius: 999px;
+    padding: .22rem .65rem; font-size: .74rem; font-weight: 600;
+    text-decoration: none; transition: background .12s;
+}
+.active-chip:hover { background: #dbeafe; color: #1e3a8a; }
+.active-chip i { font-size: .62rem; opacity: .7; }
+.clear-all-chip {
+    display: inline-flex; align-items: center; gap: .32rem;
+    background: #fef2f2; border: 1.5px solid #fecaca;
+    color: #dc2626; border-radius: 999px;
+    padding: .22rem .65rem; font-size: .74rem; font-weight: 600;
+    text-decoration: none; transition: background .12s;
+}
+.clear-all-chip:hover { background: #fee2e2; color: #b91c1c; }
+
+/* ═══════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════ */
+.browse-layout {
+    display: flex; gap: 1.5rem;
+    align-items: flex-start;
+    padding-top: 1.4rem; padding-bottom: 3rem;
+}
+
+/* ═══════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════ */
+.filter-panel { width: 245px; flex-shrink: 0; position: sticky; top: 72px; }
+.filter-panel__card {
+    background: #fff; border: 1.5px solid #e8edf4;
+    border-radius: 14px; overflow: hidden;
+}
+.filter-panel__head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .9rem 1.1rem; border-bottom: 1px solid #f1f5f9;
+}
+.filter-panel__head-title {
+    font-size: .8rem; font-weight: 700; color: #0f172a;
+    display: flex; align-items: center; gap: .4rem;
+}
+.filter-panel__head-title i { color: #2563eb; }
+.filter-panel__clear { font-size: .72rem; color: #94a3b8; text-decoration: none; transition: color .12s; }
+.filter-panel__clear:hover { color: #ef4444; }
+.filter-section { padding: .75rem 1.1rem .65rem; border-bottom: 1px solid #f1f5f9; }
+.filter-section:last-of-type { border-bottom: none; padding-bottom: .9rem; }
+.filter-label {
+    font-size: .67rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .07em; color: #94a3b8; display: block; margin-bottom: .4rem;
+}
+.filter-label.active { color: #2563eb; }
+.f-select {
+    width: 100%;
+    background: #f8fafc url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") no-repeat right .55rem center/11px;
+    border: 1.5px solid #e2e8f0; border-radius: 8px;
+    padding: .4rem .65rem; font-size: .82rem; color: #0f172a;
+    appearance: none; -webkit-appearance: none; cursor: pointer;
+    transition: border-color .12s; padding-right: 1.75rem;
+}
+.f-select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.09); }
+.f-select.has-value { border-color: #93c5fd; background-color: #eff6ff; color: #1e40af; font-weight: 600; }
+.year-row { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+.filter-panel__apply {
+    display: block; width: calc(100% - 2.2rem); margin: .8rem 1.1rem;
+    background: #0f172a; color: #fff; border: none; border-radius: 9px;
+    padding: .58rem; font-size: .84rem; font-weight: 700;
+    cursor: pointer; transition: background .15s; letter-spacing: .01em;
+}
+.filter-panel__apply:hover { background: #1e293b; }
+
+/* ═══════════════════════════════════════
+   RESULTS HEADER
+═══════════════════════════════════════ */
+.results-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1rem; flex-wrap: wrap; gap: .6rem;
+}
+.results-count { font-size: .9rem; font-weight: 700; color: #0f172a; }
+.results-count span { color: #64748b; font-weight: 400; font-size: .82rem; }
+.sort-wrap { display: flex; align-items: center; gap: .5rem; }
+.sort-wrap label { font-size: .78rem; color: #94a3b8; white-space: nowrap; }
+.f-sort {
+    background: #fff url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") no-repeat right .55rem center/11px;
+    border: 1.5px solid #e2e8f0; border-radius: 8px;
+    padding: .38rem .65rem; padding-right: 1.75rem;
+    font-size: .82rem; color: #0f172a;
+    appearance: none; -webkit-appearance: none; cursor: pointer;
+    transition: border-color .12s;
+}
+.f-sort:focus { outline: none; border-color: #2563eb; }
+
+/* ═══════════════════════════════════════
+   VEHICLE CARDS
+═══════════════════════════════════════ */
+.vc {
+    border-radius: 13px; overflow: hidden;
+    border: 1.5px solid #f0f4f8;
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s;
+    background: #fff;
+}
+.vc:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(15,23,42,.1); border-color: #dde5ef; }
+.vc__img-wrap { position: relative; overflow: hidden; }
+.vc__img { height: 185px; object-fit: cover; width: 100%; display: block; transition: transform .3s ease; }
+.vc:hover .vc__img { transform: scale(1.03); }
+.vc__img-placeholder {
+    height: 185px; background: #f8fafc;
+    display: flex; align-items: center; justify-content: center;
+}
+.vc__badge {
+    position: absolute; top: 9px; left: 9px;
+    font-size: .62rem; font-weight: 800; border-radius: 5px;
+    padding: .18rem .5rem; letter-spacing: .04em; text-transform: uppercase;
+}
+.vc__heart {
+    position: absolute; top: 8px; right: 8px; z-index: 5;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(255,255,255,.93); border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 1px 5px rgba(0,0,0,.14);
+    transition: background .12s, transform .12s;
+}
+.vc__heart:hover { background: #fff; transform: scale(1.15); }
+.vc__heart-icon { font-size: .77rem; color: #94a3b8; }
+.vc__heart-icon--saved { font-size: .77rem; color: #ef4444; }
+.vc__body { padding: .85rem 1rem .9rem; }
+.vc__title { font-size: .88rem; font-weight: 800; color: #0f172a; margin-bottom: .06rem; line-height: 1.25; }
+.vc__variant { font-size: .74rem; color: #94a3b8; margin-bottom: 0; }
+.vc__price { font-size: 1.02rem; font-weight: 900; color: #0f172a; white-space: nowrap; }
+.vc__pills { display: flex; flex-wrap: wrap; gap: .28rem; }
+.vc__pill {
+    display: inline-flex; align-items: center; gap: .25rem;
+    background: #f8fafc; border: 1px solid #e8edf4; border-radius: 999px;
+    padding: .15rem .48rem; font-size: .68rem; color: #475569;
+}
+.vc__pill i { font-size: .62rem; color: #94a3b8; }
+.vc__loc { font-size: .71rem; color: #94a3b8; }
+.vc__loc i { color: #cbd5e1; }
+.vc__divider { border-top: 1px solid #f1f5f9; margin: .55rem 0 .5rem; }
+
+/* ═══════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════ */
+.browse-empty {
+    text-align: center; padding: 5rem 2rem;
+    background: #fff; border-radius: 14px; border: 1.5px solid #f0f4f8;
+}
+.browse-empty__icon {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: #f1f5f9; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.25rem;
+}
+.browse-empty__icon i { font-size: 1.8rem; color: #94a3b8; }
+
+/* ═══════════════════════════════════════
+   MOBILE
+═══════════════════════════════════════ */
+.mobile-filter-btn {
+    display: none; width: 100%;
+    background: #fff; border: 1.5px solid #e2e8f0; border-radius: 9px;
+    padding: .55rem 1rem; font-size: .84rem; font-weight: 600; color: #0f172a;
+    align-items: center; gap: .5rem; cursor: pointer; margin-bottom: .75rem;
+    transition: border-color .12s;
+}
+.mobile-filter-btn i { color: #2563eb; }
+.mobile-filter-btn:hover { border-color: #93c5fd; }
+
+@media (max-width: 767px) {
+    .browse-layout { flex-direction: column; gap: .5rem; padding-top: .75rem; }
+    .filter-panel { width: 100%; position: static; }
+    .mobile-filter-btn { display: flex; }
+    .filter-panel__card { display: none; }
+    .filter-panel__card.open { display: block; }
+    .browse-hero__title { font-size: 1.35rem; }
+    .browse-hero { padding: 1.5rem 0 1.5rem; }
+    .vc__img, .vc__img-placeholder { height: 148px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero banner ── -->
+<section class="browse-hero">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3">
+            <div>
+                <h1 class="browse-hero__title">Browse All Cars</h1>
+                <p class="browse-hero__sub">
+                    {% if total %}<strong style="color:#e2e8f0;">{{ total }}</strong> vehicle{{ total|pluralize }} available
+                    {% else %}Search and filter from our full inventory{% endif %}
+                </p>
+            </div>
+            <form method="get" action="{% url 'browse' %}" class="browse-hero__search">
+                {% if fuel %}<input type="hidden" name="fuel" value="{{ fuel }}">{% endif %}
+                {% if transmission %}<input type="hidden" name="transmission" value="{{ transmission }}">{% endif %}
+                {% if year_from %}<input type="hidden" name="year_from" value="{{ year_from }}">{% endif %}
+                {% if year_to %}<input type="hidden" name="year_to" value="{{ year_to }}">{% endif %}
+                {% if badge %}<input type="hidden" name="badge" value="{{ badge }}">{% endif %}
+                {% if sort and sort != '-created_at' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+                <i class="bi bi-search s-icon"></i>
+                <input type="text" name="q" value="{{ q }}" placeholder="Make, model, keyword&hellip;" autocomplete="off">
+                <button type="submit" class="s-btn">Search</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+
+    <!-- ── Active filter chips ── -->
+    {% if q or fuel or transmission or year_from or year_to or badge %}
+    <div class="active-chips">
+        <span class="chip-label">Filters:</span>
+        {% if q %}<a href="{% url 'browse' %}?{% if fuel %}fuel={{ fuel }}&{% endif %}{% if transmission %}transmission={{ transmission }}&{% endif %}{% if year_from %}year_from={{ year_from }}&{% endif %}{% if year_to %}year_to={{ year_to }}&{% endif %}{% if badge %}badge={{ badge }}&{% endif %}{% if sort and sort != '-created_at' %}sort={{ sort }}{% endif %}" class="active-chip"><i class="bi bi-x-lg"></i>"{{ q }}"</a>{% endif %}
+        {% if fuel %}<a href="{% url 'browse' %}?{% if q %}q={{ q }}&{% endif %}{% if transmission %}transmission={{ transmission }}&{% endif %}{% if year_from %}year_from={{ year_from }}&{% endif %}{% if year_to %}year_to={{ year_to }}&{% endif %}{% if badge %}badge={{ badge }}&{% endif %}{% if sort and sort != '-created_at' %}sort={{ sort }}{% endif %}" class="active-chip"><i class="bi bi-x-lg"></i>{{ fuel }}</a>{% endif %}
+        {% if transmission %}<a href="{% url 'browse' %}?{% if q %}q={{ q }}&{% endif %}{% if fuel %}fuel={{ fuel }}&{% endif %}{% if year_from %}year_from={{ year_from }}&{% endif %}{% if year_to %}year_to={{ year_to }}&{% endif %}{% if badge %}badge={{ badge }}&{% endif %}{% if sort and sort != '-created_at' %}sort={{ sort }}{% endif %}" class="active-chip"><i class="bi bi-x-lg"></i>{{ transmission }}</a>{% endif %}
+        {% if year_from %}<a href="{% url 'browse' %}?{% if q %}q={{ q }}&{% endif %}{% if fuel %}fuel={{ fuel }}&{% endif %}{% if transmission %}transmission={{ transmission }}&{% endif %}{% if year_to %}year_to={{ year_to }}&{% endif %}{% if badge %}badge={{ badge }}&{% endif %}{% if sort and sort != '-created_at' %}sort={{ sort }}{% endif %}" class="active-chip"><i class="bi bi-x-lg"></i>From {{ year_from }}</a>{% endif %}
+        {% if year_to %}<a href="{% url 'browse' %}?{% if q %}q={{ q }}&{% endif %}{% if fuel %}fuel={{ fuel }}&{% endif %}{% if transmission %}transmission={{ transmission }}&{% endif %}{% if year_from %}year_from={{ year_from }}&{% endif %}{% if badge %}badge={{ badge }}&{% endif %}{% if sort and sort != '-created_at' %}sort={{ sort }}{% endif %}" class="active-chip"><i class="bi bi-x-lg"></i>To {{ year_to }}</a>{% endif %}
+        {% if badge %}<a href="{% url 'browse' %}?{% if q %}q={{ q }}&{% endif %}{% if fuel %}fuel={{ fuel }}&{% endif %}{% if transmission %}transmission={{ transmission }}&{% endif %}{% if year_from %}year_from={{ year_from }}&{% endif %}{% if year_to %}year_to={{ year_to }}&{% endif %}{% if sort and sort != '-created_at' %}sort={{ sort }}{% endif %}" class="active-chip"><i class="bi bi-x-lg"></i>{{ badge }}</a>{% endif %}
+        <a href="{% url 'browse' %}{% if sort and sort != '-created_at' %}?sort={{ sort }}{% endif %}" class="clear-all-chip"><i class="bi bi-x-circle"></i>Clear all</a>
+    </div>
+    {% endif %}
+
+    <div class="browse-layout">
+
+        <!-- ── Filter sidebar ── -->
+        <aside class="filter-panel">
+            <button class="mobile-filter-btn" type="button" onclick="document.querySelector('.filter-panel__card').classList.toggle('open')">
+                <i class="bi bi-sliders"></i>
+                Filters
+                {% if q or fuel or transmission or year_from or year_to or badge %}<span class="badge bg-primary rounded-pill ms-auto" style="font-size:.62rem; padding:.25rem .55rem;">On</span>{% endif %}
+            </button>
+
+            <div class="filter-panel__card">
+                <div class="filter-panel__head">
+                    <span class="filter-panel__head-title"><i class="bi bi-sliders"></i> Filters</span>
+                    {% if q or fuel or transmission or year_from or year_to or badge %}<a href="{% url 'browse' %}" class="filter-panel__clear">Clear all</a>{% endif %}
+                </div>
+
+                <form method="get" action="{% url 'browse' %}">
+                    {% if sort and sort != '-created_at' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+                    {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+
+                    <div class="filter-section">
+                        <label class="filter-label{% if fuel %} active{% endif %}">Fuel Type</label>
+                        <select name="fuel" class="f-select{% if fuel %} has-value{% endif %}">
+                            <option value="">Any fuel type</option>
+                            {% for f in fuels %}<option value="{{ f }}" {% if fuel == f %}selected{% endif %}>{{ f }}</option>{% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-section">
+                        <label class="filter-label{% if transmission %} active{% endif %}">Transmission</label>
+                        <select name="transmission" class="f-select{% if transmission %} has-value{% endif %}">
+                            <option value="">Any transmission</option>
+                            {% for t in transmissions %}<option value="{{ t }}" {% if transmission == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-section">
+                        <label class="filter-label{% if year_from or year_to %} active{% endif %}">Year Range</label>
+                        <div class="year-row">
+                            <select name="year_from" class="f-select{% if year_from %} has-value{% endif %}">
+                                <option value="">From</option>
+                                {% for y in years %}<option value="{{ y }}" {% if year_from == y %}selected{% endif %}>{{ y }}</option>{% endfor %}
+                            </select>
+                            <select name="year_to" class="f-select{% if year_to %} has-value{% endif %}">
+                                <option value="">To</option>
+                                {% for y in years %}<option value="{{ y }}" {% if year_to == y %}selected{% endif %}>{{ y }}</option>{% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="filter-section">
+                        <label class="filter-label{% if badge %} active{% endif %}">Deal Type</label>
+                        <select name="badge" class="f-select{% if badge %} has-value{% endif %}">
+                            <option value="">Any deal type</option>
+                            <option value="HOT DEAL" {% if badge == 'HOT DEAL' %}selected{% endif %}>Hot Deal</option>
+                            <option value="PRICE DROP" {% if badge == 'PRICE DROP' %}selected{% endif %}>Price Drop</option>
+                            <option value="ECO" {% if badge == 'ECO' %}selected{% endif %}>Eco</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="filter-panel__apply">Apply Filters</button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- ── Results ── -->
+        <div class="flex-grow-1 min-w-0">
+
+            <div class="results-header">
+                <p class="results-count mb-0">
+                    {% if total %}{{ total }} result{{ total|pluralize }}{% if q %} <span>for "{{ q }}"</span>{% endif %}
+                    {% else %}<span>No results match your filters</span>{% endif %}
+                </p>
+                <form method="get" action="{% url 'browse' %}" class="sort-wrap">
+                    {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+                    {% if fuel %}<input type="hidden" name="fuel" value="{{ fuel }}">{% endif %}
+                    {% if transmission %}<input type="hidden" name="transmission" value="{{ transmission }}">{% endif %}
+                    {% if year_from %}<input type="hidden" name="year_from" value="{{ year_from }}">{% endif %}
+                    {% if year_to %}<input type="hidden" name="year_to" value="{{ year_to }}">{% endif %}
+                    {% if badge %}<input type="hidden" name="badge" value="{{ badge }}">{% endif %}
+                    <label>Sort:</label>
+                    <select name="sort" class="f-sort" onchange="this.form.submit()">
+                        <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Newest first</option>
+                        <option value="created_at" {% if sort == 'created_at' %}selected{% endif %}>Oldest first</option>
+                        <option value="-year" {% if sort == '-year' %}selected{% endif %}>Year &#x2193;</option>
+                        <option value="year" {% if sort == 'year' %}selected{% endif %}>Year &#x2191;</option>
+                        <option value="title" {% if sort == 'title' %}selected{% endif %}>Name A&#x2013;Z</option>
+                    </select>
+                </form>
+            </div>
+
+            {% if vehicles %}
+            <div class="row g-3">
+                {% for car in vehicles %}
+                <div class="col-6 col-lg-4">
+                    <div class="vc h-100 position-relative">
+
+                        <button type="button" class="vc__heart"
+                            title="{% if car.pk in saved_pks %}Remove from saved{% else %}Save car{% endif %}"
+                            data-saved="{% if car.pk in saved_pks %}1{% else %}0{% endif %}"
+                            data-url="{% url 'save_vehicle' car.pk %}"
+                            onclick="toggleSaveCard(this)">
+                            <i class="bi {% if car.pk in saved_pks %}bi-heart-fill vc__heart-icon--saved{% else %}bi-heart vc__heart-icon{% endif %}"></i>
+                        </button>
+
+                        <a href="{% url 'vehicle_detail' car.pk %}" class="text-decoration-none d-flex flex-column h-100">
+                            <div class="vc__img-wrap">
+                                {% if car.get_image %}
+                                <img src="{{ car.get_image }}" class="vc__img" alt="{{ car.title }}" loading="lazy">
+                                {% else %}
+                                <div class="vc__img-placeholder">
+                                    <i class="bi bi-car-front text-muted" style="font-size:2.5rem;"></i>
+                                </div>
+                                {% endif %}
+                                {% if car.badge %}<span class="vc__badge {{ car.get_badge_class }}">{{ car.badge }}</span>{% endif %}
+                            </div>
+                            <div class="vc__body d-flex flex-column flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start gap-1 mb-1">
+                                    <div class="min-w-0">
+                                        <p class="vc__title text-truncate mb-0">{{ car.title }}</p>
+                                        <p class="vc__variant text-truncate mb-0">{{ car.variant }}</p>
+                                    </div>
+                                    <span class="vc__price flex-shrink-0 ms-1">{{ car.price }}</span>
+                                </div>
+                                <div class="vc__divider"></div>
+                                <div class="vc__pills mt-auto">
+                                    {% if car.year %}<span class="vc__pill"><i class="bi bi-calendar3"></i>{{ car.year }}</span>{% endif %}
+                                    {% if car.mileage %}<span class="vc__pill"><i class="bi bi-speedometer2"></i>{{ car.mileage }}</span>{% endif %}
+                                    {% if car.fuel %}<span class="vc__pill"><i class="bi bi-fuel-pump"></i>{{ car.fuel }}</span>{% endif %}
+                                    {% if car.transmission %}<span class="vc__pill"><i class="bi bi-gear"></i>{{ car.transmission }}</span>{% endif %}
+                                </div>
+                                {% if car.location %}<p class="vc__loc mt-2 mb-0"><i class="bi bi-geo-alt me-1"></i>{{ car.location }}</p>{% endif %}
+                            </div>
+                        </a>
+
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <div class="browse-empty">
+                <div class="browse-empty__icon"><i class="bi bi-car-front"></i></div>
+                <h5 class="fw-bold mb-1" style="color:#0f172a;">No cars found</h5>
+                <p class="text-muted small mb-3">Try removing a filter or broadening your search.</p>
+                <a href="{% url 'browse' %}" class="btn btn-primary btn-sm px-4">Clear all filters</a>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
