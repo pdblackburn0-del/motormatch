@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Login Activity - Motor Match{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:680px;">
+
+    <div class="d-flex align-items-center mb-4 gap-2">
+        <a href="{% url 'notifications' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="fw-bold mb-0">Login Activity</h2>
+            <p class="text-muted small mb-0">Details about a sign-in to your account.</p>
+        </div>
+    </div>
+
+    {% if event.is_confirmed %}
+    <div class="alert alert-success d-flex align-items-center gap-2 mb-4" role="alert">
+        <i class="bi bi-check-circle-fill fs-5"></i>
+        <span>You've confirmed this login was you.</span>
+    </div>
+    {% else %}
+    <div class="alert alert-warning d-flex align-items-center gap-2 mb-4" role="alert">
+        <i class="bi bi-shield-exclamation fs-5"></i>
+        <span>We detected a new login to your account. Please confirm whether this was you.</span>
+    </div>
+    {% endif %}
+
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body p-4">
+            <div class="row g-4">
+
+                <div class="col-6">
+                    <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:.05em;">IP Address</p>
+                    <p class="fw-semibold mb-0">
+                        <i class="bi bi-globe2 text-primary me-1"></i>
+                        {{ event.ip_address }}
+                        {% if event.is_local %}<span class="badge bg-secondary ms-1">local</span>{% endif %}
+                    </p>
+                </div>
+
+                <div class="col-6">
+                    <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:.05em;">Date &amp; Time</p>
+                    <p class="fw-semibold mb-0">
+                        <i class="bi bi-clock text-primary me-1"></i>
+                        {{ event.created_at|date:"D d M Y, H:i" }}
+                    </p>
+                </div>
+
+                {% if not event.is_local %}
+                <div class="col-6">
+                    <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:.05em;">Location</p>
+                    <p class="fw-semibold mb-0">
+                        <i class="bi bi-pin-map text-primary me-1"></i>
+                        {% if event.city or event.region or event.country %}
+                            {{ event.location_string }}
+                            {% if event.country_code %}
+                            <img src="https://flagcdn.com/20x15/{{ event.country_code|lower }}.png"
+                                 alt="{{ event.country }}" class="ms-1" style="vertical-align:middle;">
+                            {% endif %}
+                        {% else %}
+                            Unknown location
+                        {% endif %}
+                    </p>
+                </div>
+
+                {% if event.isp %}
+                <div class="col-6">
+                    <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:.05em;">Network / ISP</p>
+                    <p class="fw-semibold mb-0">
+                        <i class="bi bi-router text-primary me-1"></i>
+                        {{ event.isp }}
+                    </p>
+                </div>
+                {% endif %}
+                {% endif %}
+
+                {% if event.user_agent %}
+                <div class="col-12">
+                    <p class="text-muted small mb-1 text-uppercase fw-semibold" style="letter-spacing:.05em;">Device / Browser</p>
+                    <p class="fw-semibold mb-0" style="word-break:break-word; font-size:.9rem;">
+                        <i class="bi bi-laptop text-primary me-1"></i>
+                        {{ event.user_agent|truncatechars:120 }}
+                    </p>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+    {% if not event.is_confirmed %}
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-1">Was this you?</h5>
+            <p class="text-muted small mb-4">
+                If you recognise this login, confirm it below. If you don't, secure your account immediately by changing your password.
+            </p>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <form method="post" action="{% url 'confirm_login_event' event.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-check-lg me-1"></i> Yes, that was me
+                    </button>
+                </form>
+
+                <a href="{% url 'account_change_password' %}" class="btn btn-danger px-4">
+                    <i class="bi bi-lock-fill me-1"></i> No — change my password
+                </a>
+            </div>
+
+            <div class="mt-4 p-3 bg-light rounded-2 border" style="font-size:.85rem;">
+                <p class="fw-semibold mb-1"><i class="bi bi-info-circle me-1 text-primary"></i>If this wasn't you:</p>
+                <ul class="mb-0 ps-3 text-muted">
+                    <li>Change your password immediately using the button above.</li>
+                    <li>Sign out of all other sessions from your profile settings.</li>
+                    <li>Check your email address hasn't been changed.</li>
+                    <li>Contact support if you believe your account has been compromised.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-3">
+        <a href="{% url 'dashboard' %}" class="btn btn-primary px-4">
+            <i class="bi bi-grid-1x2 me-1"></i> Back to Dashboard
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

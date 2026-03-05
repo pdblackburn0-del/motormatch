@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .forms import ProfileForm, SellForm
-from .models import Bid, Message, Notification, Review, SavedVehicle, UserProfile, Vehicle
+from .models import Bid, LoginEvent, Message, Notification, Review, SavedVehicle, UserProfile, Vehicle
 
 
 def index(request):
@@ -64,36 +64,42 @@ def vehicle_detail(request, pk):
         and SavedVehicle.objects.filter(user=request.user, vehicle=car).exists()
     )
 
+    seller_reviews = []
+    seller_avg     = None
+    if car.owner:
+        seller_reviews = car.owner.reviews_received.select_related('reviewer__profile').all()
+        prof = getattr(car.owner, 'profile', None)
+        seller_avg = prof.average_rating() if prof else None
+
+    user_already_reviewed = (
+        request.user.is_authenticated and car.owner
+        and car.owner.reviews_received.filter(reviewer=request.user).exists()
+    )
+
     return render(request, 'vehicle_detail.html', {
         'car': car,
         'is_saved': is_saved,
+        'seller_reviews': seller_reviews,
+        'seller_avg': seller_avg,
+        'user_already_reviewed': user_already_reviewed,
     })
 
 
 def comparison(request):
-    car1_specs = [
-        {'label': 'Engine/Motor', 'icon': 'bi bi-cpu', 'value': 'Electric Dual Motor'},
-        {'label': 'Mileage', 'icon': 'bi bi-speedometer2', 'value': '24,000 mi'},
-        {'label': 'Fuel Type', 'icon': 'bi bi-fuel-pump', 'value': 'Electric'},
-        {'label': 'Transmission', 'icon': 'bi bi-gear', 'value': '1-Speed Auto'},
-        {'label': 'Drivetrain', 'icon': 'bi bi-arrows-move', 'value': 'AWD'},
-        {'label': 'Horsepower', 'icon': 'bi bi-lightning-charge', 'value': '450 hp'},
-        {'label': 'Seating', 'icon': 'bi bi-person', 'value': '5 Passengers'},
-    ]
+    car1_id = request.GET.get('car1')
+    car2_id = request.GET.get('car2')
 
-    car2_specs = [
-        {'label': 'Engine/Motor', 'icon': 'bi bi-cpu', 'value': '2.0L Turbo Inline-4'},
-        {'label': 'Mileage', 'icon': 'bi bi-speedometer2', 'value': '15,000 mi'},
-        {'label': 'Fuel Type', 'icon': 'bi bi-fuel-pump', 'value': 'Hybrid'},
-        {'label': 'Transmission', 'icon': 'bi bi-gear', 'value': '7-Speed Auto'},
-        {'label': 'Drivetrain', 'icon': 'bi bi-arrows-move', 'value': 'AWD'},
-        {'label': 'Horsepower', 'icon': 'bi bi-lightning-charge', 'value': '261 hp'},
-        {'label': 'Seating', 'icon': 'bi bi-person', 'value': '5 Passengers'},
-    ]
+    all_vehicles = Vehicle.objects.all().order_by('title')
+    car1 = Vehicle.objects.filter(pk=car1_id).first() if car1_id else None
+    car2 = Vehicle.objects.filter(pk=car2_id).first() if car2_id else None
+
+    cars = [c for c in (car1, car2) if c]
 
     return render(request, 'comparison.html', {
-        'car1_specs': car1_specs,
-        'car2_specs': car2_specs,
+        'all_vehicles': all_vehicles,
+        'car1': car1,
+        'car2': car2,
+        'cars': cars,
     })
 
 
@@ -187,14 +193,9 @@ def profile(request):
     return render(request, 'profile.html', {'form': form, 'profile': prof})
 
 
-# ---------------------------------------------------------------------------
-# Notifications
-# ---------------------------------------------------------------------------
-
 @login_required
 def notifications_list(request):
     notifs = Notification.objects.filter(user=request.user).order_by('-created_at')
-    # Mark all as read on page visit
     notifs.filter(is_read=False).update(is_read=True)
     return render(request, 'notifications.html', {'notifications': notifs})
 
@@ -208,14 +209,20 @@ def mark_notification_read(request, pk):
     return JsonResponse({'ok': True})
 
 
-# ---------------------------------------------------------------------------
-# Reviews
-# ---------------------------------------------------------------------------
-
 @login_required
 @require_POST
 def add_review(request, pk):
     vehicle = get_object_or_404(Vehicle, pk=pk)
+    seller  = vehicle.owner
+
+    if not seller:
+        messages.error(request, 'This listing has no seller to review.')
+        return redirect('vehicle_detail', pk=pk)
+
+    if seller == request.user:
+        messages.error(request, "You can't review your own listing.")
+        return redirect('vehicle_detail', pk=pk)
+
     rating  = request.POST.get('rating')
     comment = request.POST.get('comment', '').strip()
 
@@ -223,33 +230,39 @@ def add_review(request, pk):
         messages.error(request, 'Please select a rating between 1 and 5.')
         return redirect('vehicle_detail', pk=pk)
 
-    Review.objects.update_or_create(
-        vehicle=vehicle,
+    _, created = Review.objects.update_or_create(
+        reviewed_user=seller,
         reviewer=request.user,
         defaults={'rating': int(rating), 'comment': comment},
     )
+
+    reviewer_name = request.user.profile.get_display_name() if hasattr(request.user, 'profile') else request.user.email.split('@')[0]
+    verb = 'left' if created else 'updated'
+    Notification.objects.create(
+        user=seller,
+        title='New review on your profile',
+        message=f'{reviewer_name} {verb} you a {rating}★ review.',
+        notif_type=Notification.TYPE_SUCCESS if int(rating) >= 4 else Notification.TYPE_INFO,
+        url=f'/vehicle/{pk}/',
+    )
+
     messages.success(request, 'Review submitted!')
     return redirect('vehicle_detail', pk=pk)
 
-
-# ---------------------------------------------------------------------------
-# Messaging
-# ---------------------------------------------------------------------------
 
 @login_required
 def inbox(request):
     received = Message.objects.filter(recipient=request.user).select_related('sender', 'vehicle').order_by('-created_at')
     sent     = Message.objects.filter(sender=request.user).select_related('recipient', 'vehicle').order_by('-created_at')
-    # Mark received as read on open
     received.filter(is_read=False).update(is_read=True)
     return render(request, 'inbox.html', {'received': received, 'sent': sent})
 
 
 @login_required
 @require_POST
-def send_message(request):
+def send_message(request, pk=None):
     recipient_id = request.POST.get('recipient_id')
-    vehicle_id   = request.POST.get('vehicle_id')
+    vehicle_id   = request.POST.get('vehicle_id') or pk
     subject      = request.POST.get('subject', '').strip()
     body         = request.POST.get('body', '').strip()
 
@@ -263,7 +276,9 @@ def send_message(request):
     recipient = get_object_or_404(User, pk=recipient_id)
     vehicle   = Vehicle.objects.filter(pk=vehicle_id).first() if vehicle_id else None
 
-    msg = Message.objects.create(
+    sender_name = request.user.profile.get_display_name() if hasattr(request.user, 'profile') else request.user.email.split('@')[0]
+
+    Message.objects.create(
         sender=request.user,
         recipient=recipient,
         vehicle=vehicle,
@@ -271,22 +286,17 @@ def send_message(request):
         body=body,
     )
 
-    # Notify recipient
     Notification.objects.create(
         user=recipient,
         title='New message',
-        message=f'{request.user.email} sent you a message{": " + vehicle.title if vehicle else ""}.',
+        message=f'{sender_name} sent you a message{": " + vehicle.title if vehicle else ""}.',
         notif_type='info',
-        url=f'/inbox/',
+        url='/inbox/',
     )
 
     messages.success(request, 'Message sent!')
     return redirect(request.META.get('HTTP_REFERER', 'home'))
 
-
-# ---------------------------------------------------------------------------
-# Bids
-# ---------------------------------------------------------------------------
 
 @login_required
 @require_POST
@@ -308,12 +318,12 @@ def place_bid(request, pk):
         defaults={'amount': amount_dec, 'note': note, 'status': 'pending'},
     )
 
-    # Notify the seller
     if vehicle.owner:
+        bidder_name = request.user.profile.get_display_name() if hasattr(request.user, 'profile') else request.user.email.split('@')[0]
         Notification.objects.create(
             user=vehicle.owner,
             title='New bid on your listing',
-            message=f'{request.user.email} placed a bid of £{amount_dec:,.0f} on {vehicle.title}.',
+            message=f'{bidder_name} placed a bid of £{amount_dec:,.0f} on {vehicle.title}.',
             notif_type='success',
             url=f'/vehicle/{vehicle.pk}/',
         )
@@ -326,7 +336,7 @@ def place_bid(request, pk):
 @require_POST
 def respond_bid(request, pk):
     bid    = get_object_or_404(Bid, pk=pk, vehicle__owner=request.user)
-    action = request.POST.get('action')  # 'accept' | 'decline' | 'counter'
+    action = request.POST.get('action')
 
     if action not in ('accept', 'decline', 'counter'):
         messages.error(request, 'Invalid action.')
@@ -421,3 +431,28 @@ def dvla_lookup(request):
         'fuel': fuel, 'transmission': trans,
         'colour': colour, 'mileage': mileage, 'reg': reg,
     })
+
+
+@login_required
+def login_event_detail(request, pk):
+    event = get_object_or_404(LoginEvent, pk=pk, user=request.user)
+    return render(request, 'login_event.html', {'event': event})
+
+
+@login_required
+@require_POST
+def delete_vehicle(request, pk):
+    vehicle = get_object_or_404(Vehicle, pk=pk, owner=request.user)
+    vehicle.delete()
+    messages.success(request, 'Listing removed successfully.')
+    return redirect('dashboard')
+
+
+@login_required
+@require_POST
+def confirm_login_event(request, pk):
+    event = get_object_or_404(LoginEvent, pk=pk, user=request.user)
+    event.is_confirmed = True
+    event.save(update_fields=['is_confirmed'])
+    messages.success(request, 'Login confirmed. Stay safe!')
+    return redirect('dashboard')

@@ -8,6 +8,7 @@ urlpatterns = [
     path('vehicle/<int:pk>/bid/', views.place_bid, name='place_bid'),
     path('vehicle/<int:pk>/review/', views.add_review, name='add_review'),
     path('vehicle/<int:pk>/message/', views.send_message, name='send_message'),
+    path('vehicle/<int:pk>/delete/', views.delete_vehicle, name='delete_vehicle'),
     path('compare/', views.comparison, name='comparison'),
     path('saved/', views.saved, name='saved'),
     path('sell/', views.sell, name='sell'),
@@ -21,5 +22,7 @@ urlpatterns = [
     path('inbox/', views.inbox, name='inbox'),
     path('messages/send/', views.send_message, name='send_message_direct'),
     path('bids/<int:pk>/respond/', views.respond_bid, name='respond_bid'),
+    path('security/login/<int:pk>/', views.login_event_detail, name='login_event_detail'),
+    path('security/login/<int:pk>/confirm/', views.confirm_login_event, name='confirm_login_event'),
     path('api/dvla/', views.dvla_lookup, name='dvla_lookup'),
 ]
