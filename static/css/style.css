@@ -547,5 +547,5 @@ footer a:hover {
 .bid-avatar--other { background: #4f46e5; }
 
 /* ── Dynamic colour helpers (CSS custom property --c set inline) ── */
-.offer-avatar { width: 34px; height: 34px; font-size: .75rem; background: var(--c); }
-.dyn-badge    { font-size: .72rem; background: var(--c); color: #fff; }
+.offer-avatar { width: 34px; height: 34px; font-size: .75rem; }
+.dyn-badge    { font-size: .72rem; color: #fff; }

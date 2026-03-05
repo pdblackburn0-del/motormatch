@@ -55,7 +55,7 @@
             <div class="card border-0 shadow-sm mb-2 p-3 {% if offer.selected %}border-start border-3 border-primary{% endif %}" style="cursor:pointer; border-radius:10px;">
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0 offer-avatar"
-                             style="--c:{{ offer.color }}">{{ offer.initials }}</div>
+                             data-bg="{{ offer.color }}">{{ offer.initials }}</div>
                     <div class="flex-grow-1">
                         <p class="fw-semibold mb-0 small">{{ offer.name }}</p>
                         <p class="text-muted mb-0" style="font-size:.72rem;">{{ offer.time }}</p>

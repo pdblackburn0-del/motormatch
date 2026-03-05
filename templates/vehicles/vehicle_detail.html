@@ -168,7 +168,7 @@
                             {% endif %}
                         </div>
                         {% if seller_badge_info %}
-                        <span class="badge dyn-badge" style="--c:{{ seller_badge_info.2 }}">{{ seller_badge_info.0 }}</span>
+                        <span class="badge dyn-badge" data-bg="{{ seller_badge_info.2 }}">{{ seller_badge_info.0 }}</span>
                         {% else %}
                         <span class="badge text-success border border-success bg-white" style="font-size:.72rem;">Member</span>
                         {% endif %}
@@ -393,6 +393,7 @@
     font-size: 1rem;
     background: linear-gradient(90deg, #f59e0b calc(var(--stars,5)/5*100%), #d1d5db calc(var(--stars,5)/5*100%));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 .star-rating[data-stars="1"]  { --stars: 1; }

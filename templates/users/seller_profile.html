@@ -27,7 +27,7 @@
                 {% if seller_profile %}
                     {% with bi=seller_profile.get_badge_info %}
                     {% if bi %}
-                    <span class="badge mb-1 dyn-badge" style="--c:{{ bi.2 }}">{{ bi.0 }}</span>
+                    <span class="badge mb-1 dyn-badge" data-bg="{{ bi.2 }}">{{ bi.0 }}</span>
                     {% else %}
                     <span class="badge mb-1 text-success border border-success bg-white" style="font-size:.72rem;">Member</span>
                     {% endif %}
