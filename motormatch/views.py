@@ -167,7 +167,7 @@ def dashboard(request):
 def saved(request):
     saved_records = SavedVehicle.objects.filter(user=request.user).select_related('vehicle').order_by('-saved_at')
 
-    return render(request, 'saved.html', {
+    return render(request, 'vehicles/saved.html', {
         'saved_records': saved_records
     })
 
