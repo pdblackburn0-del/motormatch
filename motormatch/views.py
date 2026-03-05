@@ -76,12 +76,25 @@ def vehicle_detail(request, pk):
         and car.owner.reviews_received.filter(reviewer=request.user).exists()
     )
 
+    car_bids = (
+        car.bids
+        .select_related('bidder', 'bidder__profile')
+        .order_by('-amount')
+    )
+
+    user_bid = (
+        car.bids.filter(bidder=request.user).first()
+        if request.user.is_authenticated else None
+    )
+
     return render(request, 'vehicle_detail.html', {
         'car': car,
         'is_saved': is_saved,
         'seller_reviews': seller_reviews,
         'seller_avg': seller_avg,
         'user_already_reviewed': user_already_reviewed,
+        'car_bids': car_bids,
+        'user_bid': user_bid,
     })
 
 
@@ -283,28 +296,6 @@ def conversation(request, user_pk):
     _User = _gum()
     other = get_object_or_404(_User, pk=user_pk)
 
-    if request.method == 'POST':
-        body       = request.POST.get('body', '').strip()
-        vehicle_id = request.POST.get('vehicle_id')
-        if body:
-            vehicle = Vehicle.objects.filter(pk=vehicle_id).first() if vehicle_id else None
-            Message.objects.create(
-                sender=request.user,
-                recipient=other,
-                vehicle=vehicle,
-                subject='',
-                body=body,
-            )
-            sender_name = request.user.profile.get_display_name() if hasattr(request.user, 'profile') else request.user.email.split('@')[0]
-            Notification.objects.create(
-                user=other,
-                title='New message',
-                message=f'{sender_name} sent you a message.',
-                notif_type='info',
-                url=f'/inbox/{request.user.pk}/',
-            )
-        return redirect('conversation', user_pk=user_pk)
-
     thread = (
         Message.objects
         .filter(Q(sender=request.user, recipient=other) | Q(sender=other, recipient=request.user))
@@ -315,13 +306,125 @@ def conversation(request, user_pk):
 
     vehicle = next((m.vehicle for m in thread if m.vehicle), None)
     other_profile = getattr(other, 'profile', None)
+    my_initials   = request.user.profile.get_initials() if hasattr(request.user, 'profile') else request.user.email[:2].upper()
 
     return render(request, 'conversation.html', {
-        'other': other,
+        'other':         other,
         'other_profile': other_profile,
-        'thread': thread,
-        'vehicle': vehicle,
+        'thread':        thread,
+        'vehicle':       vehicle,
+        'my_initials':   my_initials,
     })
+
+
+@login_required
+@require_POST
+def send_message_ajax(request, user_pk):
+    import json as _json
+    from django.contrib.auth import get_user_model as _gum
+    _User  = _gum()
+    other  = get_object_or_404(_User, pk=user_pk)
+    body   = request.POST.get('body', '').strip()
+    vid    = request.POST.get('vehicle_id')
+    attach = request.FILES.get('attachment')
+
+    if not body and not attach:
+        return JsonResponse({'error': 'Empty message'}, status=400)
+
+    vehicle = Vehicle.objects.filter(pk=vid).first() if vid else None
+    msg = Message.objects.create(
+        sender=request.user,
+        recipient=other,
+        vehicle=vehicle,
+        subject='',
+        body=body,
+        attachment=attach or None,
+    )
+
+    sender_name = request.user.profile.get_display_name() if hasattr(request.user, 'profile') else request.user.email.split('@')[0]
+    Notification.objects.create(
+        user=other,
+        title='New message',
+        message=f'{sender_name} sent you a message.',
+        notif_type='info',
+        url=f'/inbox/{request.user.pk}/',
+    )
+
+    initials = request.user.profile.get_initials() if hasattr(request.user, 'profile') else request.user.email[:2].upper()
+    return JsonResponse({
+        'id':             msg.pk,
+        'body':           msg.body,
+        'attachment_url': msg.attachment.url if msg.attachment else None,
+        'time':           msg.created_at.strftime('%H:%M'),
+        'date':           msg.created_at.strftime('%-d %b %Y'),
+        'is_mine':        True,
+        'initials':       initials,
+        'is_read':        False,
+    })
+
+
+@login_required
+def poll_messages(request, user_pk):
+    from django.contrib.auth import get_user_model as _gum
+    from django.core.cache import cache
+    _User = _gum()
+    other    = get_object_or_404(_User, pk=user_pk)
+    after_pk = int(request.GET.get('after', 0))
+
+    new_msgs = (
+        Message.objects
+        .filter(
+            Q(sender=request.user, recipient=other) | Q(sender=other, recipient=request.user),
+            pk__gt=after_pk,
+        )
+        .select_related('sender', 'sender__profile')
+        .order_by('created_at')
+    )
+
+    new_msgs.filter(recipient=request.user, is_read=False).update(is_read=True)
+
+    read_up_to = (
+        Message.objects
+        .filter(sender=request.user, recipient=other, is_read=True)
+        .order_by('-pk')
+        .values_list('pk', flat=True)
+        .first()
+    ) or 0
+
+    typing_key = f'typing_{other.pk}_to_{request.user.pk}'
+    is_typing  = bool(cache.get(typing_key))
+
+    my_initials  = request.user.profile.get_initials() if hasattr(request.user, 'profile') else request.user.email[:2].upper()
+    other_prof   = getattr(other, 'profile', None)
+    other_init   = other_prof.get_initials() if other_prof else other.email[:2].upper()
+
+    def serialise(m):
+        is_mine = m.sender_id == request.user.pk
+        return {
+            'id':             m.pk,
+            'body':           m.body,
+            'attachment_url': m.attachment.url if m.attachment else None,
+            'time':           m.created_at.strftime('%H:%M'),
+            'date':           m.created_at.strftime('%-d %b %Y'),
+            'is_mine':        is_mine,
+            'initials':       my_initials if is_mine else other_init,
+            'is_read':        m.is_read,
+        }
+
+    return JsonResponse({
+        'messages':   [serialise(m) for m in new_msgs],
+        'typing':     is_typing,
+        'read_up_to': read_up_to,
+    })
+
+
+@login_required
+@require_POST
+def set_typing(request, user_pk):
+    from django.core.cache import cache
+    key = f'typing_{request.user.pk}_to_{user_pk}'
+    cache.set(key, True, timeout=4)
+    return JsonResponse({'ok': True})
 
 
 @login_required

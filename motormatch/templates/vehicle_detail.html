@@ -208,6 +208,67 @@
 
     </div>
 
+    <!-- Current Bids -->
+    {% if car_bids %}
+    <div class="row mt-4">
+        <div class="col-12 mb-3">
+            <h4 class="fw-bold">Current Bids <span class="badge bg-primary ms-2" style="font-size:.75rem;">{{ car_bids|length }}</span></h4>
+        </div>
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm" style="border-radius:12px; overflow:hidden;">
+                {% for bid in car_bids %}
+                <div class="d-flex align-items-center gap-3 px-4 py-3 border-bottom {% if forloop.first %}bg-success bg-opacity-10{% endif %}">
+                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+                         style="width:36px;height:36px;font-size:.78rem;background:{% if forloop.first %}#16a34a{% else %}#4f46e5{% endif %};">
+                        {% with bp=bid.bidder.profile %}{{ bp.get_initials }}{% endwith %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <p class="fw-semibold mb-0 small">
+                            {% if request.user == bid.bidder %}You{% else %}Bidder {{ forloop.counter }}{% endif %}
+                            {% if forloop.first %}<span class="badge bg-success ms-1" style="font-size:.65rem;">Highest</span>{% endif %}
+                        </p>
+                        <p class="text-muted mb-0" style="font-size:.75rem;">{{ bid.created_at|timesince }} ago</p>
+                    </div>
+                    <div class="text-end flex-shrink-0">
+                        <p class="fw-bold mb-0 {% if forloop.first %}text-success{% else %}text-dark{% endif %}" style="font-size:1.05rem;">£{{ bid.amount|floatformat:0 }}</p>
+                        {% if bid.status == 'countered' and request.user == bid.bidder %}
+                        <span class="badge bg-warning text-dark" style="font-size:.65rem;">Counter: £{{ bid.counter_amount|floatformat:0 }}</span>
+                        {% else %}
+                        <span class="badge {% if bid.status == 'accepted' %}bg-success{% elif bid.status == 'declined' %}bg-secondary{% else %}bg-light text-dark border{% endif %}" style="font-size:.65rem;">{{ bid.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if request.user.is_authenticated and car.owner != request.user %}
+            <div class="mt-3 p-3 bg-light rounded-3">
+                {% if user_bid %}
+                <p class="small text-muted mb-2">Your current bid: <strong class="text-dark">£{{ user_bid.amount|floatformat:0 }}</strong> — place a higher offer to outbid.</p>
+                {% else %}
+                <p class="small text-muted mb-2">Want to make an offer? Place a bid below.</p>
+                {% endif %}
+                <form method="post" action="{% url 'place_bid' car.pk %}" class="d-flex gap-2 align-items-end flex-wrap">
+                    {% csrf_token %}
+                    <div>
+                        <label class="form-label mb-1" style="font-size:.75rem;">Your offer</label>
+                        <div class="input-group input-group-sm" style="width:160px;">
+                            <span class="input-group-text">£</span>
+                            <input type="number" name="amount" class="form-control" placeholder="Amount" min="1" step="1" required
+                                   {% if user_bid %}value="{{ user_bid.amount|floatformat:0 }}"{% endif %}>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <label class="form-label mb-1" style="font-size:.75rem;">Note (optional)</label>
+                        <input type="text" name="note" class="form-control form-control-sm" placeholder="e.g. Can collect this week">
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm px-3 fw-semibold">{% if user_bid %}Update Bid{% else %}Place Bid{% endif %}</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Reviews Section — reviews are about the SELLER, not the vehicle -->
     <div class="row mt-5">
         <div class="col-12 mb-3">

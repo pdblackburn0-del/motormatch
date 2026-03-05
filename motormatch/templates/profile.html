@@ -104,6 +104,7 @@
                     <p class="fw-medium mb-0 small">Email Address</p>
                     <p class="text-muted mb-0" style="font-size:.8rem;">{{ request.user.email }}</p>
                 </div>
+                <a href="{% url 'account_email' %}" class="btn btn-outline-secondary btn-sm px-3">Change</a>
             </div>
             <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                 <div>

@@ -167,7 +167,8 @@ class Message(models.Model):
     recipient  = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
     vehicle    = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True, blank=True, related_name='messages')
     subject    = models.CharField(max_length=200, blank=True)
-    body       = models.TextField()
+    body       = models.TextField(blank=True)
+    attachment = models.ImageField(upload_to='message_attachments/', blank=True, null=True)
     is_read    = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
