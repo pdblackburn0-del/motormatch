@@ -7,7 +7,7 @@
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb small">
             <li class="breadcrumb-item">
-                <a href="/" class="text-decoration-none text-primary">Home</a>
+                <a href="{% url 'home' %}" class="text-decoration-none text-primary">Home</a>
             </li>
             <li class="breadcrumb-item active">Saved Vehicles</li>
         </ol>
@@ -133,7 +133,7 @@
             specs and features to make the best choice.
         </p>
         <div class="d-flex justify-content-center gap-3">
-            <a href="/compare/" class="btn btn-primary px-4"
+            <a href="{% url 'comparison' %}" class="btn btn-primary px-4"
                 >Compare Selected Vehicles <i class="bi bi-arrow-right ms-1"></i
             ></a>
             <button class="btn btn-outline-secondary px-4">
