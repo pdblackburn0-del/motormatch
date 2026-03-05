@@ -33,7 +33,7 @@
     background: #f5f6fb;
     background-image: radial-gradient(circle at 1px 1px, #e8eaf6 1px, transparent 0);
     background-size: 24px 24px;
-    padding: 20px;
+    padding: 20px 28px;
     height: calc(100vh - 300px);
     max-height: 540px;
     min-height: 300px;
@@ -46,20 +46,17 @@
 }
 
 /* Bubble wrappers */
-.bubble-wrap           { display: flex; gap: 10px; align-items: flex-end; width: 100%; }
-.bubble-wrap.mine      { flex-direction: row-reverse; }
+.bubble-wrap           { display: flex; gap: 10px; align-items: flex-end; max-width: 75%; align-self: flex-start; }
+.bubble-wrap.mine      { flex-direction: row-reverse; align-self: flex-end; }
 
-/* Column constraint – flex column so bubble shrinks to content, not col width */
+/* Column – stacks bubble + timestamp, sizes to content */
 .bubble-col {
-    max-width: min(62%, 460px);
-    width: fit-content;
     min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
 }
 .bubble-wrap.mine .bubble-col {
-    margin-left: auto;
     align-items: flex-end;
 }
 
@@ -73,8 +70,7 @@
     word-break: break-word;
     white-space: pre-line;
     display: inline-block;
-    width: fit-content;
-    max-width: min(100%, 420px);
+    max-width: 100%;
     box-sizing: border-box;
     animation: bubbleIn .18s ease-out;
 }
@@ -376,7 +372,7 @@
 /* Mobile */
 @media (max-width: 576px) {
     .chat-outer  { padding-left: 0; padding-right: 0; padding-bottom: 0; }
-    .bubble-col  { max-width: 82%; }
+    .bubble-wrap { max-width: 88%; }
     .chat-vehicle-chip { display: none; }
     .chat-header { border-radius: 0; }
     .chat-card   { border-radius: 0; }
