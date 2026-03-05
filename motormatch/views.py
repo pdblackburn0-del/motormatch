@@ -172,6 +172,13 @@ def saved(request):
     })
 
 
+@login_required
+@require_POST
+def clear_saved_vehicles(request):
+    SavedVehicle.objects.filter(user=request.user).delete()
+    return JsonResponse({'ok': True})
+
+
 def enquiry_sent(request):
     return render(request, 'enquiry_sent.html')
 

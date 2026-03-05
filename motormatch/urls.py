@@ -14,6 +14,7 @@ urlpatterns = [
     path('seller/<int:pk>/', views.seller_profile, name='seller_profile'),
     path('compare/', views.comparison, name='comparison'),
     path('saved/', views.saved, name='saved'),
+    path('saved/clear/', views.clear_saved_vehicles, name='clear_saved_vehicles'),
     path('sell/', views.sell, name='sell'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('profile/', views.profile, name='profile'),

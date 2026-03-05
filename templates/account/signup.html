@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account - Motor Match</title>
+    <title>Create Account – Motor Match</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -12,149 +12,212 @@
         html, body { height: 100%; margin: 0; }
         .auth-wrap { display: flex; min-height: 100vh; }
 
-        /* ── Left hero panel ── */
+        /* ── Left: hero panel ── */
         .auth-hero {
-            width: 46%;
+            width: 44%;
             flex-shrink: 0;
             position: relative;
-            background: url('https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1200') center/cover no-repeat;
-            display: flex;
-            flex-direction: column;
+            background: url('https://images.unsplash.com/photo-1556189250-72ba954cfc2b?w=1200') center/cover no-repeat;
         }
         .auth-hero__overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(160deg, rgba(10,18,50,.80) 0%, rgba(37,99,235,.55) 100%);
+            position: absolute; inset: 0;
+            background: linear-gradient(160deg, rgba(6,10,38,.93) 0%, rgba(15,42,120,.82) 100%);
         }
         .auth-hero__inner {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-            padding: 2.5rem;
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column; justify-content: space-between;
+            height: 100%; padding: 2.8rem 2.6rem;
         }
-        .auth-hero__logo { color: #fff; text-decoration: none; display: flex; align-items: center; gap: .5rem; font-weight: 700; font-size: 1rem; }
-        .auth-hero__logo img { height: 30px; width: auto; }
-        .auth-hero__tagline h1 { font-size: 2.4rem; font-weight: 800; line-height: 1.15; color: #fff; margin-bottom: .75rem; }
-        .auth-hero__tagline p  { color: rgba(255,255,255,.72); font-size: .95rem; line-height: 1.6; margin: 0; }
-        .auth-hero__badge {
-            display: inline-flex; align-items: center; gap: .4rem;
-            background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
-            border-radius: 999px; padding: .3rem .85rem; font-size: .78rem; color: rgba(255,255,255,.85);
-            margin-bottom: 1.5rem;
-        }
-        .auth-hero__features { list-style: none; padding: 0; margin: 1.5rem 0 0; }
-        .auth-hero__features li {
-            display: flex; align-items: center; gap: .6rem;
-            color: rgba(255,255,255,.82); font-size: .88rem; margin-bottom: .6rem;
-        }
-        .auth-hero__features li i { color: #4ade80; font-size: .9rem; flex-shrink: 0; }
 
-        /* ── Right form panel ── */
+        /* Logo */
+        .auth-hero__logo { display: flex; align-items: center; gap: .5rem; text-decoration: none; }
+        .auth-hero__logo img { height: 28px; width: auto; }
+
+        /* Mid section */
+        .auth-hero__mid {}
+        .auth-hero__badge {
+            display: inline-flex; align-items: center; gap: .38rem;
+            background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+            border-radius: 999px; padding: .28rem .9rem; font-size: .76rem;
+            color: rgba(255,255,255,.9); margin-bottom: 1.5rem;
+        }
+        .auth-hero__badge i { color: #4ade80; }
+        .auth-hero__title { font-size: 2.15rem; font-weight: 800; color: #fff; line-height: 1.18; margin-bottom: .8rem; }
+        .auth-hero__sub { color: rgba(255,255,255,.65); font-size: .88rem; line-height: 1.65; margin-bottom: 2rem; }
+
+        /* Tick list */
+        .auth-tick-list { list-style: none; padding: 0; margin: 0; }
+        .auth-tick-list li {
+            display: flex; align-items: center; gap: .7rem;
+            padding: .6rem 0; border-bottom: 1px solid rgba(255,255,255,.08);
+            color: rgba(255,255,255,.82); font-size: .875rem;
+        }
+        .auth-tick-list li:last-child { border-bottom: none; }
+        .auth-tick-list .tick-icon {
+            width: 22px; height: 22px; flex-shrink: 0;
+            background: rgba(74,222,128,.18); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .auth-tick-list .tick-icon i { color: #4ade80; font-size: .75rem; }
+
+        /* Social proof */
+        .auth-hero__proof {
+            display: flex; align-items: center; gap: .75rem;
+            padding: 1rem 1.1rem;
+            background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+            border-radius: 12px;
+        }
+        .proof-avatars { display: flex; }
+        .proof-avatars img {
+            width: 30px; height: 30px; border-radius: 50%;
+            border: 2px solid rgba(15,42,120,.9); margin-left: -8px;
+        }
+        .proof-avatars img:first-child { margin-left: 0; }
+        .proof-text { font-size: .78rem; color: rgba(255,255,255,.75); line-height: 1.35; }
+        .proof-text strong { color: #fff; display: block; font-size: .82rem; }
+        .proof-stars { color: #fbbf24; font-size: .7rem; letter-spacing: .03rem; }
+
+        /* ── Right: form panel ── */
         .auth-form-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 3rem 2rem;
-            background: #fff;
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 3rem 2.5rem; background: #fff;
             overflow-y: auto;
         }
-        .auth-form-inner { width: 100%; max-width: 420px; }
-        .auth-form-inner h2 { font-size: 1.75rem; font-weight: 800; color: #111827; margin-bottom: .3rem; }
-        .auth-form-inner .subtitle { font-size: .9rem; color: #6b7280; margin-bottom: 1.75rem; }
+        .auth-form-inner { width: 100%; max-width: 400px; }
 
-        .auth-input-group { margin-bottom: 1rem; }
-        .auth-input-group label { display: block; font-size: .82rem; font-weight: 600; color: #374151; margin-bottom: .35rem; }
+        .auth-form-inner h2 { font-size: 1.65rem; font-weight: 800; color: #0f172a; margin-bottom: .25rem; }
+        .auth-form-inner .subtitle { font-size: .875rem; color: #64748b; margin-bottom: 1.8rem; }
+
+        /* Divider label */
+        .form-section-label {
+            font-size: .72rem; font-weight: 700; color: #94a3b8;
+            text-transform: uppercase; letter-spacing: .06em; margin-bottom: .7rem;
+        }
+
+        /* Inputs */
+        .auth-input-group { margin-bottom: .9rem; }
+        .auth-input-group label { display: block; font-size: .8rem; font-weight: 600; color: #334155; margin-bottom: .3rem; }
         .auth-input-group .form-control {
-            background: #f9fafb;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 8px;
-            padding: .65rem .9rem;
-            font-size: .9rem;
-            color: #111827;
+            background: #f8fafc; border: 1.5px solid #e2e8f0;
+            border-radius: 9px; padding: .62rem .9rem;
+            font-size: .9rem; color: #0f172a;
             transition: border-color .15s, box-shadow .15s;
         }
-        .auth-input-group .form-control::placeholder { color: #9ca3af; }
+        .auth-input-group .form-control::placeholder { color: #94a3b8; }
         .auth-input-group .form-control:focus {
-            background: #fff;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37,99,235,.12);
-            outline: none;
+            background: #fff; border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,.1); outline: none;
         }
-        .auth-input-group .form-control.is-invalid { border-color: #dc2626; }
-        .auth-input-group .input-group .form-control { border-radius: 8px 0 0 8px; }
-        .auth-input-group .input-group .btn { border-radius: 0 8px 8px 0; border: 1.5px solid #e5e7eb; border-left: 0; background: #f9fafb; color: #6b7280; }
-        .auth-input-group .input-group .btn:hover { background: #f3f4f6; }
+        .auth-input-group .form-control.is-invalid { border-color: #ef4444; }
+        .auth-input-group .input-group .form-control { border-radius: 9px 0 0 9px; }
+        .auth-input-group .input-group .btn {
+            border-radius: 0 9px 9px 0; border: 1.5px solid #e2e8f0;
+            border-left: 0; background: #f8fafc; color: #94a3b8;
+            transition: background .15s;
+        }
+        .auth-input-group .input-group .btn:hover { background: #f1f5f9; color: #64748b; }
         .auth-input-group .input-group .form-control:focus { border-right: 0; }
 
+        /* Error */
         .auth-error {
-            background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;
-            padding: .7rem 1rem; display: flex; align-items: flex-start; gap: .6rem;
-            font-size: .84rem; color: #b91c1c; margin-bottom: 1.1rem;
+            background: #fef2f2; border: 1px solid #fecaca; border-radius: 9px;
+            padding: .65rem 1rem; display: flex; align-items: flex-start; gap: .6rem;
+            font-size: .83rem; color: #b91c1c; margin-bottom: 1rem;
         }
         .auth-error i { flex-shrink: 0; margin-top: 1px; }
 
+        /* Submit */
         .btn-signup {
-            width: 100%; padding: .72rem; background: #f97316; color: #fff;
-            border: none; border-radius: 8px; font-weight: 700; font-size: .95rem;
-            cursor: pointer; transition: background .2s;
+            width: 100%; padding: .74rem;
+            background: #0f172a; color: #fff;
+            border: none; border-radius: 9px;
+            font-weight: 700; font-size: .93rem;
+            cursor: pointer; transition: background .2s, transform .1s;
+            letter-spacing: .01em;
         }
-        .btn-signup:hover { background: #ea6c0a; }
+        .btn-signup:hover { background: #1e293b; transform: translateY(-1px); }
 
-        .terms-group { font-size: .82rem; color: #6b7280; margin-bottom: 1.4rem; }
+        .terms-group { font-size: .8rem; color: #64748b; margin-bottom: 1.4rem; }
         .terms-group a { color: #2563eb; font-weight: 600; text-decoration: none; }
         .terms-group a:hover { text-decoration: underline; }
 
-        .auth-footer-links { font-size: .82rem; color: #9ca3af; margin-top: 1.25rem; text-align: center; }
+        .auth-footer-links { font-size: .81rem; color: #94a3b8; margin-top: 1.25rem; text-align: center; }
         .auth-footer-links a { color: #2563eb; font-weight: 600; text-decoration: none; }
-        .auth-footer-links a:hover { text-decoration: underline; }
 
         @media (max-width: 767px) {
             .auth-hero { display: none; }
+            .auth-form-panel { padding: 2rem 1.4rem; }
         }
     </style>
 </head>
 <body>
 <div class="auth-wrap">
 
-    <!-- ── Left: hero ── -->
-    <div class="auth-hero d-none d-md-flex">
+    <!-- ── Left: hero panel ── -->
+    <div class="auth-hero d-none d-md-flex" style="flex-direction:column;">
         <div class="auth-hero__overlay"></div>
         <div class="auth-hero__inner">
+
             <a href="{% url 'home' %}" class="auth-hero__logo">
                 <img src="https://res.cloudinary.com/dwe00uiuy/image/upload/v1772713194/Screenshot_2026-03-05_at_12.18.45_pcytig.png" alt="Motor Match">
             </a>
-            <div class="auth-hero__tagline">
+
+            <div class="auth-hero__mid">
                 <div class="auth-hero__badge">
-                    <i class="bi bi-shield-check-fill" style="color:#4ade80;"></i> Join 10k+ verified drivers
+                    <i class="bi bi-shield-check-fill"></i> Trusted by 10,000+ drivers
                 </div>
-                <h1>Your next car<br>is one search<br>away.</h1>
-                <p>Create your free account and unlock thousands of verified listings from trusted sellers across the UK.</p>
-                <ul class="auth-hero__features">
-                    <li><i class="bi bi-check-circle-fill"></i> Verified seller profiles</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Make &amp; receive offers instantly</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Save favourites &amp; compare cars</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Secure in-app messaging</li>
+                <h1 class="auth-hero__title">Drive your<br>dream car<br>home today.</h1>
+                <p class="auth-hero__sub">Join the UK's fastest growing car marketplace — browse verified listings, chat with sellers, and get the best deal.</p>
+
+                <ul class="auth-tick-list">
+                    <li>
+                        <span class="tick-icon"><i class="bi bi-check2"></i></span>
+                        Verified seller profiles &amp; secure transactions
+                    </li>
+                    <li>
+                        <span class="tick-icon"><i class="bi bi-check2"></i></span>
+                        Make &amp; receive offers in seconds
+                    </li>
+                    <li>
+                        <span class="tick-icon"><i class="bi bi-check2"></i></span>
+                        Save favourites and compare side-by-side
+                    </li>
+                    <li>
+                        <span class="tick-icon"><i class="bi bi-check2"></i></span>
+                        Direct in-app messaging — no middlemen
+                    </li>
                 </ul>
             </div>
+
+            <div class="auth-hero__proof">
+                <div class="proof-avatars">
+                    <img src="https://i.pravatar.cc/60?img=12" alt="">
+                    <img src="https://i.pravatar.cc/60?img=27" alt="">
+                    <img src="https://i.pravatar.cc/60?img=44" alt="">
+                    <img src="https://i.pravatar.cc/60?img=56" alt="">
+                </div>
+                <div class="proof-text">
+                    <span class="proof-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                    <strong>Excellent · 4.9 / 5</strong>
+                    Based on 2,400+ reviews
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- ── Right: form ── -->
+    <!-- ── Right: form panel ── -->
     <div class="auth-form-panel">
         <div class="auth-form-inner">
 
             <!-- Mobile logo -->
             <a href="{% url 'home' %}" class="d-flex d-md-none align-items-center gap-2 text-decoration-none mb-4">
-                <img src="https://res.cloudinary.com/dwe00uiuy/image/upload/v1772713194/Screenshot_2026-03-05_at_12.18.45_pcytig.png" alt="Motor Match" style="height:28px;width:auto;">
+                <img src="https://res.cloudinary.com/dwe00uiuy/image/upload/v1772713194/Screenshot_2026-03-05_at_12.18.45_pcytig.png" alt="Motor Match" style="height:26px;width:auto;">
             </a>
 
             <h2>Create your account</h2>
-            <p class="subtitle">Join thousands of users finding their perfect ride today.</p>
+            <p class="subtitle">Start finding your perfect car — it's free and takes 60 seconds.</p>
 
             {% if form.errors %}
             <div class="auth-error">
@@ -171,7 +234,9 @@
             <form method="post" action="{% url 'account_signup' %}" id="signupForm">
                 {% csrf_token %}
 
-                <div class="row g-3 mb-0">
+                <p class="form-section-label">Personal details</p>
+
+                <div class="row g-2 mb-0">
                     <div class="col-6">
                         <div class="auth-input-group mb-0">
                             <label>First Name</label>
@@ -187,7 +252,8 @@
                         </div>
                     </div>
                 </div>
-                <div style="margin-bottom:1rem;"></div>
+
+                <div style="margin-bottom:.9rem;"></div>
 
                 <div class="auth-input-group">
                     <label>Email Address</label>
@@ -199,10 +265,12 @@
                 </div>
 
                 <div class="auth-input-group">
-                    <label>Phone Number <span class="text-muted fw-normal" style="font-size:.78rem;">(Optional)</span></label>
+                    <label>Phone <span style="font-weight:400;color:#94a3b8;font-size:.76rem;">— Optional</span></label>
                     <input type="tel" name="phone" class="form-control" placeholder="+44 7000 000000"
                            value="{{ form.phone.value|default:'' }}">
                 </div>
+
+                <p class="form-section-label mt-1">Security</p>
 
                 <div class="auth-input-group">
                     <label>Password</label>
@@ -210,7 +278,9 @@
                         <input type="password" name="password1"
                                class="form-control{% if form.password1.errors %} is-invalid{% endif %}"
                                placeholder="At least 8 characters" id="pw1" required autocomplete="new-password">
-                        <button class="btn" type="button" id="togglePw1"><i class="bi bi-eye"></i></button>
+                        <button class="btn" type="button" id="togglePw1" aria-label="Toggle password visibility">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -220,31 +290,35 @@
                         <input type="password" name="password2"
                                class="form-control{% if form.password2.errors %} is-invalid{% endif %}"
                                placeholder="Repeat your password" id="pw2" required autocomplete="new-password">
-                        <button class="btn" type="button" id="togglePw2"><i class="bi bi-eye"></i></button>
+                        <button class="btn" type="button" id="togglePw2" aria-label="Toggle password visibility">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
                     </div>
                 </div>
 
                 <div class="terms-group">
                     <div class="d-flex align-items-start gap-2">
                         <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" id="termsCheck"
-                               style="accent-color:#f97316;width:15px;height:15px;">
+                               style="width:15px;height:15px;">
                         <label for="termsCheck">
                             I agree to the <a href="#">Terms and Conditions</a> and <a href="#">Privacy Policy</a>.
                         </label>
                     </div>
-                    <div id="terms-error" class="text-danger mt-1 ps-4" style="display:none;font-size:.8rem;">
-                        <i class="bi bi-exclamation-circle me-1"></i>You must accept the terms to continue.
+                    <div id="terms-error" class="text-danger mt-1 ps-4" style="display:none;font-size:.78rem;">
+                        <i class="bi bi-exclamation-circle me-1"></i>Please accept the terms to continue.
                     </div>
                 </div>
 
-                <button type="submit" class="btn-signup">Create Account</button>
+                <button type="submit" class="btn-signup">
+                    Create Account <i class="bi bi-arrow-right ms-1"></i>
+                </button>
             </form>
 
             <p class="auth-footer-links">
                 Already have an account? <a href="{% url 'account_login' %}">Log In</a>
             </p>
             <p class="text-center mt-2">
-                <a href="{% url 'home' %}" class="text-muted text-decoration-none" style="font-size:.82rem;">
+                <a href="{% url 'home' %}" class="text-muted text-decoration-none" style="font-size:.8rem;">
                     <i class="bi bi-arrow-left me-1"></i>Back to home
                 </a>
             </p>
@@ -261,9 +335,10 @@
         var inp = document.getElementById(inputId);
         if (!btn || !inp) return;
         btn.addEventListener('click', function () {
-            var isText = inp.type === 'text';
-            inp.type = isText ? 'password' : 'text';
-            btn.querySelector('i').className = isText ? 'bi bi-eye' : 'bi bi-eye-slash';
+            var showing = inp.type === 'text';
+            inp.type = showing ? 'password' : 'text';
+            // showing → hide it → slash icon; hidden → show it → open eye
+            btn.querySelector('i').className = showing ? 'bi bi-eye-slash' : 'bi bi-eye';
         });
     }
     bindToggle('togglePw1', 'pw1');

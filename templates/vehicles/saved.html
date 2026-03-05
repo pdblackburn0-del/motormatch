@@ -3,6 +3,51 @@
 {% block title %}Saved Vehicles - Motor Match{% endblock %}
 
 {% block content %}
+<style>
+    .saved-card {
+        cursor: pointer;
+        transition: box-shadow .18s, transform .15s;
+        border-radius: 10px !important;
+        overflow: hidden;
+        border: 2px solid transparent !important;
+    }
+    .saved-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.1) !important; transform: translateY(-2px); }
+    .saved-card.is-selected {
+        border: 2px solid #2563eb !important;
+        box-shadow: 0 0 0 4px rgba(37,99,235,.12) !important;
+    }
+    .select-badge {
+        position: absolute; top: 8px; left: 8px; z-index: 5;
+        width: 26px; height: 26px; border-radius: 50%;
+        background: rgba(255,255,255,.9); border: 2px solid #cbd5e1;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .75rem; color: #94a3b8;
+        transition: background .15s, border-color .15s;
+        pointer-events: none;
+    }
+    .saved-card.is-selected .select-badge {
+        background: #2563eb; border-color: #2563eb; color: #fff;
+    }
+    .compare-bar {
+        background: #f0f5ff; border-radius: 14px;
+        padding: 1.5rem 2rem; transition: all .2s;
+    }
+    .compare-bar.ready { background: #eff6ff; border: 1.5px solid #bfdbfe; }
+    .compare-slots { display: flex; gap: .75rem; justify-content: center; margin-bottom: 1rem; }
+    .compare-slot {
+        flex: 1; max-width: 180px; height: 52px;
+        border: 1.5px dashed #cbd5e1; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .8rem; color: #94a3b8; background: #fff;
+        transition: all .2s; overflow: hidden;
+    }
+    .compare-slot.filled {
+        border-style: solid; border-color: #2563eb;
+        color: #1e40af; font-weight: 600; background: #eff6ff;
+        padding: 0 .6rem; text-align: center; font-size: .76rem; line-height: 1.2;
+    }
+</style>
+
 <div class="container py-4">
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb small">
@@ -17,93 +62,243 @@
         <div>
             <h1 class="fw-bold mb-1">Saved Vehicles</h1>
             <p class="text-muted mb-0 small">
-                Manage your favourites and compare your top picks to find the
-                perfect ride.
+                Manage your favourites and compare your top picks to find the perfect ride.
             </p>
         </div>
-        <a
-            href="#"
-            class="text-primary text-decoration-none small d-flex align-items-center gap-1"
-        >
+        {% if saved_records %}
+        <button id="clearAllBtn"
+            class="btn btn-sm btn-link text-danger text-decoration-none d-flex align-items-center gap-1 p-0">
             <i class="bi bi-x-circle"></i> Clear All
-        </a>
+        </button>
+        {% endif %}
     </div>
 
-    <div class="row g-3 mb-5 saved-grid">
+    {% if saved_records %}
+    <div class="row g-3 mb-4 saved-grid" id="savedGrid">
         {% for record in saved_records %}
-        <div class="col-sm-6 col-lg-4">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 10px; overflow: hidden">
+        <div class="col-sm-6 col-lg-4 saved-item" id="item-{{ record.vehicle.pk }}">
+            <div class="card border-0 shadow-sm h-100 saved-card"
+                 data-pk="{{ record.vehicle.pk }}"
+                 data-title="{{ record.vehicle.title }}"
+                 onclick="toggleSelect(this)">
+
                 <div class="position-relative">
+                    <span class="select-badge"><i class="bi bi-check2"></i></span>
+
                     {% with img=record.vehicle.get_image %}
                     {% if img %}
-                    <img src="{{ img }}" class="w-100" alt="{{ record.vehicle.title }}" style="height: 180px; object-fit: cover"/>
+                    <img src="{{ img }}" class="w-100" alt="{{ record.vehicle.title }}"
+                         style="height: 180px; object-fit: cover; pointer-events:none;"/>
                     {% else %}
-                    <div class="w-100 bg-light d-flex align-items-center justify-content-center" style="height:180px;"><i class="bi bi-car-front text-muted fs-1"></i></div>
+                    <div class="w-100 bg-light d-flex align-items-center justify-content-center"
+                         style="height:180px; pointer-events:none;">
+                        <i class="bi bi-car-front text-muted fs-1"></i>
+                    </div>
                     {% endif %}
                     {% endwith %}
-                    <button type="button" class="btn btn-sm border-0 rounded-circle bg-white shadow-sm p-1 position-absolute top-0 end-0 m-2" title="Remove from saved"
-                        data-saved="1" data-url="{% url 'save_vehicle' record.vehicle.pk %}"
-                        onclick="toggleSaveCard(this)">
+
+                    <button type="button"
+                        class="btn btn-sm border-0 rounded-circle bg-white shadow-sm p-1 position-absolute top-0 end-0 m-2"
+                        title="Remove from saved"
+                        data-saved="1"
+                        data-url="{% url 'save_vehicle' record.vehicle.pk %}"
+                        onclick="event.stopPropagation(); toggleSaveCard(this)">
                         <i class="bi bi-heart-fill text-danger" style="font-size: 0.75rem"></i>
                     </button>
+
                     {% if record.vehicle.badge %}
-                    <span class="badge position-absolute bottom-0 start-0 m-2 text-dark fw-semibold" style="background: #e9ecef; font-size: 0.72rem">{{ record.vehicle.badge }}</span>
+                    <span class="badge position-absolute bottom-0 start-0 m-2 text-dark fw-semibold"
+                          style="background:#e9ecef; font-size:.72rem; pointer-events:none;">
+                        {{ record.vehicle.badge }}
+                    </span>
                     {% endif %}
                 </div>
-                <div class="card-body p-3">
+
+                <div class="card-body p-3" style="pointer-events:none;">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="fw-bold mb-0" style="font-size: 0.9rem">{{ record.vehicle.title }}</h6>
-                            <p class="text-muted mb-1" style="font-size: 0.78rem">{{ record.vehicle.variant }}</p>
+                            <h6 class="fw-bold mb-0" style="font-size:.9rem">{{ record.vehicle.title }}</h6>
+                            <p class="text-muted mb-1" style="font-size:.78rem">{{ record.vehicle.variant }}</p>
                         </div>
-                        <span class="fw-bold text-dark" style="font-size: 0.95rem; white-space: nowrap">{{ record.vehicle.price }}</span>
+                        <span class="fw-bold text-dark" style="font-size:.95rem; white-space:nowrap">{{ record.vehicle.price }}</span>
                     </div>
-                    <div class="d-flex gap-3 text-muted mb-2" style="font-size: 0.75rem">
+                    <div class="d-flex gap-3 text-muted mb-2" style="font-size:.75rem">
                         <span><i class="bi bi-speedometer2 me-1"></i>{{ record.vehicle.mileage }}</span>
                         <span><i class="bi bi-fuel-pump me-1"></i>{{ record.vehicle.fuel }}</span>
                     </div>
-                    <p class="text-muted mb-2" style="font-size: 0.75rem">
+                    <p class="text-muted mb-2" style="font-size:.75rem">
                         <i class="bi bi-geo-alt me-1"></i>{{ record.vehicle.location }}
                     </p>
-                    <a href="{% url 'vehicle_detail' record.vehicle.pk %}" class="btn btn-outline-primary btn-sm w-100">View Listing</a>
                 </div>
-            </div>
-        </div>
-        {% empty %}
-        <div class="col-12">
-            <div class="text-center py-5 text-muted">
-                <i class="bi bi-heart fs-1 d-block mb-3 text-secondary"></i>
-                <h5 class="fw-semibold">No saved vehicles yet</h5>
-                <p class="small mb-3">Browse cars and click the heart icon to save them here.</p>
-                <a href="{% url 'home' %}" class="btn btn-primary">Browse Cars</a>
+                <div class="card-footer bg-transparent border-top-0 px-3 pb-3 pt-0" style="pointer-events:auto;">
+                    <a href="{% url 'vehicle_detail' record.vehicle.pk %}"
+                       class="btn btn-outline-primary btn-sm w-100"
+                       onclick="event.stopPropagation()">View Listing</a>
+                </div>
             </div>
         </div>
         {% endfor %}
     </div>
 
-    <div
-        class="card border-0 p-4 text-center"
-        style="background: #f0f5ff; border-radius: 14px"
-    >
-        <div class="mb-2">
-            <i
-                class="bi bi-arrow-left-right text-primary"
-                style="font-size: 1.6rem"
-            ></i>
+    <!-- ── Compare bar ── -->
+    <div class="compare-bar" id="compareBar">
+        <div class="compare-slots" id="compareSlots">
+            <div class="compare-slot" id="slot0"><i class="bi bi-plus me-1"></i>Car 1</div>
+            <div class="compare-slot" id="slot1"><i class="bi bi-plus me-1"></i>Car 2</div>
         </div>
-        <h5 class="fw-bold mb-1">Ready to decide?</h5>
-        <p class="text-muted small mb-3">
-            You've selected 2 vehicles to compare side-by-side. Analyse their
-            specs and features to make the best choice.
+        <div class="mb-2">
+            <i class="bi bi-arrow-left-right text-primary d-block text-center" style="font-size:1.5rem;"></i>
+        </div>
+        <h5 class="fw-bold mb-1 text-center" id="compareTitle">Select 2 vehicles to compare</h5>
+        <p class="text-muted small mb-3 text-center" id="compareSubtitle">
+            Click any saved car above to add it to your comparison.
         </p>
         <div class="d-flex justify-content-center gap-3">
-            <a href="{% url 'comparison' %}" class="btn btn-primary px-4"
-                >Compare Selected Vehicles <i class="bi bi-arrow-right ms-1"></i
-            ></a>
-            <button class="btn btn-outline-secondary px-4">
+            <a href="#" id="compareBtn"
+               class="btn btn-primary px-4 disabled"
+               aria-disabled="true">
+                Compare Selected Vehicles <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+            <button class="btn btn-outline-secondary px-4" id="clearSelectionBtn">
                 Clear Selection
             </button>
         </div>
     </div>
+
+    {% else %}
+    <div class="col-12">
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-heart fs-1 d-block mb-3 text-secondary"></i>
+            <h5 class="fw-semibold">No saved vehicles yet</h5>
+            <p class="small mb-3">Browse cars and click the heart icon to save them here.</p>
+            <a href="{% url 'home' %}" class="btn btn-primary">Browse Cars</a>
+        </div>
+    </div>
+    {% endif %}
 </div>
+
+<script>
+(function () {
+    var selected = [];          // holds PKs of selected cars (max 2)
+    var selectedTitles = {};    // pk → title
+
+    /* ── Selection toggle ── */
+    function toggleSelect(card) {
+        var pk = card.dataset.pk;
+        var title = card.dataset.title;
+
+        if (card.classList.contains('is-selected')) {
+            // deselect
+            card.classList.remove('is-selected');
+            selected = selected.filter(function (id) { return id !== pk; });
+            delete selectedTitles[pk];
+        } else {
+            if (selected.length >= 2) {
+                // flash the card to indicate "full"
+                card.style.transition = 'none';
+                card.style.border = '2px solid #ef4444 !important';
+                setTimeout(function () { card.style.border = ''; card.style.transition = ''; }, 600);
+                return;
+            }
+            card.classList.add('is-selected');
+            selected.push(pk);
+            selectedTitles[pk] = title;
+        }
+        updateCompareBar();
+    }
+    window.toggleSelect = toggleSelect;
+
+    /* ── Update compare bar ── */
+    function updateCompareBar() {
+        var n = selected.length;
+        var bar      = document.getElementById('compareBar');
+        var titleEl  = document.getElementById('compareTitle');
+        var subEl    = document.getElementById('compareSubtitle');
+        var btn      = document.getElementById('compareBtn');
+        var slot0    = document.getElementById('slot0');
+        var slot1    = document.getElementById('slot1');
+
+        // Update slots
+        [slot0, slot1].forEach(function (slot, i) {
+            var pk = selected[i];
+            if (pk) {
+                slot.className = 'compare-slot filled';
+                slot.innerHTML = '<i class="bi bi-car-front me-1"></i>' + selectedTitles[pk];
+            } else {
+                slot.className = 'compare-slot';
+                slot.innerHTML = '<i class="bi bi-plus me-1"></i>Car ' + (i + 1);
+            }
+        });
+
+        if (n === 0) {
+            titleEl.textContent = 'Select 2 vehicles to compare';
+            subEl.textContent   = 'Click any saved car above to add it to your comparison.';
+            btn.classList.add('disabled');
+            btn.setAttribute('aria-disabled', 'true');
+            btn.href = '#';
+            bar.classList.remove('ready');
+        } else if (n === 1) {
+            titleEl.textContent = '1 vehicle selected — pick one more';
+            subEl.textContent   = 'Select a second car to unlock the comparison.';
+            btn.classList.add('disabled');
+            btn.setAttribute('aria-disabled', 'true');
+            btn.href = '#';
+            bar.classList.remove('ready');
+        } else {
+            titleEl.textContent = 'Ready to compare!';
+            subEl.textContent   = 'You\'ve selected 2 vehicles. Analyse their specs side-by-side.';
+            btn.classList.remove('disabled');
+            btn.removeAttribute('aria-disabled');
+            btn.href = '{% url "comparison" %}?car1=' + selected[0] + '&car2=' + selected[1];
+            bar.classList.add('ready');
+        }
+    }
+
+    /* ── Clear selection ── */
+    document.getElementById('clearSelectionBtn').addEventListener('click', function () {
+        document.querySelectorAll('.saved-card.is-selected').forEach(function (c) {
+            c.classList.remove('is-selected');
+        });
+        selected = [];
+        selectedTitles = {};
+        updateCompareBar();
+    });
+
+    /* ── Clear All ── */
+    var clearAllBtn = document.getElementById('clearAllBtn');
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', function () {
+            if (!confirm('Remove all saved vehicles?')) return;
+            fetch('{% url "clear_saved_vehicles" %}', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrf(), 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function (r) { return r.json(); }).then(function (data) {
+                if (data.ok) {
+                    document.getElementById('savedGrid').innerHTML = '';
+                    clearAllBtn.remove();
+                    selected = [];
+                    selectedTitles = {};
+                    updateCompareBar();
+                    // Show empty state
+                    var grid = document.getElementById('savedGrid');
+                    if (grid) {
+                        grid.outerHTML = '<div class="text-center py-5 text-muted">' +
+                            '<i class="bi bi-heart fs-1 d-block mb-3 text-secondary"></i>' +
+                            '<h5 class="fw-semibold">No saved vehicles yet</h5>' +
+                            '<p class="small mb-3">Browse cars and click the heart icon to save them here.</p>' +
+                            '<a href="/" class="btn btn-primary">Browse Cars</a></div>';
+                    }
+                }
+            });
+        });
+    }
+
+    function getCsrf() {
+        var m = document.cookie.match(/csrftoken=([^;]+)/);
+        return m ? m[1] : '';
+    }
+
+    updateCompareBar();
+})();
+</script>
 {% endblock %}
