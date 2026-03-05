@@ -89,48 +89,50 @@ p, span, a, li {
 }
 
 /* Icon buttons (bell, chat) */
-.nav-icon-btn {
+.navbar .nav-icon-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    color: #9ca3af;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    color: #fff !important;
     text-decoration: none;
-    transition: background .15s, color .15s;
+    transition: opacity .15s;
+    opacity: .75;
 }
-.nav-icon-btn:hover {
-    background: rgba(255,255,255,.1);
-    color: #fff;
+.navbar .nav-icon-btn:hover {
+    opacity: 1;
 }
 
 /* My Account button */
-.nav-account-btn {
-    color: #d1d5db;
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.15);
-    border-radius: 8px;
-    font-size: .85rem;
-    transition: background .15s, color .15s;
+.navbar .nav-account-btn {
+    color: #fff !important;
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,.35) !important;
+    border-radius: 6px;
+    font-size: .9rem;
+    opacity: .85;
+    transition: opacity .15s, border-color .15s;
 }
-.nav-account-btn:hover {
-    background: rgba(255,255,255,.16);
-    color: #fff;
+.navbar .nav-account-btn:hover {
+    opacity: 1;
+    border-color: rgba(255,255,255,.7) !important;
 }
 
 /* Log Out button */
-.nav-logout-btn {
-    background: #4f46e5;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: .85rem;
-    transition: background .15s;
+.navbar .nav-logout-btn {
+    background: transparent !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,.35) !important;
+    border-radius: 6px;
+    font-size: .9rem;
+    opacity: .85;
+    transition: opacity .15s, border-color .15s;
 }
-.nav-logout-btn:hover {
-    background: #4338ca;
-    color: #fff;
+.navbar .nav-logout-btn:hover {
+    opacity: 1;
+    border-color: rgba(255,255,255,.7) !important;
 }
 .navbar-toggler {
     border-color: rgba(255, 255, 255, .3) !important;
