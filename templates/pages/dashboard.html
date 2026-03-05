@@ -53,12 +53,9 @@
             <a href="{% url 'profile' %}" class="nav-link d-flex align-items-center gap-2 text-muted">
                 <i class="bi bi-person-circle"></i> My Profile
             </a>
-            <form method="post" action="{% url 'account_logout' %}" class="mt-1">
-                {% csrf_token %}
-                <button type="submit" class="nav-link btn btn-link text-start w-100 d-flex align-items-center gap-2 text-danger p-0" style="text-decoration:none;">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </button>
-            </form>
+            <a href="{% url 'account_logout' %}" class="nav-link d-flex align-items-center gap-2 text-danger mt-1">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
         </div>
     </div>
 
@@ -99,12 +96,20 @@
         <div class="p-4">
 
             {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'success' }} alert-dismissible fade show mb-3" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="mm-toast-container" aria-live="polite" aria-atomic="true">
+                {% for message in messages %}
+                <div class="mm-toast mm-toast--{{ message.tags|default:'info' }}" role="alert">
+                    <div class="mm-toast__icon">
+                        {% if 'success' in message.tags %}<i class="bi bi-check-circle-fill"></i>
+                        {% elif 'error' in message.tags or 'danger' in message.tags %}<i class="bi bi-x-circle-fill"></i>
+                        {% elif 'warning' in message.tags %}<i class="bi bi-exclamation-triangle-fill"></i>
+                        {% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
+                    </div>
+                    <span class="mm-toast__msg">{{ message }}</span>
+                    <button class="mm-toast__close" onclick="this.closest('.mm-toast').remove()" aria-label="Close">&times;</button>
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
             {% endif %}
 
             <div class="d-flex justify-content-between align-items-start mb-4">
@@ -202,7 +207,7 @@
                                     <div class="p-2">
                                         <p class="fw-semibold mb-0 small">{{ car.title }}</p>
                                         <p class="text-muted mb-0" style="font-size:.75rem;">{{ car.price }}</p>
-                                        <div class="d-flex gap-1 mt-1" style="position:relative; z-index:1;">
+                                        <div class="d-flex gap-1 mt-1" style="position:relative; z-index:2;">
                                             <a href="{% url 'vehicle_detail' car.pk %}" class="btn btn-sm" style="font-size:.72rem;padding:2px 10px;border:1.5px solid #4f46e5;color:#4f46e5;border-radius:6px;background:transparent;" onmouseover="this.style.background='#4f46e5';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#4f46e5'">View</a>
                                             {% if not car.is_removed %}
                                             <a href="{% url 'edit_vehicle' car.pk %}" class="btn btn-sm" style="font-size:.72rem;padding:2px 10px;border:1.5px solid #6b7280;color:#6b7280;border-radius:6px;background:transparent;" onmouseover="this.style.background='#6b7280';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#6b7280'">Edit</a>
@@ -471,6 +476,14 @@ document.getElementById('destroyModal').addEventListener('show.bs.modal', functi
 });
 
 // Notifications polling handled by notifications.js (loaded via base.html)
+
+// Custom toast auto-dismiss
+document.querySelectorAll('.mm-toast').forEach(function(toast) {
+    setTimeout(function() {
+        toast.style.animation = 'mmToastOut .3s ease forwards';
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 4000);
+});
 </script>
 </body>
 </html>

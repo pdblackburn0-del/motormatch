@@ -1,0 +1,536 @@
+/* ============================================================
+   Motor Match – Global Stylesheet
+   All page-level styles live here. Bootstrap 5.3.3 is the
+   base layer; these rules extend and customise it.
+   ============================================================ */
+
+/* --- Brand tokens ------------------------------------------ */
+:root {
+    --mm-primary:    #2563eb;
+    --mm-primary-dk: #1d4ed8;
+    --mm-accent:     #f97316;
+    --mm-dark:       #111827;
+    --mm-text:       #1f2937;
+    --mm-text-muted: #6b7280;
+    --mm-bg:         #f9fafb;
+    --mm-bg-alt:     #f3f4f6;
+    --mm-white:      #ffffff;
+    --mm-border:     #e5e7eb;
+    --mm-success:    #16a34a;
+    --mm-danger:     #dc2626;
+    --mm-warning:    #d97706;
+}
+
+/* --- Base -------------------------------------------------- */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    background-color: var(--mm-bg);
+    color: var(--mm-text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body.dashboard-body {
+    background-color: var(--mm-bg-alt);
+}
+
+/* Headings and general text should never be pure gray */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--mm-dark);
+}
+
+p, span, a, li {
+    color: inherit;
+}
+
+.text-muted {
+    color: var(--mm-text-muted) !important;
+}
+
+/* --- Navbar ------------------------------------------------ */
+.navbar {
+    background-color: #111827 !important;
+    border-bottom: 1px solid #1f2937;
+    padding-top: .6rem;
+    padding-bottom: .6rem;
+}
+.navbar-brand {
+    font-weight: 700;
+    color: #fff !important;
+    font-size: 1.1rem;
+}
+.navbar-brand img {
+    height: 48px;
+    width: auto;
+}
+/* Override Bootstrap's .nav-link inside the navbar only */
+.navbar .navbar-nav .nav-link,
+.navbar .nav-link {
+    color: #d1d5db !important;
+    font-size: .9rem;
+    transition: color .15s;
+}
+.navbar .navbar-nav .nav-link:hover,
+.navbar .nav-link:hover {
+    color: #ffffff !important;
+}
+.navbar .btn-outline-secondary {
+    color: #f9fafb;
+    border-color: rgba(255, 255, 255, .3);
+    font-size: .85rem;
+}
+.navbar .btn-outline-secondary:hover {
+    background-color: #fff;
+    border-color: #fff;
+    color: #111827;
+}
+
+/* Icon buttons (bell, chat) */
+.navbar .nav-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    color: #fff !important;
+    text-decoration: none;
+    transition: opacity .15s;
+    opacity: .75;
+}
+.navbar .nav-icon-btn:hover {
+    opacity: 1;
+}
+
+/* My Account button */
+.navbar .nav-account-btn {
+    color: #fff !important;
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,.35) !important;
+    border-radius: 6px;
+    font-size: .9rem;
+    opacity: .85;
+    transition: opacity .15s, border-color .15s;
+}
+.navbar .nav-account-btn:hover {
+    opacity: 1;
+    border-color: rgba(255,255,255,.7) !important;
+}
+
+/* Log Out button */
+.navbar .nav-logout-btn {
+    background: transparent !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,.35) !important;
+    border-radius: 6px;
+    font-size: .9rem;
+    opacity: .85;
+    transition: opacity .15s, border-color .15s;
+}
+.navbar .nav-logout-btn:hover {
+    opacity: 1;
+    border-color: rgba(255,255,255,.7) !important;
+}
+.navbar-toggler {
+    border-color: rgba(255, 255, 255, .3) !important;
+}
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* --- Footer ------------------------------------------------ */
+footer {
+    color: var(--mm-text-muted);
+}
+footer a {
+    color: var(--mm-text-muted);
+    text-decoration: none;
+}
+footer a:hover {
+    color: var(--mm-primary) !important;
+}
+.auth-footer {
+    border-top: 1px solid var(--mm-border);
+    background: #fff;
+}
+
+/* --- Badge colours (vehicle condition labels) -------------- */
+.badge-green   { background-color: var(--mm-success); color: #fff; }
+.badge-red     { background-color: var(--mm-danger);  color: #fff; }
+.badge-default { background-color: #374151;            color: #fff; }
+
+/* --- Cards ------------------------------------------------- */
+.card {
+    border-color: var(--mm-border);
+}
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, .08) !important;
+    transition: box-shadow .2s ease;
+}
+
+/* --- Dashboard sidebar / topbar ---------------------------- */
+.sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: var(--mm-white);
+    border-right: 1px solid var(--mm-border);
+}
+
+/* IMPORTANT: sidebar links must NOT inherit the navbar .nav-link rules */
+.sidebar .nav-link {
+    color: var(--mm-text) !important;
+    font-size: .875rem;
+    font-weight: 500;
+    border-radius: 8px;
+    padding: .55rem .9rem;
+    transition: background .15s, color .15s;
+}
+.sidebar .nav-link:hover {
+    background: #eff6ff;
+    color: var(--mm-primary) !important;
+}
+.sidebar .nav-link.active {
+    background: #dbeafe;
+    color: var(--mm-primary) !important;
+    font-weight: 600;
+}
+.sidebar .nav-link .badge {
+    font-size: .65rem;
+}
+/* My Profile link at bottom */
+.sidebar .nav-link.text-muted {
+    color: var(--mm-text-muted) !important;
+    font-weight: 400;
+}
+.sidebar .nav-link.text-muted:hover {
+    color: var(--mm-primary) !important;
+    background: #eff6ff;
+}
+
+.topbar {
+    background: var(--mm-white);
+    border-bottom: 1px solid var(--mm-border);
+    height: 58px;
+}
+.topbar .input-group-text,
+.topbar .form-control {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    color: var(--mm-text);
+}
+
+/* --- Dashboard stat cards ---------------------------------- */
+.stat-card {
+    border-radius: 12px;
+    background: var(--mm-white);
+    border: 1px solid var(--mm-border) !important;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, .1) !important;
+}
+.stat-card p.text-muted {
+    color: var(--mm-text-muted) !important;
+}
+.stat-card h3 {
+    color: var(--mm-dark) !important;
+}
+
+/* --- Login hero panel -------------------------------------- */
+.hero-side {
+    background: url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900') center/cover no-repeat;
+    position: relative;
+}
+.hero-side::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 18, 40, 0.65);
+}
+.hero-side .content {
+    position: relative;
+    z-index: 1;
+}
+
+/* --- Register dark panel ----------------------------------- */
+.dark-side {
+    background: #0f1723;
+}
+.trusted-pill {
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .15);
+    border-radius: 999px;
+    padding: .3rem .9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .78rem;
+}
+
+/* --- Shared form styles ------------------------------------ */
+.form-control,
+.form-select {
+    background: var(--mm-bg);
+    border: 1px solid var(--mm-border);
+    color: var(--mm-text);
+}
+.form-control:focus,
+.form-select:focus {
+    background: #fff;
+    border-color: var(--mm-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+    color: var(--mm-text);
+}
+.form-label {
+    color: var(--mm-text);
+    font-weight: 500;
+}
+
+/* --- Body-type browse cards -------------------------------- */
+.body-type-card {
+    transition: border-color .15s, box-shadow .15s;
+    cursor: pointer;
+}
+.body-type-card:hover {
+    border-color: var(--mm-primary) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .08);
+}
+
+/* --- Buttons ----------------------------------------------- */
+.btn-primary {
+    background-color: var(--mm-primary);
+    border-color: var(--mm-primary);
+}
+.btn-primary:hover {
+    background-color: var(--mm-primary-dk);
+    border-color: var(--mm-primary-dk);
+}
+
+/* --- Vehicle detail / listing cards ----------------------- */
+.vehicle-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+.vehicle-card-link:hover .card {
+    box-shadow: 0 6px 24px rgba(0,0,0,.1) !important;
+}
+
+/* --- Upgrade card (kept for reference) --------------------- */
+.upgrade-card {
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    border-radius: 12px;
+    color: white;
+}
+
+/* --- Base -------------------------------------------------- */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    background-color: var(--mm-bg);
+}
+
+/* Dashboard uses a slightly cooler grey background */
+body.dashboard-body {
+    background-color: var(--mm-bg-alt);
+}
+
+/* --- Navbar ------------------------------------------------ */
+.navbar {
+    background-color: #13141c !important;
+    border-bottom: 1px solid #2a2b35;
+}
+.navbar-brand {
+    font-weight: 700;
+    color: #fff !important;
+    font-size: 1.1rem;
+}
+.navbar-brand img {
+    height: 48px;
+    width: auto;
+}
+.navbar-brand .brand-icon {
+    color: var(--mm-primary);
+}
+.nav-link {
+    color: #e9ecef !important;
+    font-size: 0.9rem;
+}
+.nav-link:hover {
+    color: #93c5fd !important;
+}
+.navbar-toggler {
+    border-color: rgba(255, 255, 255, .3) !important;
+}
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* --- Footer ------------------------------------------------ */
+footer a:hover {
+    color: var(--mm-primary) !important;
+}
+.auth-footer {
+    border-top: 1px solid var(--mm-border);
+    background: #fff;
+}
+
+/* --- Badge colours (vehicle condition labels) -------------- */
+.badge-green   { background-color: #16a34a; }
+.badge-red     { background-color: #dc2626; }
+.badge-default { background-color: #6c757d; }
+
+/* --- Dashboard sidebar / topbar ---------------------------- */
+.sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: #fff;
+    border-right: 1px solid var(--mm-border);
+}
+.sidebar .nav-link {
+    color: #555;
+    font-size: .88rem;
+    border-radius: 8px;
+    padding: .55rem .9rem;
+}
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    background: #eff3ff;
+    color: var(--mm-primary);
+}
+.sidebar .nav-link .badge {
+    font-size: .65rem;
+}
+.topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--mm-border);
+    height: 58px;
+}
+
+/* --- Dashboard cards --------------------------------------- */
+.stat-card {
+    border-radius: 12px;
+    background: #fff;
+    border: none;
+}
+.upgrade-card {
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    border-radius: 12px;
+    color: white;
+}
+
+/* --- Login hero panel -------------------------------------- */
+.hero-side {
+    background: url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900') center/cover no-repeat;
+    position: relative;
+}
+.hero-side::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 18, 40, 0.65);
+}
+.hero-side .content {
+    position: relative;
+    z-index: 1;
+}
+
+/* --- Register dark panel ----------------------------------- */
+.dark-side {
+    background: #0f1723;
+}
+.trusted-pill {
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .15);
+    border-radius: 999px;
+    padding: .3rem .9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .78rem;
+}
+
+/* --- Shared form styles ------------------------------------ */
+.form-control {
+    background: var(--mm-bg);
+    border: 1px solid #e2e8f0;
+}
+.form-control:focus {
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, .12);
+}
+
+/* --- Custom toasts ----------------------------------------- */
+.mm-toast-container {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 1090;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    pointer-events: none;
+}
+
+.mm-toast {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    min-width: 280px;
+    max-width: 380px;
+    background: var(--mm-dark);
+    color: #fff;
+    border-radius: 12px;
+    padding: .85rem 1rem;
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    pointer-events: all;
+    border-left: 4px solid var(--mm-primary);
+    animation: mmToastIn .3s cubic-bezier(.22,.68,0,1.2) forwards;
+}
+
+.mm-toast--success { border-left-color: var(--mm-success); }
+.mm-toast--success .mm-toast__icon { color: #4ade80; }
+
+.mm-toast--error,
+.mm-toast--danger  { border-left-color: var(--mm-danger); }
+.mm-toast--error .mm-toast__icon,
+.mm-toast--danger .mm-toast__icon { color: #f87171; }
+
+.mm-toast--warning { border-left-color: var(--mm-warning); }
+.mm-toast--warning .mm-toast__icon { color: #fbbf24; }
+
+.mm-toast--info    { border-left-color: var(--mm-primary); }
+.mm-toast--info .mm-toast__icon { color: #60a5fa; }
+
+.mm-toast__icon { font-size: 1.15rem; flex-shrink: 0; }
+
+.mm-toast__msg { font-size: .875rem; flex-grow: 1; line-height: 1.4; }
+
+.mm-toast__close {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,.5);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: color .15s;
+}
+.mm-toast__close:hover { color: #fff; }
+
+@keyframes mmToastIn {
+    from { opacity: 0; transform: translateX(2rem) scale(.95); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes mmToastOut {
+    from { opacity: 1; transform: translateX(0) scale(1); }
+    to   { opacity: 0; transform: translateX(2rem) scale(.95); }
+}
