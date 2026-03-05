@@ -235,6 +235,21 @@ def mark_notification_read(request, pk):
 
 @login_required
 @require_POST
+def dismiss_notification(request, pk):
+    Notification.objects.filter(pk=pk, user=request.user).update(is_read=True)
+    unread = Notification.objects.filter(user=request.user, is_read=False).count()
+    return JsonResponse({'ok': True, 'unread': unread})
+
+
+@login_required
+@require_POST
+def dismiss_all_notifications(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({'ok': True, 'unread': 0})
+
+
+@login_required
+@require_POST
 def add_review(request, pk):
     vehicle = get_object_or_404(Vehicle, pk=pk)
     seller  = vehicle.owner
@@ -400,6 +415,12 @@ def poll_messages(request, user_pk):
     )
 
     new_msgs.filter(recipient=request.user, is_read=False).update(is_read=True)
+    # Clear any message notifications from this sender while user is actively on chat
+    Notification.objects.filter(
+        user=request.user,
+        url__contains=f'/inbox/{other.pk}/',
+        is_read=False,
+    ).update(is_read=True)
 
     read_up_to = (
         Message.objects
@@ -817,10 +838,10 @@ def notifications_poll(request):
     from django.core.cache import cache
     unread_notifs = Notification.objects.filter(user=request.user, is_read=False).count()
     unread_msgs = Message.objects.filter(recipient=request.user, is_read=False).count()
-    # Return latest 3 unread notifications so the dropdown can show them
+    # Return latest 10 unread notifications so the dropdown can show them
     latest = list(
         Notification.objects.filter(user=request.user, is_read=False)
-        .order_by('-created_at')[:3]
+        .order_by('-created_at')[:10]
         .values('id', 'title', 'message', 'notif_type', 'url', 'created_at')
     )
     for n in latest:

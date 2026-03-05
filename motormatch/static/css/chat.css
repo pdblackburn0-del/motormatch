@@ -49,8 +49,18 @@
 .bubble-wrap           { display: flex; gap: 10px; align-items: flex-end; }
 .bubble-wrap.mine      { flex-direction: row-reverse; }
 
-/* Column constraint – this is what fixes the vertical letter-stacking bug */
-.bubble-col { max-width: min(62%, 460px); min-width: 0; }
+/* Column constraint – flex column so bubble shrinks to content, not col width */
+.bubble-col {
+    max-width: min(62%, 460px);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;  /* theirs: bubble hugs left/content */
+}
+.bubble-wrap.mine .bubble-col {
+    margin-left: auto;
+    align-items: flex-end;    /* mine: bubble hugs right/content */
+}
 
 /* Bubbles */
 .bubble {
@@ -64,7 +74,9 @@
     display: inline-block;
     max-width: 100%;
     box-sizing: border-box;
+    align-self: flex-start;  /* never stretch to column width */
 }
+.bubble-wrap.mine .bubble-col .bubble { align-self: flex-end; }
 .bubble.theirs {
     background: #fff;
     box-shadow: 0 1px 6px rgba(0,0,0,.07);

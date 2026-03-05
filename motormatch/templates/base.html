@@ -55,10 +55,30 @@
                     </ul>
                     <div class="d-flex align-items-center gap-2 ms-3">
                         {% if request.user.is_authenticated %}
-                        <a href="{% url 'notifications' %}" class="nav-icon-btn position-relative" id="navBellBtn" title="Notifications">
-                            <i class="bi bi-bell fs-6"></i>
-                            <span id="navBellBadge" class="badge bg-danger position-absolute top-0 end-0 d-none" style="font-size:.5rem;padding:3px 4px;border-radius:50%;"></span>
-                        </a>
+                        <div class="dropdown">
+                            <button class="nav-icon-btn position-relative border-0 bg-transparent p-0"
+                                    id="navBellBtn" data-bs-toggle="dropdown"
+                                    data-bs-auto-close="outside" aria-expanded="false" title="Notifications">
+                                <i class="bi bi-bell fs-6"></i>
+                                <span id="navBellBadge" class="badge bg-danger position-absolute top-0 end-0 d-none"
+                                      style="font-size:.5rem;padding:3px 4px;border-radius:50%;min-width:14px;"></span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end shadow border-0 p-0"
+                                 id="notifDropdownMenu"
+                                 style="min-width:320px;max-width:340px;border-radius:12px;overflow:hidden;">
+                                <div class="d-flex align-items-center px-3 pt-3 pb-2 border-bottom">
+                                    <span class="fw-semibold" style="font-size:.85rem;">Notifications</span>
+                                    <button class="btn btn-sm text-danger ms-auto p-0 border-0 fw-semibold"
+                                            id="clearAllNotifs" style="font-size:.78rem;">Clear all</button>
+                                </div>
+                                <div id="notifList" style="max-height:300px;overflow-y:auto;">
+                                    <div class="text-center text-muted py-3 small" id="notifEmpty">You're all caught up!</div>
+                                </div>
+                                <div class="text-center py-2 border-top">
+                                    <a href="{% url 'notifications' %}" class="text-primary text-decoration-none" style="font-size:.8rem;">View all</a>
+                                </div>
+                            </div>
+                        </div>
                         <a href="{% url 'inbox' %}" class="nav-icon-btn position-relative" id="navMsgBtn" title="Messages">
                             <i class="bi bi-chat-dots fs-6"></i>
                             <span id="navMsgBadge" class="badge bg-success position-absolute top-0 end-0 d-none" style="font-size:.5rem;padding:3px 4px;border-radius:50%;"></span>
