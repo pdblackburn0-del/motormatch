@@ -26,11 +26,15 @@
                             <div class="col-12">
                                 <label class="form-label small fw-medium">Registration Number <span class="text-muted fw-normal">(Optional)</span></label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="E.G., AB12 CDE">
+                                    <input type="text" id="dvlaReg" class="form-control" placeholder="E.G., AB12 CDE" style="text-transform:uppercase;" autocomplete="off">
+                                    <button type="button" id="dvlaLookupBtn" class="btn btn-warning fw-semibold px-3">
+                                        <i class="bi bi-search me-1"></i>Lookup
+                                    </button>
                                     <span class="input-group-text p-1">
                                         <span class="badge text-dark fw-bold px-2 py-1" style="background:#f0c040; font-size:.75rem; border-radius:3px;">GB</span>
                                     </span>
                                 </div>
+                                <div id="dvlaMsg" class="small mt-1 d-none"></div>
                             </div>
                             <div class="col-6">
                                 <label class="form-label small fw-medium">Make</label>
@@ -93,10 +97,54 @@
                         <button type="submit" class="btn btn-primary px-5 flex-grow-1 fw-semibold">List My Car</button>
                     </div>
                 </div>
-
-            </div>
             </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('dvlaLookupBtn').addEventListener('click', function () {
+    const reg = document.getElementById('dvlaReg').value.replace(/\s/g, '').toUpperCase();
+    const msgEl = document.getElementById('dvlaMsg');
+    if (!reg) { return; }
+    msgEl.className = 'small mt-1 text-muted';
+    msgEl.textContent = 'Looking up...';
+    msgEl.classList.remove('d-none');
+    fetch(`{% url 'dvla_lookup' %}?reg=${encodeURIComponent(reg)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                msgEl.className = 'small mt-1 text-danger';
+                msgEl.textContent = data.error;
+                return;
+            }
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+            set('id_make', data.make);
+            set('id_model', data.model);
+            set('id_year', data.year);
+            set('id_mileage', data.mileage.replace(/[^0-9]/g, ''));
+            ['id_fuel', 'id_transmission'].forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const key = id === 'id_fuel' ? data.fuel : data.transmission;
+                for (let opt of sel.options) {
+                    if (opt.text.toLowerCase() === key.toLowerCase() || opt.value.toLowerCase() === key.toLowerCase()) {
+                        sel.value = opt.value; break;
+                    }
+                }
+            });
+            msgEl.className = 'small mt-1 text-success';
+            msgEl.textContent = `\u2713 Found: ${data.year} ${data.make} ${data.model} \u2014 ${data.colour}, ${data.fuel}`;
+        })
+        .catch(() => {
+            msgEl.className = 'small mt-1 text-danger';
+            msgEl.textContent = 'Lookup failed. Please fill in details manually.';
+        });
+});
+document.getElementById('dvlaReg').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('dvlaLookupBtn').click(); }
+});
+</script>
 {% endblock %}

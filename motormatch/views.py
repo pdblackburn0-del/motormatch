@@ -1,12 +1,19 @@
-from django.shortcuts import render, get_object_or_404, redirect
+import hashlib
+import re
+
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from .models import Vehicle
-from .forms import SellForm
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+
+from .forms import ProfileForm, SellForm
+from .models import SavedVehicle, UserProfile, Vehicle
 
 
 def index(request):
     query = request.GET.get('q', '').strip()
+
     body_types = [
         {'name': 'SUV', 'icon': 'bi bi-truck'},
         {'name': 'Sedan', 'icon': 'bi bi-car-front'},
@@ -16,18 +23,27 @@ def index(request):
         {'name': 'Convertible', 'icon': 'bi bi-wind'},
     ]
 
-    all_vehicles = Vehicle.objects.all()
+    vehicles = Vehicle.objects.all()
+
     if query:
-        all_vehicles = all_vehicles.filter(
+        vehicles = vehicles.filter(
             Q(title__icontains=query)
             | Q(variant__icontains=query)
             | Q(fuel__icontains=query)
             | Q(transmission__icontains=query)
         )
 
-    featured_cars = all_vehicles[:4]
-    recommended_cars = all_vehicles[:4]
-    remaining_cars = all_vehicles[4:]
+    saved_pks = set()
+
+    if request.user.is_authenticated:
+        saved_pks = set(
+            SavedVehicle.objects.filter(user=request.user)
+            .values_list('vehicle_id', flat=True)
+        )
+
+    featured_cars = vehicles[:4]
+    recommended_cars = vehicles[:4]
+    remaining_cars = vehicles[4:]
 
     return render(request, 'home.html', {
         'body_types': body_types,
@@ -35,200 +51,98 @@ def index(request):
         'recommended_cars': recommended_cars,
         'remaining_cars': remaining_cars,
         'query': query,
+        'saved_pks': saved_pks,
     })
 
 
 def vehicle_detail(request, pk):
     car = get_object_or_404(Vehicle, pk=pk)
-    return render(request, 'vehicle_detail.html', {'car': car})
+
+    is_saved = (
+        request.user.is_authenticated
+        and SavedVehicle.objects.filter(user=request.user, vehicle=car).exists()
+    )
+
+    return render(request, 'vehicle_detail.html', {
+        'car': car,
+        'is_saved': is_saved,
+    })
 
 
 def comparison(request):
     car1_specs = [
-        {'label': 'Engine/Motor', 'icon': 'bi bi-cpu', 'value': 'Electric Dual Motor', 'highlight': None},
-        {'label': 'Mileage', 'icon': 'bi bi-speedometer2', 'value': '24,000 mi', 'highlight': 'LOWER MILEAGE'},
-        {'label': 'Fuel Type', 'icon': 'bi bi-fuel-pump', 'value': 'Electric', 'highlight': None},
-        {'label': 'Transmission', 'icon': 'bi bi-gear', 'value': '1-Speed Auto', 'highlight': None},
-        {'label': 'Drivetrain', 'icon': 'bi bi-arrows-move', 'value': 'AWD', 'highlight': None},
-        {'label': 'Horsepower', 'icon': 'bi bi-lightning-charge', 'value': '450 hp', 'highlight': 'MORE POWER'},
-        {'label': 'Seating', 'icon': 'bi bi-person', 'value': '5 Passengers', 'highlight': None},
+        {'label': 'Engine/Motor', 'icon': 'bi bi-cpu', 'value': 'Electric Dual Motor'},
+        {'label': 'Mileage', 'icon': 'bi bi-speedometer2', 'value': '24,000 mi'},
+        {'label': 'Fuel Type', 'icon': 'bi bi-fuel-pump', 'value': 'Electric'},
+        {'label': 'Transmission', 'icon': 'bi bi-gear', 'value': '1-Speed Auto'},
+        {'label': 'Drivetrain', 'icon': 'bi bi-arrows-move', 'value': 'AWD'},
+        {'label': 'Horsepower', 'icon': 'bi bi-lightning-charge', 'value': '450 hp'},
+        {'label': 'Seating', 'icon': 'bi bi-person', 'value': '5 Passengers'},
     ]
+
     car2_specs = [
-        {'label': 'Engine/Motor', 'icon': 'bi bi-cpu', 'value': '2.0L Turbo Inline-4', 'highlight': None},
-        {'label': 'Mileage', 'icon': 'bi bi-speedometer2', 'value': '15,000 mi', 'highlight': None},
-        {'label': 'Fuel Type', 'icon': 'bi bi-fuel-pump', 'value': 'Hybrid', 'highlight': None},
-        {'label': 'Transmission', 'icon': 'bi bi-gear', 'value': '7-Speed Auto-Shift', 'highlight': None},
-        {'label': 'Drivetrain', 'icon': 'bi bi-arrows-move', 'value': 'AWD', 'highlight': None},
-        {'label': 'Horsepower', 'icon': 'bi bi-lightning-charge', 'value': '261 hp', 'highlight': None},
-        {'label': 'Seating', 'icon': 'bi bi-person', 'value': '5 Passengers', 'highlight': 'MORE SPACIOUS'},
+        {'label': 'Engine/Motor', 'icon': 'bi bi-cpu', 'value': '2.0L Turbo Inline-4'},
+        {'label': 'Mileage', 'icon': 'bi bi-speedometer2', 'value': '15,000 mi'},
+        {'label': 'Fuel Type', 'icon': 'bi bi-fuel-pump', 'value': 'Hybrid'},
+        {'label': 'Transmission', 'icon': 'bi bi-gear', 'value': '7-Speed Auto'},
+        {'label': 'Drivetrain', 'icon': 'bi bi-arrows-move', 'value': 'AWD'},
+        {'label': 'Horsepower', 'icon': 'bi bi-lightning-charge', 'value': '261 hp'},
+        {'label': 'Seating', 'icon': 'bi bi-person', 'value': '5 Passengers'},
     ]
-    return render(request, 'comparison.html', {'car1_specs': car1_specs, 'car2_specs': car2_specs})
 
-
-def saved(request):
-    saved_cars = [
-        {'title': '2019 Honda Civic', 'variant': 'Sport Sedan 4D', 'price': '£18,500', 'mileage': '32k mi', 'mpg': '30 MPG', 'location': 'Bristol', 'badge': 'Used', 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400&h=220&fit=crop'},
-        {'title': '2020 Toyota Camry', 'variant': 'SE Sedan 4D', 'price': '£22,000', 'mileage': '15k mi', 'mpg': '28 MPG', 'location': 'Leeds', 'badge': 'Certified Pre-Owned', 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400&h=220&fit=crop'},
-        {'title': '2018 Ford Mustang', 'variant': 'GT Premium Coupe', 'price': '£28,900', 'mileage': '40k mi', 'mpg': '18 MPG', 'location': 'Manchester', 'badge': None, 'compare_checked': True, 'image': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&h=220&fit=crop'},
-        {'title': '2021 Tesla Model 3', 'variant': 'Long Range AWD', 'price': '£39,500', 'mileage': '12k mi', 'mpg': '134 MPGe', 'location': 'London', 'badge': 'Electric', 'compare_checked': True, 'image': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=220&fit=crop'},
-        {'title': '2017 Chevrolet Silverado', 'variant': '1500 LT Crew Cab', 'price': '£32,000', 'mileage': '55k mi', 'mpg': '17 MPG', 'location': 'Birmingham', 'badge': None, 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=220&fit=crop'},
-        {'title': '2022 BMW 3 Series', 'variant': '330i xDrive', 'price': '£42,000', 'mileage': '5k mi', 'mpg': '26 MPG', 'location': 'Edinburgh', 'badge': None, 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=220&fit=crop'},
-    ]
-    return render(request, 'saved.html', {'saved_cars': saved_cars})
+    return render(request, 'comparison.html', {
+        'car1_specs': car1_specs,
+        'car2_specs': car2_specs,
+    })
 
 
 @login_required
 def sell(request):
     if request.method == 'POST':
         form = SellForm(request.POST, request.FILES)
+
         if form.is_valid():
             vehicle = form.save()
             return redirect('vehicle_detail', pk=vehicle.pk)
+
     else:
         form = SellForm()
+
     return render(request, 'sell.html', {'form': form})
 
 
 @login_required
 def dashboard(request):
-    active_bids = [
-        {'title': '2021 Tesla Model 3', 'variant': 'Long Range AWD', 'mileage': '24k mi', 'ends': 'Ends in 2h 45m', 'status': 'Outbid', 'highest': 'Highest: £34,900', 'your_bid': '£34,500', 'image': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=120&h=80&fit=crop'},
-        {'title': '2020 Porsche 911 Carrera', 'variant': 'Carrera 4S', 'mileage': '12.5k mi', 'ends': 'Ends in 1d 4h', 'status': 'Winning', 'highest': None, 'your_bid': '£45,000', 'image': 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=120&h=80&fit=crop'},
-        {'title': '2016 Chevrolet Camaro', 'variant': '2SS Coupe', 'mileage': '45.6k mi', 'ends': 'Ends in 5h 12m', 'status': 'Outbid', 'highest': 'Highest: £29,995', 'your_bid': '£28,500', 'image': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=120&h=80&fit=crop'},
-    ]
-    your_listings = [
-        {'image': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop'},
-        {'image': 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=300&h=200&fit=crop'},
-    ]
-    messages_list = [
-        {'name': 'Sarah Jenkins', 'initials': 'SJ', 'color': '#6366f1', 'time': '10m ago', 'preview': 'RE: 2022 Audi 65 - Is the service history available...'},
-        {'name': 'Mike Ross', 'initials': 'MR', 'color': '#f59e0b', 'time': '2h ago', 'preview': "RE: 2020 Porsche 911 - Thanks for the quick reply..."},
-        {'name': 'Motor Match Support', 'initials': 'MM', 'color': '#0d6efd', 'time': '1d ago', 'preview': 'Account Verification - Your ID verification has...'},
-        {'name': 'David Lee', 'initials': 'DL', 'color': '#10b981', 'time': '2d ago', 'preview': 'RE: 2019 BMW 3 Series - Is the price negotiable...'},
-    ]
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    my_listings = Vehicle.objects.filter(owner=request.user)
+
+    saved_count = SavedVehicle.objects.filter(user=request.user).count()
+
     return render(request, 'dashboard.html', {
-        'active_bids': active_bids,
-        'your_listings': your_listings,
-        'messages_list': messages_list,
+        'profile': profile,
+        'my_listings': my_listings,
+        'saved_count': saved_count,
+    })
+
+
+@login_required
+def saved(request):
+    saved_vehicles = SavedVehicle.objects.filter(user=request.user)
+
+    return render(request, 'saved.html', {
+        'saved_vehicles': saved_vehicles
     })
 
 
 @login_required
 def offers(request):
     offers_list = [
-        {'name': 'Michael Johnson', 'initials': 'MJ', 'color': '#0d6efd', 'time': 'Today, 10:30 AM', 'amount': '£32,500', 'type': 'Cash Offer', 'badge': 'New', 'selected': True},
-        {'name': 'Sarah Anderson', 'initials': 'SA', 'color': '#10b981', 'time': 'Yesterday', 'amount': '£31,000', 'type': 'Financing', 'badge': 'Countered', 'selected': False},
-        {'name': 'David Kim', 'initials': 'DK', 'color': '#6b7280', 'time': '2 days ago', 'amount': '£28,000', 'type': 'Cash Offer', 'badge': 'Declined', 'selected': False},
+        {'name': 'Michael Johnson', 'amount': '£32,500', 'type': 'Cash Offer'},
+        {'name': 'Sarah Anderson', 'amount': '£31,000', 'type': 'Financing'},
+        {'name': 'David Kim', 'amount': '£28,000', 'type': 'Cash Offer'},
     ]
-    return render(request, 'offers.html', {'offers': offers_list})
 
-
-def offer_submitted(request):
-    return render(request, 'offer_submitted.html')
-
-
-def enquiry_sent(request):
-    return render(request, 'enquiry_sent.html')
-
-    body_types = [
-        {'name': 'SUV', 'icon': 'bi bi-truck'},
-        {'name': 'Sedan', 'icon': 'bi bi-car-front'},
-        {'name': 'Hatchback', 'icon': 'bi bi-car-front-fill'},
-        {'name': 'Truck', 'icon': 'bi bi-truck-flatbed'},
-        {'name': 'Coupe', 'icon': 'bi bi-lightning-charge'},
-        {'name': 'Convertible', 'icon': 'bi bi-wind'},
-    ]
-    
-    all_vehicles = Vehicle.objects.all()
-    featured_cars = all_vehicles[:4]
-    recommended_cars = all_vehicles[:4]
-    remaining_cars = all_vehicles[4:]
-
-    return render(request, 'home.html', {
-        'body_types': body_types,
-        'featured_cars': featured_cars,
-        'recommended_cars': recommended_cars,
-        'remaining_cars': remaining_cars,
-    })
-
-
-def vehicle_detail(request, pk):
-    thumbs = [
-        {'src': 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=160&h=100&fit=crop'},
-        {'src': 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=160&h=100&fit=crop'},
-        {'src': 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=160&h=100&fit=crop'},
-        {'src': 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=160&h=100&fit=crop'},
-    ]
-    return render(request, 'vehicle_detail.html', {'car': {'title': '2021 Toyota Camry SE'}, 'thumbs': thumbs})
-
-
-def comparison(request):
-    car1_specs = [
-        {'label': 'Engine/Motor', 'icon': 'bi bi-cpu', 'value': 'Electric Dual Motor', 'highlight': None},
-        {'label': 'Mileage', 'icon': 'bi bi-speedometer2', 'value': '24,000 mi', 'highlight': 'LOWER MILEAGE'},
-        {'label': 'Fuel Type', 'icon': 'bi bi-fuel-pump', 'value': 'Electric', 'highlight': None},
-        {'label': 'Transmission', 'icon': 'bi bi-gear', 'value': '1-Speed Auto', 'highlight': None},
-        {'label': 'Drivetrain', 'icon': 'bi bi-arrows-move', 'value': 'AWD', 'highlight': None},
-        {'label': 'Horsepower', 'icon': 'bi bi-lightning-charge', 'value': '450 hp', 'highlight': 'MORE POWER'},
-        {'label': 'Seating', 'icon': 'bi bi-person', 'value': '5 Passengers', 'highlight': None},
-    ]
-    car2_specs = [
-        {'label': 'Engine/Motor', 'icon': 'bi bi-cpu', 'value': '2.0L Turbo Inline-4', 'highlight': None},
-        {'label': 'Mileage', 'icon': 'bi bi-speedometer2', 'value': '15,000 mi', 'highlight': None},
-        {'label': 'Fuel Type', 'icon': 'bi bi-fuel-pump', 'value': 'Hybrid', 'highlight': None},
-        {'label': 'Transmission', 'icon': 'bi bi-gear', 'value': '7-Speed Auto-Shift', 'highlight': None},
-        {'label': 'Drivetrain', 'icon': 'bi bi-arrows-move', 'value': 'AWD', 'highlight': None},
-        {'label': 'Horsepower', 'icon': 'bi bi-lightning-charge', 'value': '261 hp', 'highlight': None},
-        {'label': 'Seating', 'icon': 'bi bi-person', 'value': '5 Passengers', 'highlight': 'MORE SPACIOUS'},
-    ]
-    return render(request, 'comparison.html', {'car1_specs': car1_specs, 'car2_specs': car2_specs})
-
-
-def saved(request):
-    saved_cars = [
-        {'title': '2019 Honda Civic', 'variant': 'Sport Sedan 4D', 'price': '£18,500', 'mileage': '32k mi', 'mpg': '30 MPG', 'location': 'Bristol', 'badge': 'Used', 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400&h=220&fit=crop'},
-        {'title': '2020 Toyota Camry', 'variant': 'SE Sedan 4D', 'price': '£22,000', 'mileage': '15k mi', 'mpg': '28 MPG', 'location': 'Leeds', 'badge': 'Certified Pre-Owned', 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400&h=220&fit=crop'},
-        {'title': '2018 Ford Mustang', 'variant': 'GT Premium Coupe', 'price': '£28,900', 'mileage': '40k mi', 'mpg': '18 MPG', 'location': 'Manchester', 'badge': None, 'compare_checked': True, 'image': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&h=220&fit=crop'},
-        {'title': '2021 Tesla Model 3', 'variant': 'Long Range AWD', 'price': '£39,500', 'mileage': '12k mi', 'mpg': '134 MPGe', 'location': 'London', 'badge': 'Electric', 'compare_checked': True, 'image': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=220&fit=crop'},
-        {'title': '2017 Chevrolet Silverado', 'variant': '1500 LT Crew Cab', 'price': '£32,000', 'mileage': '55k mi', 'mpg': '17 MPG', 'location': 'Birmingham', 'badge': None, 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=220&fit=crop'},
-        {'title': '2022 BMW 3 Series', 'variant': '330i xDrive', 'price': '£42,000', 'mileage': '5k mi', 'mpg': '26 MPG', 'location': 'Edinburgh', 'badge': None, 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=220&fit=crop'},
-    ]
-    return render(request, 'saved.html', {'saved_cars': saved_cars})
-
-
-def sell(request):
-    return render(request, 'sell.html')
-
-
-def dashboard(request):
-    active_bids = [
-        {'title': '2021 Tesla Model 3', 'variant': 'Long Range AWD', 'mileage': '24k mi', 'ends': 'Ends in 2h 45m', 'status': 'Outbid', 'highest': 'Highest: £34,900', 'your_bid': '£34,500', 'image': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=120&h=80&fit=crop'},
-        {'title': '2020 Porsche 911 Carrera', 'variant': 'Carrera 4S', 'mileage': '12.5k mi', 'ends': 'Ends in 1d 4h', 'status': 'Winning', 'highest': None, 'your_bid': '£45,000', 'image': 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=120&h=80&fit=crop'},
-        {'title': '2016 Chevrolet Camaro', 'variant': '2SS Coupe', 'mileage': '45.6k mi', 'ends': 'Ends in 5h 12m', 'status': 'Outbid', 'highest': 'Highest: £29,995', 'your_bid': '£28,500', 'image': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=120&h=80&fit=crop'},
-    ]
-    your_listings = [
-        {'image': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop'},
-        {'image': 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=300&h=200&fit=crop'},
-    ]
-    messages_list = [
-        {'name': 'Sarah Jenkins', 'initials': 'SJ', 'color': '#6366f1', 'time': '10m ago', 'preview': 'RE: 2022 Audi 65 - Is the service history available...'},
-        {'name': 'Mike Ross', 'initials': 'MR', 'color': '#f59e0b', 'time': '2h ago', 'preview': "RE: 2020 Porsche 911 - Thanks for the quick reply..."},
-        {'name': 'Motor Match Support', 'initials': 'MM', 'color': '#0d6efd', 'time': '1d ago', 'preview': 'Account Verification - Your ID verification has...'},
-        {'name': 'David Lee', 'initials': 'DL', 'color': '#10b981', 'time': '2d ago', 'preview': 'RE: 2019 BMW 3 Series - Is the price negotiable...'},
-    ]
-    return render(request, 'dashboard.html', {
-        'active_bids': active_bids,
-        'your_listings': your_listings,
-        'messages_list': messages_list,
-    })
-
-
-def offers(request):
-    offers_list = [
-        {'name': 'Michael Johnson', 'initials': 'MJ', 'color': '#0d6efd', 'time': 'Today, 10:30 AM', 'amount': '£32,500', 'type': 'Cash Offer', 'badge': 'New', 'selected': True},
-        {'name': 'Sarah Anderson', 'initials': 'SA', 'color': '#10b981', 'time': 'Yesterday', 'amount': '£31,000', 'type': 'Financing', 'badge': 'Countered', 'selected': False},
-        {'name': 'David Kim', 'initials': 'DK', 'color': '#6b7280', 'time': '2 days ago', 'amount': '£28,000', 'type': 'Cash Offer', 'badge': 'Declined', 'selected': False},
-    ]
     return render(request, 'offers.html', {'offers': offers_list})
 
 
@@ -240,5 +154,83 @@ def enquiry_sent(request):
     return render(request, 'enquiry_sent.html')
 
 
+@login_required
+def save_vehicle(request, pk):
+    vehicle = get_object_or_404(Vehicle, pk=pk)
+    obj, created = SavedVehicle.objects.get_or_create(user=request.user, vehicle=vehicle)
+    if not created:
+        obj.delete()
+    is_saved = created
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'saved': is_saved})
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
 
 
+@login_required
+def profile(request):
+    prof, _ = UserProfile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=prof)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully.')
+            return redirect('profile')
+    else:
+        form = ProfileForm(instance=prof)
+    return render(request, 'profile.html', {'form': form, 'profile': prof})
+
+
+_MAKES = ['Ford', 'Vauxhall', 'BMW', 'Audi', 'Toyota', 'Honda', 'Volkswagen',
+          'Mercedes-Benz', 'Nissan', 'Hyundai', 'Kia', 'Renault', 'Peugeot',
+          'Fiat', 'Volvo', 'Land Rover', 'Mini', 'Skoda', 'Seat', 'Mazda']
+_MODELS = {
+    'Ford':          ['Fiesta', 'Focus', 'Mondeo', 'Puma', 'Kuga'],
+    'Vauxhall':      ['Astra', 'Corsa', 'Insignia', 'Mokka', 'Crossland'],
+    'BMW':           ['1 Series', '3 Series', '5 Series', 'X3', 'X5'],
+    'Audi':          ['A1', 'A3', 'A4', 'Q3', 'Q5'],
+    'Toyota':        ['Yaris', 'Corolla', 'Camry', 'RAV4', 'C-HR'],
+    'Honda':         ['Civic', 'Jazz', 'HR-V', 'CR-V', 'Accord'],
+    'Volkswagen':    ['Polo', 'Golf', 'Passat', 'Tiguan', 'T-Roc'],
+    'Mercedes-Benz': ['A-Class', 'C-Class', 'E-Class', 'GLC', 'GLA'],
+    'Nissan':        ['Micra', 'Juke', 'Qashqai', 'Leaf', 'X-Trail'],
+    'Hyundai':       ['i10', 'i20', 'i30', 'Tucson', 'Kona'],
+    'Kia':           ['Picanto', 'Rio', 'Ceed', 'Sportage', 'Niro'],
+    'Renault':       ['Clio', 'Megane', 'Captur', 'Kadjar', 'Zoe'],
+    'Peugeot':       ['108', '208', '308', '2008', '3008'],
+    'Fiat':          ['500', 'Punto', 'Tipo', '500X', 'Panda'],
+    'Volvo':         ['V40', 'V60', 'XC40', 'XC60', 'S90'],
+    'Land Rover':    ['Discovery Sport', 'Range Rover Evoque', 'Defender', 'Discovery', 'Freelander'],
+    'Mini':          ['Hatch', 'Convertible', 'Clubman', 'Countryman', 'Paceman'],
+    'Skoda':         ['Fabia', 'Octavia', 'Superb', 'Karoq', 'Kodiaq'],
+    'Seat':          ['Ibiza', 'Leon', 'Arona', 'Ateca', 'Tarraco'],
+    'Mazda':         ['Mazda2', 'Mazda3', 'Mazda6', 'CX-3', 'CX-5'],
+}
+_FUELS         = ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'Petrol', 'Diesel']
+_TRANSMISSIONS = ['Manual', 'Automatic', 'Manual', 'Manual', 'Automatic']
+_COLOURS       = ['White', 'Black', 'Silver', 'Grey', 'Blue', 'Red', 'Green', 'Orange']
+
+
+def dvla_lookup(request):
+    reg = request.GET.get('reg', '').replace(' ', '').upper()
+    if not reg:
+        return JsonResponse({'error': 'No registration provided.'}, status=400)
+    valid = bool(
+        re.match(r'^[A-Z]{2}\d{2}[A-Z]{3}$', reg)
+        or re.match(r'^[A-Z]\d{3}[A-Z]{3}$', reg)
+        or re.match(r'^[A-Z]{3}\d{3}[A-Z]$', reg)
+    )
+    if not valid:
+        return JsonResponse({'error': 'Enter a valid UK registration (e.g. AB12 CDE).'}, status=400)
+    seed    = int(hashlib.md5(reg.encode()).hexdigest(), 16)
+    make    = _MAKES[seed % len(_MAKES)]
+    model   = _MODELS[make][(seed // len(_MAKES)) % len(_MODELS[make])]
+    year    = 2005 + (seed % 19)
+    fuel    = _FUELS[seed % len(_FUELS)]
+    trans   = _TRANSMISSIONS[seed % len(_TRANSMISSIONS)]
+    colour  = _COLOURS[seed % len(_COLOURS)]
+    mileage = f'{(seed % 150) * 1000 + 5000:,} mi'
+    return JsonResponse({
+        'make': make, 'model': model, 'year': year,
+        'fuel': fuel, 'transmission': trans,
+        'colour': colour, 'mileage': mileage, 'reg': reg,
+    })
