@@ -113,10 +113,5 @@ def enquiry_sent(request):
     return render(request, 'enquiry_sent.html')
 
 
-def login_view(request):
-    return render(request, 'login.html')
 
-
-def register_view(request):
-    return render(request, 'register.html')
 

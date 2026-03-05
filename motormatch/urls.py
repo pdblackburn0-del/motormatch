@@ -11,6 +11,4 @@ urlpatterns = [
     path('offers/', views.offers, name='offers'),
     path('offer-submitted/', views.offer_submitted, name='offer_submitted'),
     path('enquiry-sent/', views.enquiry_sent, name='enquiry_sent'),
-    path('login/', views.login_view, name='login'),
-    path('register/', views.register_view, name='register'),
 ]
