@@ -34,11 +34,13 @@
         <div class="col-sm-6 col-lg-4">
             <div class="card border-0 shadow-sm h-100" style="border-radius: 10px; overflow: hidden">
                 <div class="position-relative">
-                    {% if record.vehicle.image %}
-                    <img src="{{ record.vehicle.image.url }}" class="w-100" alt="{{ record.vehicle.title }}" style="height: 180px; object-fit: cover"/>
+                    {% with img=record.vehicle.get_image %}
+                    {% if img %}
+                    <img src="{{ img }}" class="w-100" alt="{{ record.vehicle.title }}" style="height: 180px; object-fit: cover"/>
                     {% else %}
                     <div class="w-100 bg-light d-flex align-items-center justify-content-center" style="height:180px;"><i class="bi bi-car-front text-muted fs-1"></i></div>
                     {% endif %}
+                    {% endwith %}
                     <form method="post" action="{% url 'save_vehicle' record.vehicle.pk %}" class="position-absolute top-0 end-0 m-2">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm border-0 rounded-circle bg-white shadow-sm p-1" title="Remove from saved">

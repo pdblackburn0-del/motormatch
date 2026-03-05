@@ -135,10 +135,10 @@ def dashboard(request):
 
 @login_required
 def saved(request):
-    saved_vehicles = SavedVehicle.objects.filter(user=request.user)
+    saved_records = SavedVehicle.objects.filter(user=request.user).select_related('vehicle').order_by('-saved_at')
 
     return render(request, 'saved.html', {
-        'saved_vehicles': saved_vehicles
+        'saved_records': saved_records
     })
 
 

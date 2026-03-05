@@ -55,14 +55,12 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h6 fw-bold mb-0">Browse by Body Type</h2>
-            <a href="#" class="text-primary text-decoration-none small"
-                >View all</a
-            >
+            <a href="{% url 'home' %}" class="text-primary text-decoration-none small">View all</a>
         </div>
         <div class="row row-cols-3 row-cols-sm-6 g-2 text-center">
             {% for body in body_types %}
             <div class="col">
-                <a href="#" class="text-decoration-none text-dark">
+                <a href="{% url 'home' %}?q={{ body.name }}" class="text-decoration-none text-dark">
                     <div
                         class="border rounded py-3 px-2 h-100"
                         style="cursor: pointer"
@@ -84,20 +82,22 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h6 fw-bold mb-0">Featured Deals</h2>
             <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-secondary px-2 py-1">
+                <button class="btn btn-sm btn-outline-secondary px-2 py-1" id="scroll-left">
                     <i class="bi bi-chevron-left"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-secondary px-2 py-1">
+                <button class="btn btn-sm btn-outline-secondary px-2 py-1" id="scroll-right">
                     <i class="bi bi-chevron-right"></i>
                 </button>
             </div>
         </div>
         <div
+            id="featured-scroll"
             class="row g-3 flex-nowrap overflow-auto pb-2"
             style="scrollbar-width: none"
         >
             {% for car in featured_cars %}
             <div class="col-8 col-sm-5 col-md-4 col-lg-3 flex-shrink-0">
+                <a href="{% url 'vehicle_detail' car.id %}" class="text-decoration-none text-dark">
                 <div
                     class="card border-0 shadow-sm h-100"
                     style="border-radius: 10px; overflow: hidden"
@@ -114,7 +114,7 @@
                             style="border-radius: 4px"
                             >{{ car.badge }}</span
                         >
-                        <form method="post" action="{% url 'save_vehicle' car.pk %}" class="position-absolute top-0 end-0 m-2">
+                        <form method="post" action="{% url 'save_vehicle' car.pk %}" class="position-absolute top-0 end-0 m-2" onclick="event.stopPropagation()">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-light border-0 rounded-circle p-1" title="{% if car.pk in saved_pks %}Unsave{% else %}Save{% endif %}">
                                 <i class="bi {% if car.pk in saved_pks %}bi-heart-fill text-danger{% else %}bi-heart text-muted{% endif %}" style="font-size: 0.75rem"></i>
@@ -138,6 +138,7 @@
                         </div>
                     </div>
                 </div>
+                </a>
             </div>
             {% endfor %}
         </div>
@@ -162,7 +163,7 @@
             {% for car in recommended_cars %}
             <div class="col-sm-6 col-xl-3">
                 <div
-                    class="card border-0 shadow-sm h-100"
+                    class="card border-0 shadow-sm h-100 position-relative"
                     style="border-radius: 10px; overflow: hidden"
                 >
                     <div class="position-relative">
@@ -172,7 +173,7 @@
                             alt="{{ car.title }}"
                             style="height: 175px; object-fit: cover"
                         />
-                        <form method="post" action="{% url 'save_vehicle' car.pk %}" class="position-absolute top-0 end-0 m-2">
+                        <form method="post" action="{% url 'save_vehicle' car.pk %}" class="position-absolute top-0 end-0 m-2" style="z-index:2;" onclick="event.stopPropagation()">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-light border-0 rounded-circle p-1" title="{% if car.pk in saved_pks %}Unsave{% else %}Save{% endif %}">
                                 <i class="bi {% if car.pk in saved_pks %}bi-heart-fill text-danger{% else %}bi-heart text-muted{% endif %}" style="font-size: 0.75rem"></i>
@@ -180,10 +181,7 @@
                         </form>
                         <span
                             class="position-absolute bottom-0 start-0 m-2 text-white fw-bold"
-                            style="
-                                font-size: 0.95rem;
-                                text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
-                            "
+                            style="font-size: 0.95rem; text-shadow: 0 1px 4px rgba(0,0,0,0.7); z-index:1;"
                             >{{ car.price }}</span
                         >
                     </div>
@@ -195,31 +193,21 @@
                             {{ car.variant }}
                         </p>
                         <div
-                            class="d-flex gap-2 mb-3 flex-wrap"
+                            class="d-flex gap-2 mb-2 flex-wrap"
                             style="font-size: 0.72rem"
                         >
-                            <span class="badge bg-light text-muted border"
-                                >{{ car.mileage }}</span
-                            >
-                            <span class="badge bg-light text-muted border"
-                                >{{ car.year }}</span
-                            >
-                            <span class="badge bg-light text-muted border"
-                                >{{ car.fuel }}</span
-                            >
+                            <span class="badge bg-light text-muted border">{{ car.mileage }}</span>
+                            <span class="badge bg-light text-muted border">{{ car.year }}</span>
+                            <span class="badge bg-light text-muted border">{{ car.fuel }}</span>
                         </div>
-                        <a
-                            href="{% url 'vehicle_detail' car.id %}"
-                            class="btn btn-outline-primary w-100 btn-sm"
-                            >View Details</a
-                        >
+                        <a href="{% url 'vehicle_detail' car.id %}" class="stretched-link"></a>
                     </div>
                 </div>
             </div>
             {% endfor %} {% for car in remaining_cars %}
             <div class="col-sm-6 col-xl-3 d-none extra-car">
                 <div
-                    class="card border-0 shadow-sm h-100"
+                    class="card border-0 shadow-sm h-100 position-relative"
                     style="border-radius: 10px; overflow: hidden"
                 >
                     <div class="position-relative">
@@ -229,7 +217,7 @@
                             alt="{{ car.title }}"
                             style="height: 175px; object-fit: cover"
                         />
-                        <form method="post" action="{% url 'save_vehicle' car.pk %}" class="position-absolute top-0 end-0 m-2">
+                        <form method="post" action="{% url 'save_vehicle' car.pk %}" class="position-absolute top-0 end-0 m-2" style="z-index:2;" onclick="event.stopPropagation()">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-light border-0 rounded-circle p-1" title="{% if car.pk in saved_pks %}Unsave{% else %}Save{% endif %}">
                                 <i class="bi {% if car.pk in saved_pks %}bi-heart-fill text-danger{% else %}bi-heart text-muted{% endif %}" style="font-size: 0.75rem"></i>
@@ -237,10 +225,7 @@
                         </form>
                         <span
                             class="position-absolute bottom-0 start-0 m-2 text-white fw-bold"
-                            style="
-                                font-size: 0.95rem;
-                                text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
-                            "
+                            style="font-size: 0.95rem; text-shadow: 0 1px 4px rgba(0,0,0,0.7); z-index:1;"
                             >{{ car.price }}</span
                         >
                     </div>
@@ -251,25 +236,12 @@
                         <p class="text-muted mb-2" style="font-size: 0.78rem">
                             {{ car.variant }}
                         </p>
-                        <div
-                            class="d-flex gap-2 mb-3 flex-wrap"
-                            style="font-size: 0.72rem"
-                        >
-                            <span class="badge bg-light text-muted border"
-                                >{{ car.mileage }}</span
-                            >
-                            <span class="badge bg-light text-muted border"
-                                >{{ car.year }}</span
-                            >
-                            <span class="badge bg-light text-muted border"
-                                >{{ car.fuel }}</span
-                            >
+                        <div class="d-flex gap-2 mb-2 flex-wrap" style="font-size: 0.72rem">
+                            <span class="badge bg-light text-muted border">{{ car.mileage }}</span>
+                            <span class="badge bg-light text-muted border">{{ car.year }}</span>
+                            <span class="badge bg-light text-muted border">{{ car.fuel }}</span>
                         </div>
-                        <a
-                            href="{% url 'vehicle_detail' car.id %}"
-                            class="btn btn-outline-primary w-100 btn-sm"
-                            >View Details</a
-                        >
+                        <a href="{% url 'vehicle_detail' car.id %}" class="stretched-link"></a>
                     </div>
                 </div>
             </div>
@@ -293,6 +265,15 @@
             loadMoreBtn.style.display = "none";
         });
     }
+
+    // Featured deals carousel scroll
+    const featuredScroll = document.getElementById("featured-scroll");
+    document.getElementById("scroll-left")?.addEventListener("click", () => {
+        featuredScroll.scrollBy({ left: -300, behavior: "smooth" });
+    });
+    document.getElementById("scroll-right")?.addEventListener("click", () => {
+        featuredScroll.scrollBy({ left: 300, behavior: "smooth" });
+    });
 </script>
 
 {% endblock %}
