@@ -5,6 +5,7 @@ import re
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -142,6 +143,13 @@ def saved(request):
 
 
 @login_required
+@require_POST
+def clear_saved_vehicles(request):
+    SavedVehicle.objects.filter(user=request.user).delete()
+    return JsonResponse({'ok': True})
+
+
+@login_required
 def sell(request):
     from apps.vehicles.forms import SellForm
     if request.method == 'POST':
@@ -157,7 +165,6 @@ def sell(request):
 
 @login_required
 def save_vehicle(request, pk):
-    from django.http import JsonResponse
     vehicle = get_object_or_404(Vehicle, pk=pk)
     obj, created = SavedVehicle.objects.get_or_create(user=request.user, vehicle=vehicle)
     if not created:
