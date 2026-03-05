@@ -1,0 +1,144 @@
+/* ============================================================
+   Motor Match – Global Stylesheet
+   All page-level styles live here. Bootstrap 5.3.3 is the
+   base layer; these rules extend and customise it.
+   ============================================================ */
+
+/* --- Brand tokens ------------------------------------------ */
+:root {
+    --mm-primary:  #0d6efd;
+    --mm-accent:   #f97316;
+    --mm-dark:     #1a1a2e;
+    --mm-bg:       #f8f9fa;
+    --mm-bg-alt:   #f4f6f9;
+    --mm-border:   #e9ecef;
+}
+
+/* --- Base -------------------------------------------------- */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    background-color: var(--mm-bg);
+}
+
+/* Dashboard uses a slightly cooler grey background */
+body.dashboard-body {
+    background-color: var(--mm-bg-alt);
+}
+
+/* --- Navbar ------------------------------------------------ */
+.navbar {
+    border-bottom: 1px solid var(--mm-border);
+}
+.navbar-brand {
+    font-weight: 700;
+    color: var(--mm-dark) !important;
+    font-size: 1.1rem;
+}
+.navbar-brand .brand-icon {
+    color: var(--mm-primary);
+}
+.nav-link {
+    color: #4a4a4a !important;
+    font-size: 0.9rem;
+}
+.nav-link:hover {
+    color: var(--mm-primary) !important;
+}
+
+/* --- Footer ------------------------------------------------ */
+footer a:hover {
+    color: var(--mm-primary) !important;
+}
+.auth-footer {
+    border-top: 1px solid var(--mm-border);
+    background: #fff;
+}
+
+/* --- Badge colours (vehicle condition labels) -------------- */
+.badge-green   { background-color: #16a34a; }
+.badge-red     { background-color: #dc2626; }
+.badge-default { background-color: #6c757d; }
+
+/* --- Dashboard sidebar / topbar ---------------------------- */
+.sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: #fff;
+    border-right: 1px solid var(--mm-border);
+}
+.sidebar .nav-link {
+    color: #555;
+    font-size: .88rem;
+    border-radius: 8px;
+    padding: .55rem .9rem;
+}
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    background: #eff3ff;
+    color: var(--mm-primary);
+}
+.sidebar .nav-link .badge {
+    font-size: .65rem;
+}
+.topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--mm-border);
+    height: 58px;
+}
+
+/* --- Dashboard cards --------------------------------------- */
+.stat-card {
+    border-radius: 12px;
+    background: #fff;
+    border: none;
+}
+.upgrade-card {
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    border-radius: 12px;
+    color: white;
+}
+
+/* --- Login hero panel -------------------------------------- */
+.hero-side {
+    background: url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900') center/cover no-repeat;
+    position: relative;
+}
+.hero-side::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 18, 40, 0.65);
+}
+.hero-side .content {
+    position: relative;
+    z-index: 1;
+}
+
+/* --- Register dark panel ----------------------------------- */
+.dark-side {
+    background: #0f1723;
+}
+.trusted-pill {
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .15);
+    border-radius: 999px;
+    padding: .3rem .9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .78rem;
+}
+
+/* --- Shared form styles ------------------------------------ */
+.form-control {
+    background: var(--mm-bg);
+    border: 1px solid #e2e8f0;
+}
+.form-control:focus {
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, .12);
+}
