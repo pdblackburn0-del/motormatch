@@ -61,6 +61,15 @@
                     {{ other_profile.get_display_name }}
                 </p>
                 <p class="mb-0" id="typingStatus" style="font-size:.74rem;color:#adb5bd;min-height:1.1em;"></p>
+                <p class="mb-0" id="onlineStatus" style="font-size:.72rem;">
+                    {% if other_online.online %}
+                    <span class="text-success d-flex align-items-center gap-1">
+                        <i class="bi bi-circle-fill" style="font-size:.45rem;"></i>Online now
+                    </span>
+                    {% elif other_online.display %}
+                    <span class="text-muted">Last seen {{ other_online.display }}</span>
+                    {% endif %}
+                </p>
             </div>
 
             {% if vehicle %}

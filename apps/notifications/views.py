@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
@@ -28,6 +29,7 @@ def mark_notification_read(request, pk):
 @require_POST
 def dismiss_notification(request, pk):
     Notification.objects.filter(pk=pk, user=request.user).update(is_read=True)
+    cache.delete(f'poll_counts_{request.user.pk}')  # bust badge cache
     unread = Notification.objects.filter(user=request.user, is_read=False).count()
     return JsonResponse({'ok': True, 'unread': unread})
 
@@ -36,13 +38,21 @@ def dismiss_notification(request, pk):
 @require_POST
 def dismiss_all_notifications(request):
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    cache.delete(f'poll_counts_{request.user.pk}')  # bust badge cache
     return JsonResponse({'ok': True, 'unread': 0})
 
 
 @login_required
 def notifications_poll(request):
-    unread_notifs = Notification.objects.filter(user=request.user, is_read=False).exclude(title='New message').count()
-    unread_msgs   = Message.objects.filter(recipient=request.user, is_read=False).count()
+    counts_key = f'poll_counts_{request.user.pk}'
+    counts = cache.get(counts_key)
+    if counts is None:
+        unread_notifs = Notification.objects.filter(user=request.user, is_read=False).exclude(title='New message').count()
+        unread_msgs   = Message.objects.filter(recipient=request.user, is_read=False).count()
+        cache.set(counts_key, {'notifs': unread_notifs, 'msgs': unread_msgs}, timeout=10)
+    else:
+        unread_notifs = counts['notifs']
+        unread_msgs   = counts['msgs']
     latest = list(
         Notification.objects
         .filter(user=request.user, is_read=False)

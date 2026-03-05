@@ -81,6 +81,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'apps.users.middleware.OnlinePresenceMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -162,6 +163,20 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
     BASE_DIR / 'motormatch' / 'static',
 ]
+
+# ── Redis / Cache ─────────────────────────────────────────────────────────────
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1')
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': REDIS_URL,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'IGNORE_EXCEPTIONS': True,  # Graceful fallback if Redis is unavailable
+        },
+        'TIMEOUT': 300,
+    }
+}
 
 # Media files (user uploads) — served via Cloudinary
 CLOUDINARY_STORAGE = {

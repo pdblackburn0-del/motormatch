@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST
 from apps.messaging.models import Message
 from apps.notifications.models import Notification
 from apps.vehicles.models import Vehicle
+from apps.users.middleware import get_online_status, invalidate_poll_cache
 
 User = get_user_model()
 
@@ -59,6 +60,7 @@ def conversation(request, user_pk):
         'thread':        thread,
         'vehicle':       vehicle,
         'my_initials':   my_initials,
+        'other_online':  get_online_status(other.pk),
     })
 
 
@@ -100,6 +102,7 @@ def send_message_ajax(request, user_pk):
             notif_type='info',
             url=f'/inbox/{request.user.pk}/',
         )
+        invalidate_poll_cache(other.pk)  # bust badge cache for recipient
 
     initials = request.user.profile.get_initials() if hasattr(request.user, 'profile') else request.user.email[:2].upper()
     return JsonResponse({
@@ -168,9 +171,10 @@ def poll_messages(request, user_pk):
         }
 
     return JsonResponse({
-        'messages':   [serialise(m) for m in new_msgs],
-        'typing':     is_typing,
-        'read_up_to': read_up_to,
+        'messages':    [serialise(m) for m in new_msgs],
+        'typing':      is_typing,
+        'read_up_to':  read_up_to,
+        'other_online': get_online_status(other.pk),
     })
 
 

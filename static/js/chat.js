@@ -231,10 +231,26 @@
                 if (d.typing) {
                     typingBubble.classList.remove('d-none');
                     if (typingStatus) typingStatus.textContent = 'typing\u2026';
+                    var os = document.getElementById('onlineStatus'); if (os) os.style.display = 'none';
                     scrollBottom(false);
                 } else {
                     typingBubble.classList.add('d-none');
                     if (typingStatus) typingStatus.textContent = '';
+                    var os2 = document.getElementById('onlineStatus'); if (os2) os2.style.display = '';
+                }
+
+                // Update online presence indicator live
+                if (d.other_online) {
+                    var onlineEl = document.getElementById('onlineStatus');
+                    if (onlineEl) {
+                        if (d.other_online.online) {
+                            onlineEl.innerHTML = '<span class="text-success d-flex align-items-center gap-1"><i class="bi bi-circle-fill" style="font-size:.45rem;"></i>Online now</span>';
+                        } else if (d.other_online.display) {
+                            onlineEl.innerHTML = '<span class="text-muted">Last seen ' + d.other_online.display + '</span>';
+                        } else {
+                            onlineEl.innerHTML = '';
+                        }
+                    }
                 }
 
                 if (d.read_up_to) {
