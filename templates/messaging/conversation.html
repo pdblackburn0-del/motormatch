@@ -106,8 +106,7 @@
                     <div class="bubble-time">
                         {{ msg.created_at|date:'H:i' }}
                         {% if msg.sender == request.user %}
-                        <i class="bi {% if msg.is_read %}bi-check2-all{% else %}bi-check2{% endif %} tick-icon"
-                           style="color:{% if msg.is_read %}#a5b4fc{% else %}#adb5bd{% endif %};"></i>
+                        <i class="bi {% if msg.is_read %}bi-check2-all tick-icon--read{% else %}bi-check2 tick-icon--unread{% endif %} tick-icon"></i>
                         {% endif %}
                     </div>
                 </div>
@@ -191,11 +190,14 @@
 {% endblock %}
 
 {% block extra_js %}
-{# Globals needed by chat.js #}
+{# Globals needed by chat.js — rendered as JSON to avoid linter false positives #}
+{{ other.pk|json_script:"data-other-pk" }}
+{{ csrf_token|json_script:"data-csrf" }}
+{{ my_initials|json_script:"data-my-inits" }}
 <script>
-var OTHER_PK   = {{ other.pk }};
-var CSRF       = '{{ csrf_token }}';
-var MY_INITS   = '{{ my_initials }}';
+var OTHER_PK   = JSON.parse(document.getElementById('data-other-pk').textContent);
+var CSRF       = JSON.parse(document.getElementById('data-csrf').textContent);
+var MY_INITS   = JSON.parse(document.getElementById('data-my-inits').textContent);
 var SEND_URL   = '/inbox/' + OTHER_PK + '/send/';
 var POLL_URL   = '/inbox/' + OTHER_PK + '/poll/';
 var TYPING_URL = '/inbox/' + OTHER_PK + '/typing/';

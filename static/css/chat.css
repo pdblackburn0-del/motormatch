@@ -135,6 +135,8 @@
 .bubble-wrap.mine .bubble-time   { justify-content: flex-end; }
 .bubble-wrap.theirs .bubble-time { justify-content: flex-start; }
 .tick-icon { font-size: .78rem; }
+.tick-icon--read   { color: #a5b4fc; }
+.tick-icon--unread { color: #adb5bd; }
 
 /* Avatar circles */
 .avatar-sm {
