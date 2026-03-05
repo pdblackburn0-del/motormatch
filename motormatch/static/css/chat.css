@@ -60,7 +60,7 @@
     word-break: break-word;
     white-space: pre-line;
     display: inline-block;
-    width: 100%;
+    max-width: 100%;
     box-sizing: border-box;
 }
 .bubble.theirs {
@@ -76,7 +76,10 @@
     box-shadow: 0 2px 8px rgba(79,70,229,.28);
 }
 
-/* Attachment images inside bubbles */
+/* Attachment images inside bubbles — bubble should fill col when it has an image */
+.bubble:has(img.attach) {
+    width: 100%;
+}
 .bubble img.attach {
     max-width: 100%;
     max-height: 220px;
@@ -246,6 +249,31 @@
     object-fit: cover;
     display: block;
 }
+/* Attach image button */
+.chat-attach-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: color .15s, background .15s;
+    flex-shrink: 0;
+    padding: 0;
+}
+.chat-attach-btn:hover {
+    color: #4f46e5;
+    background: #ede9fe;
+}
+.chat-outer.theme-ocean .chat-attach-btn:hover { color: #0ea5e9; background: #e0f2fe; }
+.chat-outer.theme-rose  .chat-attach-btn:hover { color: #f43f5e; background: #ffe4e6; }
+.chat-outer.theme-dark  .chat-attach-btn { color: #64748b; }
+.chat-outer.theme-dark  .chat-attach-btn:hover { color: #a5b4fc; background: #334155; }
+
 #gifBtn {
     background: #ede9fe !important;
     color: #4f46e5 !important;
