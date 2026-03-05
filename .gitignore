@@ -3,3 +3,6 @@ env.py
 __pycache__/
 *.py[cod]
 db.sqlite3
+media/
+fix_car_images.py
+add_more_cars.py

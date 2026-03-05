@@ -1,0 +1,3 @@
+# Django templates contain template tags that Prettier splits across
+# lines, breaking Django's template engine rendering.
+motormatch/templates/**/*.html

@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from .models import Vehicle
 
 
 def index(request):
@@ -10,24 +11,17 @@ def index(request):
         {'name': 'Coupe', 'icon': 'bi bi-lightning-charge'},
         {'name': 'Convertible', 'icon': 'bi bi-wind'},
     ]
-    featured_cars = [
-        {'title': '2021 Tesla Model 3', 'price': '£34,900', 'variant': 'Long Range AWD', 'mileage': '24k mi', 'fuel': 'Electric', 'transmission': 'Auto', 'badge': 'HOT DEAL', 'badge_color': '#16a34a', 'image': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=220&fit=crop'},
-        {'title': '2019 BMW 3 Series', 'price': '£28,500', 'variant': '330i xDrive', 'mileage': '42k mi', 'fuel': 'Gas', 'transmission': 'Auto', 'badge': 'PRICE DROP', 'badge_color': '#dc2626', 'image': 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=220&fit=crop'},
-        {'title': '2022 Audi Q5', 'price': '£41,200', 'variant': '45 TFSI Premium', 'mileage': '15k mi', 'fuel': 'Hybrid', 'transmission': 'Auto', 'badge': 'ECO', 'badge_color': '#16a34a', 'image': 'https://images.unsplash.com/photo-1606152421802-db97b9c7a11b?w=400&h=220&fit=crop'},
-        {'title': '2020 Honda Accord', 'price': '£22,900', 'variant': 'Touring Sedan', 'mileage': '31k mi', 'fuel': 'Gas', 'transmission': 'Auto', 'badge': 'HOT DEAL', 'badge_color': '#16a34a', 'image': 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400&h=220&fit=crop'},
-    ]
-    recommended_cars = [
-        {'id': 1, 'title': '2020 Porsche 911 Carrera', 'variant': 'Carrera 4S', 'price': '$45,000', 'mileage': '12,500 mi', 'year': '2020', 'fuel': 'Automatic', 'image': 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=400&h=220&fit=crop'},
-        {'id': 2, 'title': '2023 BMW X5', 'variant': 'xDrive40i', 'price': '$62,950', 'mileage': '5,200 mi', 'year': '2023', 'fuel': 'Hybrid', 'image': 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=220&fit=crop'},
-        {'id': 3, 'title': '2018 Toyota Camry', 'variant': 'SE Sedan', 'price': '$18,500', 'mileage': '54,000 mi', 'year': '2018', 'fuel': 'Gas', 'image': 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400&h=220&fit=crop'},
-        {'id': 4, 'title': '2021 Ford F-150', 'variant': 'XLT SuperCrew', 'price': '$38,900', 'mileage': '32,100 mi', 'year': '2021', 'fuel': '4WD', 'image': 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=220&fit=crop'},
-        {'id': 5, 'title': '2022 Mercedes-Benz C-Class', 'variant': 'C 300 4MATIC', 'price': '$55,400', 'mileage': '8,900 mi', 'year': '2022', 'fuel': 'Luxury', 'image': 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=400&h=220&fit=crop'},
-        {'id': 6, 'title': '2016 Chevrolet Camaro', 'variant': '2SS Coupe', 'price': '$29,995', 'mileage': '45,600 mi', 'year': '2016', 'fuel': 'V8', 'image': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&h=220&fit=crop'},
-    ]
+    
+    all_vehicles = Vehicle.objects.all()
+    featured_cars = all_vehicles[:4]
+    recommended_cars = all_vehicles[:4]
+    remaining_cars = all_vehicles[4:]
+
     return render(request, 'home.html', {
         'body_types': body_types,
         'featured_cars': featured_cars,
         'recommended_cars': recommended_cars,
+        'remaining_cars': remaining_cars,
     })
 
 
@@ -65,12 +59,12 @@ def comparison(request):
 
 def saved(request):
     saved_cars = [
-        {'title': '2019 Honda Civic', 'variant': 'Sport Sedan 4D', 'price': '$18,500', 'mileage': '32k mi', 'mpg': '30 MPG', 'location': 'San Jose, CA', 'badge': 'Used', 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400&h=220&fit=crop'},
-        {'title': '2020 Toyota Camry', 'variant': 'SE Sedan 4D', 'price': '$22,000', 'mileage': '15k mi', 'mpg': '28 MPG', 'location': 'Austin, TX', 'badge': 'Certified Pre-Owned', 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400&h=220&fit=crop'},
-        {'title': '2018 Ford Mustang', 'variant': 'GT Premium Coupe', 'price': '$28,900', 'mileage': '40k mi', 'mpg': '18 MPG', 'location': 'Los Angeles, CA', 'badge': None, 'compare_checked': True, 'image': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&h=220&fit=crop'},
-        {'title': '2021 Tesla Model 3', 'variant': 'Long Range AWD', 'price': '$39,500', 'mileage': '12k mi', 'mpg': '134 MPGe', 'location': 'San Francisco, CA', 'badge': 'Electric', 'compare_checked': True, 'image': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=220&fit=crop'},
-        {'title': '2017 Chevrolet Silverado', 'variant': '1500 LT Crew Cab', 'price': '$32,000', 'mileage': '55k mi', 'mpg': '17 MPG', 'location': 'Dallas, TX', 'badge': None, 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=220&fit=crop'},
-        {'title': '2022 BMW 3 Series', 'variant': '330i xDrive', 'price': '$42,000', 'mileage': '5k mi', 'mpg': '26 MPG', 'location': 'New York, NY', 'badge': None, 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=220&fit=crop'},
+        {'title': '2019 Honda Civic', 'variant': 'Sport Sedan 4D', 'price': '£18,500', 'mileage': '32k mi', 'mpg': '30 MPG', 'location': 'Bristol', 'badge': 'Used', 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400&h=220&fit=crop'},
+        {'title': '2020 Toyota Camry', 'variant': 'SE Sedan 4D', 'price': '£22,000', 'mileage': '15k mi', 'mpg': '28 MPG', 'location': 'Leeds', 'badge': 'Certified Pre-Owned', 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400&h=220&fit=crop'},
+        {'title': '2018 Ford Mustang', 'variant': 'GT Premium Coupe', 'price': '£28,900', 'mileage': '40k mi', 'mpg': '18 MPG', 'location': 'Manchester', 'badge': None, 'compare_checked': True, 'image': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&h=220&fit=crop'},
+        {'title': '2021 Tesla Model 3', 'variant': 'Long Range AWD', 'price': '£39,500', 'mileage': '12k mi', 'mpg': '134 MPGe', 'location': 'London', 'badge': 'Electric', 'compare_checked': True, 'image': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=220&fit=crop'},
+        {'title': '2017 Chevrolet Silverado', 'variant': '1500 LT Crew Cab', 'price': '£32,000', 'mileage': '55k mi', 'mpg': '17 MPG', 'location': 'Birmingham', 'badge': None, 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=220&fit=crop'},
+        {'title': '2022 BMW 3 Series', 'variant': '330i xDrive', 'price': '£42,000', 'mileage': '5k mi', 'mpg': '26 MPG', 'location': 'Edinburgh', 'badge': None, 'compare_checked': False, 'image': 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=220&fit=crop'},
     ]
     return render(request, 'saved.html', {'saved_cars': saved_cars})
 
