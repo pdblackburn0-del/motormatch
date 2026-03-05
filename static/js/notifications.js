@@ -155,30 +155,59 @@ function getCsrf() {
 
 function toggleSaveCard(btn) {
     var icon = btn.querySelector('i');
+    var wasSaved = btn.dataset.saved === '1';
+
+    // Optimistic immediate update
+    if (icon) {
+        if (wasSaved) {
+            icon.classList.remove('bi-heart-fill', 'vc__heart-icon--saved', 'text-danger');
+            icon.classList.add('bi-heart', 'vc__heart-icon', 'text-muted');
+        } else {
+            icon.classList.remove('bi-heart', 'vc__heart-icon', 'text-muted');
+            icon.classList.add('bi-heart-fill', 'vc__heart-icon--saved', 'text-danger');
+        }
+    }
+    btn.dataset.saved = wasSaved ? '0' : '1';
+    btn.title = wasSaved ? 'Save' : 'Unsave';
+
     fetch(btn.dataset.url, {
         method: 'POST',
         headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCsrf() }
     })
     .then(function(r){ return r.json(); })
     .then(function(d){
-        if (d.saved) {
+        // Sync with server truth in case of mismatch
+        if (d.saved !== !wasSaved) {
             if (icon) {
-                icon.classList.remove('bi-heart', 'vc__heart-icon', 'text-muted');
-                icon.classList.add('bi-heart-fill', 'vc__heart-icon--saved', 'text-danger');
+                if (d.saved) {
+                    icon.classList.remove('bi-heart', 'vc__heart-icon', 'text-muted');
+                    icon.classList.add('bi-heart-fill', 'vc__heart-icon--saved', 'text-danger');
+                } else {
+                    icon.classList.remove('bi-heart-fill', 'vc__heart-icon--saved', 'text-danger');
+                    icon.classList.add('bi-heart', 'vc__heart-icon', 'text-muted');
+                }
+                btn.dataset.saved = d.saved ? '1' : '0';
+                btn.title = d.saved ? 'Unsave' : 'Save';
             }
-            btn.title = 'Unsave';
-            btn.dataset.saved = '1';
-        } else {
-            if (icon) {
-                icon.classList.remove('bi-heart-fill', 'vc__heart-icon--saved', 'text-danger');
-                icon.classList.add('bi-heart', 'vc__heart-icon', 'text-muted');
-            }
-            btn.title = 'Save';
-            btn.dataset.saved = '0';
-            // Remove card from saved page if we're on it
+        }
+        // Remove card from saved page if unsaved
+        if (!d.saved) {
             var card = btn.closest('.col');
             if (card && document.querySelector('.saved-grid')) card.remove();
         }
     })
-    .catch(function(){});
+    .catch(function(){
+        // Revert optimistic update on failure
+        if (icon) {
+            if (wasSaved) {
+                icon.classList.remove('bi-heart', 'vc__heart-icon', 'text-muted');
+                icon.classList.add('bi-heart-fill', 'vc__heart-icon--saved', 'text-danger');
+            } else {
+                icon.classList.remove('bi-heart-fill', 'vc__heart-icon--saved', 'text-danger');
+                icon.classList.add('bi-heart', 'vc__heart-icon', 'text-muted');
+            }
+            btn.dataset.saved = wasSaved ? '1' : '0';
+            btn.title = wasSaved ? 'Unsave' : 'Save';
+        }
+    });
 }
