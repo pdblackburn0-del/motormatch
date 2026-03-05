@@ -3,56 +3,79 @@
 {% block title %}Messages - Motor Match{% endblock %}
 
 {% block content %}
-<div class="container py-5" style="max-width:680px;">
+<div class="container py-4" style="max-width:680px;">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-0">Messages</h2>
+            <h2 class="fw-bold mb-1">Messages</h2>
             <p class="text-muted small mb-0">Your conversations with buyers and sellers.</p>
         </div>
-        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm px-3">
             <i class="bi bi-arrow-left me-1"></i>Dashboard
         </a>
     </div>
 
     {% if conversations %}
-    <div class="card border-0 shadow-sm" style="border-radius:14px; overflow:hidden;">
+    <div class="card border-0 shadow-sm" style="border-radius:14px;">
         {% for conv in conversations %}
-        <a href="{% url 'conversation' conv.user.pk %}"
-           class="d-flex align-items-center gap-3 px-4 py-3 text-decoration-none text-dark border-bottom conv-row">
-            {% if conv.user.profile.avatar %}
-                <img src="{{ conv.user.profile.avatar.url }}" alt=""
-                     class="rounded-circle border flex-shrink-0"
-                     style="width:48px;height:48px;object-fit:cover;">
-            {% else %}
-                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white flex-shrink-0"
-                     style="width:48px;height:48px;background:#4f46e5;font-size:.95rem;">
-                    {{ conv.user.profile.get_initials }}
-                </div>
-            {% endif %}
-            <div class="flex-grow-1 overflow-hidden">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="fw-semibold {% if conv.unread %}text-dark{% else %}text-secondary{% endif %}" style="font-size:.92rem;">
-                        {{ conv.user.profile.get_display_name }}
-                    </span>
-                    <span class="text-muted flex-shrink-0 ms-2" style="font-size:.73rem;">{{ conv.last_message.created_at|timesince }} ago</span>
-                </div>
-                <div class="d-flex align-items-center justify-content-between gap-2 mt-1">
-                    <p class="mb-0 text-truncate {% if conv.unread %}fw-semibold text-dark{% else %}text-muted{% endif %}" style="font-size:.82rem; max-width:400px;">
-                        {% if conv.last_message.sender == request.user %}<span class="text-muted me-1">You:</span>{% endif %}
-                        {{ conv.last_message.body|truncatechars:60 }}
-                    </p>
-                    {% if conv.unread %}<span class="badge bg-primary rounded-pill flex-shrink-0" style="font-size:.7rem;">{{ conv.unread }}</span>{% endif %}
-                </div>
-                {% if conv.last_message.vehicle %}
-                <p class="mb-0 mt-1" style="font-size:.73rem;"><i class="bi bi-car-front text-primary me-1"></i>{{ conv.last_message.vehicle.title }}</p>
+        <div class="conv-row d-flex align-items-center gap-3 px-4 py-3 border-bottom">
+            <!-- Avatar + message preview (clickable) -->
+            <a href="{% url 'conversation' conv.user.pk %}"
+               class="d-flex align-items-center gap-3 flex-grow-1 overflow-hidden text-decoration-none text-dark">
+                {% if conv.user.profile.avatar %}
+                    <img src="{{ conv.user.profile.avatar.url }}" alt=""
+                         class="rounded-circle border flex-shrink-0"
+                         style="width:48px;height:48px;object-fit:cover;">
+                {% else %}
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white flex-shrink-0"
+                         style="width:48px;height:48px;background:#4f46e5;font-size:.95rem;">
+                        {{ conv.user.profile.get_initials }}
+                    </div>
                 {% endif %}
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold {% if conv.unread %}text-dark{% else %}text-secondary{% endif %}" style="font-size:.92rem;">
+                            {{ conv.user.profile.get_display_name }}
+                        </span>
+                        <span class="text-muted flex-shrink-0 ms-2" style="font-size:.73rem;">{{ conv.last_message.created_at|timesince }} ago</span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between gap-2 mt-1">
+                        <p class="mb-0 text-truncate {% if conv.unread %}fw-semibold text-dark{% else %}text-muted{% endif %}" style="font-size:.82rem; max-width:380px;">
+                            {% if conv.last_message.sender == request.user %}<span class="text-muted me-1">You:</span>{% endif %}
+                            {{ conv.last_message.body|truncatechars:60 }}
+                        </p>
+                        {% if conv.unread %}<span class="badge bg-primary rounded-pill flex-shrink-0" style="font-size:.7rem;">{{ conv.unread }}</span>{% endif %}
+                    </div>
+                    {% if conv.last_message.vehicle %}
+                    <p class="mb-0 mt-1" style="font-size:.73rem;"><i class="bi bi-car-front text-primary me-1"></i>{{ conv.last_message.vehicle.title }}</p>
+                    {% endif %}
+                </div>
+            </a>
+
+            <!-- 3-dot dropdown -->
+            <div class="dropdown flex-shrink-0 ms-1">
+                <button class="btn btn-link text-muted p-1 lh-1 conv-menu-btn"
+                        data-bs-toggle="dropdown" aria-expanded="false" title="Options">
+                    <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius:10px;min-width:170px;">
+                    <li>
+                        <a class="dropdown-item py-2" href="{% url 'seller_profile' conv.user.pk %}">
+                            <i class="bi bi-person me-2 text-primary"></i>View Profile
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <button class="dropdown-item py-2 text-danger"
+                                onclick="openDeleteModal('{{ conv.user.pk }}', '{{ conv.user.profile.get_display_name }}')">
+                            <i class="bi bi-trash3 me-2"></i>Delete Chat
+                        </button>
+                    </li>
+                </ul>
             </div>
-            <i class="bi bi-chevron-right text-muted flex-shrink-0" style="font-size:.8rem;"></i>
-        </a>
+        </div>
         {% endfor %}
     </div>
-    <style>.conv-row:hover{background:#f8f9ff!important;} .conv-row:last-child{border-bottom:none!important;}</style>
 
     {% else %}
     <div class="text-center py-5 text-muted">
@@ -64,4 +87,47 @@
     {% endif %}
 
 </div>
+
+<!-- Delete conversation modal -->
+<div class="modal fade" id="inboxDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+        <div class="modal-content border-0 shadow" style="border-radius:14px;">
+            <div class="modal-body p-4 text-center">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                     style="width:56px;height:56px;background:#fff4f4;">
+                    <i class="bi bi-trash3-fill text-danger fs-4"></i>
+                </div>
+                <h5 class="fw-bold mb-1">Delete this conversation?</h5>
+                <p class="text-muted small mb-4" id="inboxDeleteText"></p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-light fw-semibold px-4" data-bs-dismiss="modal">Cancel</button>
+                    <form method="post" id="inboxDeleteForm" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger fw-semibold px-4">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.conv-row { transition: background .12s; }
+.conv-row:hover { background: #f8f9ff !important; }
+.conv-row:first-child { border-radius: 14px 14px 0 0; }
+.conv-row:last-child { border-bottom: none !important; border-radius: 0 0 14px 14px; }
+.conv-menu-btn { opacity: 0; transition: opacity .15s; border-radius: 6px; }
+.conv-row:hover .conv-menu-btn,
+.conv-menu-btn:focus,
+.conv-menu-btn[aria-expanded="true"] { opacity: 1; }
+</style>
+
+<script>
+function openDeleteModal(userPk, name) {
+    document.getElementById('inboxDeleteText').textContent =
+        'All messages with ' + name + ' will be permanently removed. This cannot be undone.';
+    document.getElementById('inboxDeleteForm').action = '/inbox/' + userPk + '/delete/';
+    new bootstrap.Modal(document.getElementById('inboxDeleteModal')).show();
+}
+</script>
 {% endblock %}

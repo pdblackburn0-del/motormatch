@@ -7,27 +7,42 @@
 {% endblock extra_css %}
 
 {% block content %}
-<div class="chat-outer mb-5">
+<div class="chat-outer container py-2">
 
     <!-- Back bar -->
     <div class="d-flex align-items-center gap-2 mb-3">
-        <a href="{% url 'inbox' %}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>All Messages
+        <a href="{% url 'inbox' %}" class="btn btn-outline-secondary btn-sm px-3">
+            <i class="bi bi-arrow-left me-1"></i>Messages
         </a>
-        <span class="ms-auto d-flex align-items-center gap-3">
+        <span class="ms-auto d-flex align-items-center gap-2">
             <span class="badge bg-success-subtle text-success border border-success-subtle chat-secured-badge">
                 <i class="bi bi-lock-fill me-1"></i>Secured
             </span>
-            <!-- Delete / wipe conversation -->
-            <button class="chat-delete-link btn btn-link p-0"
+            <!-- Theme picker -->
+            <div class="dropdown">
+                <button class="btn btn-sm px-2 text-muted chat-action-btn"
+                        id="themeToggle" data-bs-toggle="dropdown" aria-expanded="false" title="Change theme">
+                    <i class="bi bi-palette"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-3" style="min-width:180px;border-radius:12px;">
+                    <li class="mb-2"><span class="text-muted" style="font-size:.72rem;font-weight:600;letter-spacing:.06em;">THEME</span></li>
+                    <li class="d-flex gap-2 justify-content-start">
+                        <button class="theme-swatch" data-theme="" title="Purple" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);"></button>
+                        <button class="theme-swatch" data-theme="theme-ocean" title="Ocean" style="background:linear-gradient(135deg,#0ea5e9,#06b6d4);"></button>
+                        <button class="theme-swatch" data-theme="theme-rose" title="Rose" style="background:linear-gradient(135deg,#f43f5e,#e879f9);"></button>
+                        <button class="theme-swatch" data-theme="theme-dark" title="Dark" style="background:linear-gradient(135deg,#1e293b,#334155);"></button>
+                    </li>
+                </ul>
+            </div>
+            <button class="btn btn-sm px-2 text-muted chat-delete-btn"
                     data-bs-toggle="modal" data-bs-target="#deleteChatModal"
                     title="Delete conversation">
-                <i class="bi bi-trash3 me-1"></i><span class="d-none d-sm-inline">Delete chat</span>
+                <i class="bi bi-trash3 me-1"></i><span class="d-none d-sm-inline">Delete</span>
             </button>
         </span>
     </div>
 
-    <div class="shadow-sm" style="border-radius:14px; overflow:hidden;">
+    <div class="chat-card shadow-sm" style="overflow:hidden;">
 
         <!-- ── Header ── -->
         <div class="chat-header">
@@ -136,9 +151,7 @@
                     <i class="bi bi-image fs-5 text-muted"></i>
                     <input type="file" id="attachInput" accept="image/*,.gif" class="d-none">
                 </label>
-                <button type="button" id="gifBtn" class="btn btn-light border-0 flex-shrink-0 p-2" title="Send GIF">
-                    <span style="font-size:.72rem;font-weight:700;color:#6366f1;letter-spacing:.02em;">GIF</span>
-                </button>
+                <button type="button" id="gifBtn" class="btn flex-shrink-0" title="Send GIF">GIF</button>
                 <textarea id="msgInput" rows="1"
                           class="form-control"
                           placeholder="Type a message…"></textarea>
@@ -188,4 +201,34 @@ var POLL_URL   = '/inbox/' + OTHER_PK + '/poll/';
 var TYPING_URL = '/inbox/' + OTHER_PK + '/typing/';
 </script>
 <script src="{% static 'js/chat.js' %}"></script>
+<script>
+// ── Chat theme switcher ──
+(function () {
+    var outer = document.querySelector('.chat-outer');
+    var swatches = document.querySelectorAll('.theme-swatch');
+    var STORAGE_KEY = 'mm_chat_theme';
+
+    function applyTheme(theme) {
+        outer.classList.remove('theme-ocean', 'theme-rose', 'theme-dark');
+        if (theme) outer.classList.add(theme);
+        swatches.forEach(function (s) {
+            s.classList.toggle('active', s.dataset.theme === theme);
+        });
+    }
+
+    // Restore saved theme
+    applyTheme(localStorage.getItem(STORAGE_KEY) || '');
+
+    swatches.forEach(function (s) {
+        s.addEventListener('click', function () {
+            var t = s.dataset.theme;
+            applyTheme(t);
+            localStorage.setItem(STORAGE_KEY, t);
+            // close dropdown
+            document.getElementById('themeToggle').closest('.dropdown')
+                .querySelector('[data-bs-toggle]').__bsDropdown && bootstrap.Dropdown.getInstance(document.getElementById('themeToggle')).hide();
+        });
+    });
+})();
+</script>
 {% endblock extra_js %}
