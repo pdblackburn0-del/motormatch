@@ -28,6 +28,15 @@ class UserProfile(models.Model):
             return self.first_name[:2].upper()
         return self.user.email[:2].upper()
 
+    def average_rating(self):
+        reviews = self.user.reviews_received.all()
+        if not reviews.exists():
+            return None
+        return round(sum(r.rating for r in reviews) / reviews.count(), 1)
+
+    def review_count(self):
+        return self.user.reviews_received.count()
+
     def __str__(self):
         return f"Profile: {self.user.email}"
 
@@ -42,7 +51,7 @@ class Vehicle(models.Model):
     owner        = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='vehicles')
     title        = models.CharField(max_length=200)
     variant      = models.CharField(max_length=200)
-    price        = models.CharField(max_length=50) # using CharField to include currency symbols for now, as in template
+    price        = models.CharField(max_length=50)
     mileage      = models.CharField(max_length=50)
     year         = models.CharField(max_length=4, blank=True, null=True)
     fuel         = models.CharField(max_length=50)
@@ -50,44 +59,31 @@ class Vehicle(models.Model):
     badge        = models.CharField(max_length=50, blank=True, null=True)
     badge_color  = models.CharField(max_length=20, blank=True, null=True)
     image        = models.URLField(max_length=500, blank=True, null=True)
-    image_file   = models.ImageField(
-        upload_to='car_images/', blank=True, null=True
-    )
+    image_file   = models.ImageField(upload_to='car_images/', blank=True, null=True)
     location     = models.CharField(max_length=100, blank=True)
     description  = models.TextField(blank=True)
     created_at   = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
-    # Whitelist mapping badge_color values to safe Bootstrap classes.
     _BADGE_CLASS_MAP = {
         '#16a34a': 'badge-green',
         '#dc2626': 'badge-red',
     }
 
     def get_badge_class(self):
-        """Return a safe CSS class for the badge colour."""
-        return self._BADGE_CLASS_MAP.get(
-            (self.badge_color or '').lower(), 'badge-default'
-        )
+        return self._BADGE_CLASS_MAP.get((self.badge_color or '').lower(), 'badge-default')
 
     def get_image(self):
-        """Return local file if uploaded, else fall back to URL."""
         if self.image_file and self.image_file.name:
             return self.image_file.url
         return self.image or ''
-
-    def average_rating(self):
-        reviews = self.reviews.all()
-        if not reviews.exists():
-            return None
-        return round(sum(r.rating for r in reviews) / reviews.count(), 1)
 
     def __str__(self):
         return f"{self.title} - {self.variant}"
 
 
 class SavedVehicle(models.Model):
-    user    = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_vehicles')
-    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='saved_by')
+    user     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_vehicles')
+    vehicle  = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='saved_by')
     saved_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -98,9 +94,6 @@ class SavedVehicle(models.Model):
         return f"{self.user.email} → {self.vehicle.title}"
 
 
-# ---------------------------------------------------------------------------
-# Notification
-# ---------------------------------------------------------------------------
 class Notification(models.Model):
     TYPE_INFO    = 'info'
     TYPE_SUCCESS = 'success'
@@ -126,27 +119,49 @@ class Notification(models.Model):
         return f"[{self.user.email}] {self.title}"
 
 
-# ---------------------------------------------------------------------------
-# Review
-# ---------------------------------------------------------------------------
-class Review(models.Model):
-    vehicle    = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='reviews')
-    reviewer   = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_given')
-    rating     = models.PositiveSmallIntegerField(default=5)
-    comment    = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+class LoginEvent(models.Model):
+    user         = models.ForeignKey(User, on_delete=models.CASCADE, related_name='login_events')
+    ip_address   = models.CharField(max_length=45)
+    user_agent   = models.TextField(blank=True)
+    city         = models.CharField(max_length=100, blank=True)
+    region       = models.CharField(max_length=100, blank=True)
+    country      = models.CharField(max_length=100, blank=True)
+    country_code = models.CharField(max_length=5, blank=True)
+    isp          = models.CharField(max_length=200, blank=True)
+    lat          = models.FloatField(null=True, blank=True)
+    lon          = models.FloatField(null=True, blank=True)
+    is_confirmed = models.BooleanField(default=False)
+    created_at   = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('vehicle', 'reviewer')
+        ordering = ['-created_at']
+
+    def location_string(self):
+        parts = [p for p in (self.city, self.region, self.country) if p]
+        return ', '.join(parts) if parts else 'Unknown location'
+
+    def is_local(self):
+        return self.ip_address in ('127.0.0.1', '::1', 'localhost')
+
+    def __str__(self):
+        return f"{self.user.email} from {self.ip_address} at {self.created_at}"
+
+
+class Review(models.Model):
+    reviewed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_received', null=True)
+    reviewer      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_given')
+    rating        = models.PositiveSmallIntegerField(default=5)
+    comment       = models.TextField(blank=True)
+    created_at    = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('reviewed_user', 'reviewer')
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.reviewer.email} → {self.vehicle.title} ({self.rating}★)"
+        return f"{self.reviewer} → {self.reviewed_user} ({self.rating}★)"
 
 
-# ---------------------------------------------------------------------------
-# Message
-# ---------------------------------------------------------------------------
 class Message(models.Model):
     sender     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     recipient  = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
@@ -163,9 +178,6 @@ class Message(models.Model):
         return f"{self.sender.email} → {self.recipient.email}: {self.subject}"
 
 
-# ---------------------------------------------------------------------------
-# Bid
-# ---------------------------------------------------------------------------
 class Bid(models.Model):
     STATUS_PENDING   = 'pending'
     STATUS_ACCEPTED  = 'accepted'
@@ -193,31 +205,61 @@ class Bid(models.Model):
         return f"{self.bidder.email} bid £{self.amount} on {self.vehicle.title}"
 
 
-# ---------------------------------------------------------------------------
-# Signals
-# ---------------------------------------------------------------------------
+def _fetch_geo(ip):
+    try:
+        import requests as _req
+        r = _req.get(f'http://ip-api.com/json/{ip}?fields=status,city,regionName,country,countryCode,isp,lat,lon', timeout=2)
+        if r.ok:
+            d = r.json()
+            if d.get('status') == 'success':
+                return d
+    except Exception:
+        pass
+    return {}
+
 
 @receiver(user_logged_in)
-def notify_login(sender, request, user, **kwargs):
-    """Create an info notification every time a user logs in."""
-    ip = request.META.get('REMOTE_ADDR', 'unknown')
+def record_login_event(sender, request, user, **kwargs):
+    ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', '')).split(',')[0].strip()
+    ua = request.META.get('HTTP_USER_AGENT', '')
+
+    geo = {} if ip in ('127.0.0.1', '::1', '') else _fetch_geo(ip)
+
+    event = LoginEvent.objects.create(
+        user=user,
+        ip_address=ip or '127.0.0.1',
+        user_agent=ua,
+        city=geo.get('city', ''),
+        region=geo.get('regionName', ''),
+        country=geo.get('country', ''),
+        country_code=geo.get('countryCode', ''),
+        isp=geo.get('isp', ''),
+        lat=geo.get('lat'),
+        lon=geo.get('lon'),
+    )
+
+    if geo:
+        location_hint = event.location_string()
+    else:
+        location_hint = 'local network' if event.is_local() else ip
+
     Notification.objects.create(
         user=user,
-        title='New login',
-        message=f'You logged in from {ip}.',
+        title='New login detected',
+        message=f'Your account was accessed from {location_hint}.',
         notif_type=Notification.TYPE_INFO,
-        url='/dashboard/',
+        url=f'/security/login/{event.pk}/',
     )
 
 
 @receiver(post_save, sender=SavedVehicle)
 def notify_vehicle_saved(sender, instance, created, **kwargs):
-    """Notify a seller when someone saves their listing."""
     if created and instance.vehicle.owner and instance.vehicle.owner != instance.user:
+        saver_name = instance.user.profile.get_display_name() if hasattr(instance.user, 'profile') else instance.user.email.split('@')[0]
         Notification.objects.create(
             user=instance.vehicle.owner,
             title='Someone saved your listing',
-            message=f'{instance.user.email} saved your listing: {instance.vehicle.title}.',
+            message=f'{saver_name} saved your listing: {instance.vehicle.title}.',
             notif_type=Notification.TYPE_SUCCESS,
             url=f'/vehicle/{instance.vehicle.pk}/',
         )

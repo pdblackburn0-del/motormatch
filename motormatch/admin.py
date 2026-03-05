@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Bid, Message, Notification, Review, SavedVehicle, UserProfile, Vehicle
+from .models import Bid, LoginEvent, Message, Notification, Review, SavedVehicle, UserProfile, Vehicle
 
 
 @admin.register(Vehicle)
@@ -32,9 +32,9 @@ class NotificationAdmin(admin.ModelAdmin):
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display  = ('reviewer', 'vehicle', 'rating', 'created_at')
+    list_display  = ('reviewer', 'reviewed_user', 'rating', 'created_at')
     list_filter   = ('rating',)
-    search_fields = ('reviewer__email', 'vehicle__title')
+    search_fields = ('reviewer__email', 'reviewed_user__email')
 
 
 @admin.register(Message)
@@ -49,4 +49,12 @@ class BidAdmin(admin.ModelAdmin):
     list_display  = ('bidder', 'vehicle', 'amount', 'status', 'created_at')
     list_filter   = ('status',)
     search_fields = ('bidder__email', 'vehicle__title')
+
+
+@admin.register(LoginEvent)
+class LoginEventAdmin(admin.ModelAdmin):
+    list_display  = ('user', 'ip_address', 'city', 'country', 'is_confirmed', 'created_at')
+    list_filter   = ('is_confirmed', 'country')
+    search_fields = ('user__email', 'ip_address', 'city')
+    readonly_fields = ('user', 'ip_address', 'user_agent', 'city', 'region', 'country', 'country_code', 'isp', 'lat', 'lon', 'created_at')
 
