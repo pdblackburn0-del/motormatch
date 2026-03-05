@@ -72,6 +72,7 @@ def index(request):
         saved_pks = set(SavedVehicle.objects.filter(user=request.user).values_list('vehicle_id', flat=True))
 
     recently_listed = Vehicle.objects.filter(is_removed=False).order_by('-created_at')[:12]
+    total_listed    = Vehicle.objects.filter(is_removed=False).count()
     return render(request, 'pages/home.html', {
         'body_types':      body_types,
         'featured_cars':   vehicles[:4],
@@ -79,6 +80,7 @@ def index(request):
         'remaining_cars':  list(recently_listed[4:]),
         'query':           query,
         'saved_pks':       saved_pks,
+        'total_listed':    total_listed,
     })
 
 

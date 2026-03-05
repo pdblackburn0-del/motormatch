@@ -4,48 +4,100 @@
 
 {% block content %}
 
-<section
-    class="position-relative text-white"
-    style="
-        min-height: 340px;
-        background: url(&quot;https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1600&quot;)
-            center/cover no-repeat;
-    "
->
-    <div
-        class="position-absolute top-0 start-0 w-100 h-100"
-        style="background: rgba(15, 20, 40, 0.62)"
-    ></div>
-    <div class="container position-relative py-5 text-center">
-        <h1 class="fw-bold mb-2" style="font-size: 2.1rem">
-            Find your perfect match on the road.
-        </h1>
-        <p class="mb-4 text-white-50">
-            Search thousands of used cars from trusted dealers.
-        </p>
-        <div class="row justify-content-center">
-            <div class="col-lg-7">
-                <form method="get" action="{% url 'home' %}">
-                <div class="input-group shadow">
-                    <span
-                        class="input-group-text bg-white border-end-0 text-muted"
-                        ><i class="bi bi-search"></i
-                    ></span>
-                    <input
-                        type="text"
-                        name="q"
-                        value="{{ query }}"
-                        class="form-control border-start-0 ps-0 py-3"
-                        placeholder="Search by make, model, or keyword"
-                    />
-                    <button
-                        class="btn btn-primary px-4 fw-semibold"
-                        type="submit"
-                    >
-                        Search Cars
-                    </button>
+<style>
+.hero-banner {
+    position: relative;
+    min-height: 420px;
+    background: url("https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1600") center/cover no-repeat;
+    display: flex;
+    align-items: center;
+}
+.hero-banner__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        105deg,
+        rgba(7, 10, 26, 0.88) 0%,
+        rgba(10, 18, 45, 0.70) 55%,
+        rgba(10, 18, 45, 0.30) 100%
+    );
+}
+.hero-banner__inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+}
+.hero-accent { color: #60a5fa; }
+.hero-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 999px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.85);
+    backdrop-filter: blur(6px);
+}
+.hero-stat i { color: #60a5fa; font-size: 0.85rem; }
+.hero-search .form-control {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-left: 0;
+    font-size: 0.95rem;
+}
+.hero-search .input-group-text {
+    border-right: 0;
+    background: #fff;
+}
+.hero-search .btn {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    font-size: 0.95rem;
+}
+</style>
+
+<section class="hero-banner text-white">
+    <div class="hero-banner__overlay"></div>
+    <div class="hero-banner__inner">
+        <div class="container py-5">
+            <div class="row">
+                <div class="col-lg-8 col-xl-7">
+                    <p class="text-uppercase fw-semibold mb-2" style="font-size:0.75rem; letter-spacing:0.12em; color:#93c5fd;">The UK's Smartest Car Marketplace</p>
+                    <h1 class="fw-bold mb-3 lh-sm" style="font-size: clamp(1.9rem, 4vw, 2.9rem)">
+                        Find your <span class="hero-accent">perfect match</span><br>
+                        on the road.
+                    </h1>
+                    <p class="mb-4" style="color:rgba(255,255,255,0.68); font-size:1.0rem; max-width:480px;">
+                        Compare thousands of verified used cars, get honest pricing,
+                        and drive away with confidence.
+                    </p>
+                    <div class="hero-search mb-4 col-lg-9 col-xl-8 p-0">
+                        <form method="get" action="{% url 'home' %}">
+                            <div class="input-group shadow-lg">
+                                <span class="input-group-text">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+                                <input
+                                    type="text"
+                                    name="q"
+                                    value="{{ query }}"
+                                    class="form-control"
+                                    placeholder="Make, model, or keyword&hellip;"
+                                />
+                                <button class="btn btn-primary fw-semibold" type="submit">
+                                    Search Cars
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="hero-stat"><i class="bi bi-car-front-fill"></i> {{ total_listed }} car{% if total_listed != 1 %}s{% endif %} listed</span>
+                        <span class="hero-stat"><i class="bi bi-patch-check-fill"></i> Verified sellers</span>
+                        <span class="hero-stat"><i class="bi bi-tag-fill"></i> Best-price guarantee</span>
+                    </div>
                 </div>
-                </form>
             </div>
         </div>
     </div>
@@ -90,13 +142,14 @@
                 </button>
             </div>
         </div>
+        <div id="featured-track-wrap" style="overflow: hidden;">
         <div
             id="featured-scroll"
-            class="row g-3 flex-nowrap overflow-auto pb-2"
-            style="scrollbar-width: none"
+            class="d-flex gap-3 pb-2"
+            style="overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none;"
         >
             {% for car in featured_cars %}
-            <div class="col-8 col-sm-5 col-md-4 col-lg-3 flex-shrink-0">
+            <div style="min-width: 260px; max-width: 280px; flex-shrink: 0; scroll-snap-align: start;">
                 <a href="{% url 'vehicle_detail' car.id %}" class="text-decoration-none text-dark">
                 <div
                     class="card border-0 shadow-sm h-100"
@@ -141,6 +194,7 @@
                 </a>
             </div>
             {% endfor %}
+        </div>
         </div>
     </div>
 </section>
@@ -264,13 +318,22 @@
     }
 
     // Featured deals carousel scroll
-    const featuredScroll = document.getElementById("featured-scroll");
-    document.getElementById("scroll-left")?.addEventListener("click", () => {
-        featuredScroll.scrollBy({ left: -300, behavior: "smooth" });
-    });
-    document.getElementById("scroll-right")?.addEventListener("click", () => {
-        featuredScroll.scrollBy({ left: 300, behavior: "smooth" });
-    });
+    (function () {
+        const track = document.getElementById("featured-scroll");
+        if (!track) return;
+        const STEP = 300;
+        document.getElementById("scroll-left")?.addEventListener("click", () => {
+            track.scrollBy({ left: -STEP, behavior: "smooth" });
+        });
+        document.getElementById("scroll-right")?.addEventListener("click", () => {
+            track.scrollBy({ left: STEP, behavior: "smooth" });
+        });
+        // hide webkit scrollbar
+        track.style.cssText += '; scrollbar-width: none;';
+        const style = document.createElement('style');
+        style.textContent = '#featured-scroll::-webkit-scrollbar { display: none; }';
+        document.head.appendChild(style);
+    })();
 </script>
 
 {% endblock %}
