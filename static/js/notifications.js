@@ -162,11 +162,17 @@ function toggleSaveCard(btn) {
     .then(function(r){ return r.json(); })
     .then(function(d){
         if (d.saved) {
-            if (icon) icon.className = icon.className.replace('bi-heart text-muted', 'bi-heart-fill text-danger');
+            if (icon) {
+                icon.classList.remove('bi-heart', 'vc__heart-icon', 'text-muted');
+                icon.classList.add('bi-heart-fill', 'vc__heart-icon--saved', 'text-danger');
+            }
             btn.title = 'Unsave';
             btn.dataset.saved = '1';
         } else {
-            if (icon) icon.className = icon.className.replace('bi-heart-fill text-danger', 'bi-heart text-muted');
+            if (icon) {
+                icon.classList.remove('bi-heart-fill', 'vc__heart-icon--saved', 'text-danger');
+                icon.classList.add('bi-heart', 'vc__heart-icon', 'text-muted');
+            }
             btn.title = 'Save';
             btn.dataset.saved = '0';
             // Remove card from saved page if we're on it
