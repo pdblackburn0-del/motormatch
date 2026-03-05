@@ -17,9 +17,9 @@
     inset: 0;
     background: linear-gradient(
         105deg,
-        rgba(7, 10, 26, 0.88) 0%,
-        rgba(10, 18, 45, 0.70) 55%,
-        rgba(10, 18, 45, 0.30) 100%
+        rgba(7, 10, 26, 0.96) 0%,
+        rgba(10, 18, 45, 0.78) 55%,
+        rgba(10, 18, 45, 0.35) 100%
     );
 }
 .hero-banner__inner {
@@ -56,6 +56,8 @@
     padding-right: 1.5rem;
     font-size: 0.95rem;
 }
+#featured-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+#featured-scroll::-webkit-scrollbar { display: none; }
 </style>
 
 <section class="hero-banner text-white">
@@ -65,9 +67,9 @@
             <div class="row">
                 <div class="col-lg-8 col-xl-7">
                     <p class="text-uppercase fw-semibold mb-2" style="font-size:0.75rem; letter-spacing:0.12em; color:#93c5fd;">The UK's Smartest Car Marketplace</p>
-                    <h1 class="fw-bold mb-3 lh-sm" style="font-size: clamp(1.9rem, 4vw, 2.9rem)">
-                        Find your <span class="hero-accent">perfect match</span><br>
-                        on the road.
+                    <h1 class="fw-bold mb-3 lh-sm" style="font-size: clamp(1.9rem, 4vw, 2.9rem); text-shadow: 0 1px 10px rgba(0,0,0,0.55);">
+                        <span style="color:#e0eaff;">Find your</span> <span class="hero-accent">perfect match</span><br>
+                        <span style="color:#e0eaff;">on the road.</span>
                     </h1>
                     <p class="mb-4" style="color:rgba(255,255,255,0.68); font-size:1.0rem; max-width:480px;">
                         Compare thousands of verified used cars, get honest pricing,
@@ -142,11 +144,10 @@
                 </button>
             </div>
         </div>
-        <div id="featured-track-wrap" style="overflow: hidden;">
         <div
             id="featured-scroll"
             class="d-flex gap-3 pb-2"
-            style="overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none;"
+            style="overflow-x: scroll; scroll-snap-type: x mandatory;"
         >
             {% for car in featured_cars %}
             <div style="min-width: 260px; max-width: 280px; flex-shrink: 0; scroll-snap-align: start;">
@@ -194,7 +195,6 @@
                 </a>
             </div>
             {% endfor %}
-        </div>
         </div>
     </div>
 </section>
@@ -320,19 +320,12 @@
     // Featured deals carousel scroll
     (function () {
         const track = document.getElementById("featured-scroll");
-        if (!track) return;
-        const STEP = 300;
-        document.getElementById("scroll-left")?.addEventListener("click", () => {
-            track.scrollBy({ left: -STEP, behavior: "smooth" });
-        });
-        document.getElementById("scroll-right")?.addEventListener("click", () => {
-            track.scrollBy({ left: STEP, behavior: "smooth" });
-        });
-        // hide webkit scrollbar
-        track.style.cssText += '; scrollbar-width: none;';
-        const style = document.createElement('style');
-        style.textContent = '#featured-scroll::-webkit-scrollbar { display: none; }';
-        document.head.appendChild(style);
+        const btnL = document.getElementById("scroll-left");
+        const btnR = document.getElementById("scroll-right");
+        if (!track || !btnL || !btnR) return;
+        const STEP = 292; // card width (280) + gap (12)
+        btnL.addEventListener("click", () => track.scrollBy({ left: -STEP, behavior: "smooth" }));
+        btnR.addEventListener("click", () => track.scrollBy({ left:  STEP, behavior: "smooth" }));
     })();
 </script>
 
