@@ -3,7 +3,7 @@
 {% block title %}Inbox - Motor Match{% endblock %}
 
 {% block content %}
-<div class="container py-5" style="max-width:900px;">
+<div class="container py-5" style="max-width:860px;">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -17,13 +17,15 @@
 
     <ul class="nav nav-tabs mb-4" id="inboxTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="received-tab" data-bs-toggle="tab" data-bs-target="#received" type="button" role="tab">
-                Received {% if received %}<span class="badge bg-primary ms-1">{{ received|length }}</span>{% endif %}
+            <button class="nav-link active fw-semibold" id="received-tab" data-bs-toggle="tab" data-bs-target="#received" type="button" role="tab">
+                <i class="bi bi-inbox me-1"></i>Received
+                {% if received %}<span class="badge bg-primary ms-1">{{ received|length }}</span>{% endif %}
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="sent-tab" data-bs-toggle="tab" data-bs-target="#sent" type="button" role="tab">
-                Sent {% if sent %}<span class="badge bg-secondary ms-1">{{ sent|length }}</span>{% endif %}
+            <button class="nav-link fw-semibold" id="sent-tab" data-bs-toggle="tab" data-bs-target="#sent" type="button" role="tab">
+                <i class="bi bi-send me-1"></i>Sent
+                {% if sent %}<span class="badge bg-secondary ms-1">{{ sent|length }}</span>{% endif %}
             </button>
         </li>
     </ul>
@@ -33,33 +35,63 @@
         <!-- Received -->
         <div class="tab-pane fade show active" id="received" role="tabpanel">
             {% if received %}
-            <div class="list-group shadow-sm">
+            <div class="d-flex flex-column gap-3">
                 {% for msg in received %}
-                <div class="list-group-item list-group-item-action d-flex gap-3 py-3">
-                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:40px;height:40px;font-size:.8rem;">
-                        {{ msg.sender.email|slice:":2"|upper }}
-                    </div>
-                    <div class="flex-grow-1 overflow-hidden">
-                        <div class="d-flex justify-content-between">
-                            <span class="fw-semibold small">{{ msg.sender.email }}</span>
-                            <span class="text-muted" style="font-size:.75rem;">{{ msg.created_at|timesince }} ago</span>
+                <div class="card border-0 shadow-sm" style="border-radius:12px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex gap-3">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0 fw-semibold"
+                                 style="width:44px;height:44px;font-size:.85rem;">
+                                {% with sp=msg.sender.profile %}{{ sp.get_initials }}{% endwith %}
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="fw-bold mb-0" style="font-size:.95rem;">
+                                            {% with sp=msg.sender.profile %}{{ sp.get_display_name }}{% endwith %}
+                                        </p>
+                                        {% if msg.subject %}<p class="mb-0 text-dark fw-semibold small">{{ msg.subject }}</p>{% endif %}
+                                    </div>
+                                    <span class="text-muted flex-shrink-0 ms-3" style="font-size:.75rem;">{{ msg.created_at|timesince }} ago</span>
+                                </div>
+                                {% if msg.vehicle %}
+                                <p class="mb-1 mt-1" style="font-size:.78rem;">
+                                    <i class="bi bi-car-front text-primary me-1"></i>
+                                    <a href="{% url 'vehicle_detail' msg.vehicle.pk %}" class="text-primary text-decoration-none">{{ msg.vehicle.title }}</a>
+                                </p>
+                                {% endif %}
+                                <p class="text-muted small mb-3 mt-1" style="white-space:pre-wrap;">{{ msg.body }}</p>
+
+                                <button class="btn btn-sm btn-outline-primary"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#reply-{{ msg.pk }}">
+                                    <i class="bi bi-reply me-1"></i>Reply
+                                </button>
+                                <div class="collapse mt-3" id="reply-{{ msg.pk }}">
+                                    <form method="post" action="{% url 'send_message_direct' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="recipient_id" value="{{ msg.sender.pk }}">
+                                        {% if msg.vehicle %}<input type="hidden" name="vehicle_id" value="{{ msg.vehicle.pk }}">{% endif %}
+                                        <input type="hidden" name="subject" value="Re: {{ msg.subject|default:'your message' }}">
+                                        <div class="input-group">
+                                            <textarea name="body" rows="2" class="form-control form-control-sm"
+                                                      placeholder="Write your reply..." required></textarea>
+                                            <button type="submit" class="btn btn-primary btn-sm px-3">
+                                                <i class="bi bi-send-fill"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
-                        {% if msg.subject %}<p class="mb-0 small fw-semibold text-dark">{{ msg.subject }}</p>{% endif %}
-                        {% if msg.vehicle %}
-                        <p class="mb-0 text-primary" style="font-size:.75rem;">
-                            <i class="bi bi-car-front me-1"></i>
-                            <a href="{% url 'vehicle_detail' msg.vehicle.pk %}" class="text-primary text-decoration-none">{{ msg.vehicle.title }}</a>
-                        </p>
-                        {% endif %}
-                        <p class="text-muted small mb-0">{{ msg.body|truncatechars:100 }}</p>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
             <div class="text-center py-5 text-muted">
-                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                <h5>No messages received</h5>
+                <i class="bi bi-inbox fs-1 d-block mb-3 text-primary opacity-25"></i>
+                <h5 class="fw-semibold">No messages yet</h5>
                 <p class="small">When someone messages you about a listing, it'll appear here.</p>
             </div>
             {% endif %}
@@ -68,34 +100,43 @@
         <!-- Sent -->
         <div class="tab-pane fade" id="sent" role="tabpanel">
             {% if sent %}
-            <div class="list-group shadow-sm">
+            <div class="d-flex flex-column gap-3">
                 {% for msg in sent %}
-                <div class="list-group-item list-group-item-action d-flex gap-3 py-3">
-                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:40px;height:40px;font-size:.8rem;">
-                        {{ msg.recipient.email|slice:":2"|upper }}
-                    </div>
-                    <div class="flex-grow-1 overflow-hidden">
-                        <div class="d-flex justify-content-between">
-                            <span class="fw-semibold small">To: {{ msg.recipient.email }}</span>
-                            <span class="text-muted" style="font-size:.75rem;">{{ msg.created_at|timesince }} ago</span>
+                <div class="card border-0 shadow-sm" style="border-radius:12px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex gap-3">
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0 fw-semibold"
+                                 style="width:44px;height:44px;font-size:.85rem; opacity:.8;">
+                                {% with rp=msg.recipient.profile %}{{ rp.get_initials }}{% endwith %}
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="fw-bold mb-0" style="font-size:.95rem;">
+                                            To: {% with rp=msg.recipient.profile %}{{ rp.get_display_name }}{% endwith %}
+                                        </p>
+                                        {% if msg.subject %}<p class="mb-0 text-dark fw-semibold small">{{ msg.subject }}</p>{% endif %}
+                                    </div>
+                                    <span class="text-muted flex-shrink-0 ms-3" style="font-size:.75rem;">{{ msg.created_at|timesince }} ago</span>
+                                </div>
+                                {% if msg.vehicle %}
+                                <p class="mb-1 mt-1" style="font-size:.78rem;">
+                                    <i class="bi bi-car-front text-primary me-1"></i>
+                                    <a href="{% url 'vehicle_detail' msg.vehicle.pk %}" class="text-primary text-decoration-none">{{ msg.vehicle.title }}</a>
+                                </p>
+                                {% endif %}
+                                <p class="text-muted small mb-0 mt-1" style="white-space:pre-wrap;">{{ msg.body }}</p>
+                            </div>
                         </div>
-                        {% if msg.subject %}<p class="mb-0 small fw-semibold text-dark">{{ msg.subject }}</p>{% endif %}
-                        {% if msg.vehicle %}
-                        <p class="mb-0 text-primary" style="font-size:.75rem;">
-                            <i class="bi bi-car-front me-1"></i>
-                            <a href="{% url 'vehicle_detail' msg.vehicle.pk %}" class="text-primary text-decoration-none">{{ msg.vehicle.title }}</a>
-                        </p>
-                        {% endif %}
-                        <p class="text-muted small mb-0">{{ msg.body|truncatechars:100 }}</p>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
             <div class="text-center py-5 text-muted">
-                <i class="bi bi-send fs-1 d-block mb-3"></i>
-                <h5>No messages sent</h5>
-                <p class="small">Send a message from a car listing page.</p>
+                <i class="bi bi-send fs-1 d-block mb-3 text-primary opacity-25"></i>
+                <h5 class="fw-semibold">No sent messages</h5>
+                <p class="small">Send a message from any car listing page.</p>
             </div>
             {% endif %}
         </div>
