@@ -13,8 +13,14 @@ class VehicleAdmin(admin.ModelAdmin):
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display  = ('user', 'first_name', 'last_name', 'phone', 'location')
-    search_fields = ('user__email', 'first_name', 'last_name')
+    list_display   = ('user', 'first_name', 'last_name', 'phone', 'location', 'badge')
+    list_editable  = ('badge',)
+    list_filter    = ('badge',)
+    search_fields  = ('user__email', 'first_name', 'last_name')
+    fieldsets = (
+        ('Identity', {'fields': ('user', 'first_name', 'last_name', 'phone', 'avatar', 'bio', 'location')}),
+        ('Badge',    {'fields': ('badge',), 'description': 'Assign a trust badge visible on solver profiles and reviews.'}),
+    )
 
 
 @admin.register(SavedVehicle)

@@ -9,6 +9,7 @@ urlpatterns = [
     path('vehicle/<int:pk>/review/', views.add_review, name='add_review'),
     path('vehicle/<int:pk>/message/', views.send_message, name='send_message'),
     path('vehicle/<int:pk>/delete/', views.delete_vehicle, name='delete_vehicle'),
+    path('vehicle/<int:pk>/destroy/', views.hard_delete_vehicle, name='hard_delete_vehicle'),
     path('vehicle/<int:pk>/edit/', views.edit_vehicle, name='edit_vehicle'),
     path('seller/<int:pk>/', views.seller_profile, name='seller_profile'),
     path('compare/', views.comparison, name='comparison'),
@@ -34,4 +35,5 @@ urlpatterns = [
     path('security/login/<int:pk>/', views.login_event_detail, name='login_event_detail'),
     path('security/login/<int:pk>/confirm/', views.confirm_login_event, name='confirm_login_event'),
     path('api/dvla/', views.dvla_lookup, name='dvla_lookup'),
+    path('api/tenor/', views.tenor_search, name='tenor_search'),
 ]

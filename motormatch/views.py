@@ -1,6 +1,10 @@
+import concurrent.futures
 import hashlib
 import re
+import urllib.parse
+import urllib.request
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -43,13 +47,14 @@ def index(request):
         )
 
     featured_cars = vehicles[:4]
-    recommended_cars = vehicles[:4]
-    remaining_cars = vehicles[4:]
+    # Recently listed — latest 12, regardless of search filter
+    recently_listed = Vehicle.objects.filter(is_removed=False).order_by('-created_at')[:12]
+    remaining_cars = list(recently_listed[4:])
 
     return render(request, 'home.html', {
         'body_types': body_types,
         'featured_cars': featured_cars,
-        'recommended_cars': recommended_cars,
+        'recently_listed': recently_listed[:4],
         'remaining_cars': remaining_cars,
         'query': query,
         'saved_pks': saved_pks,
@@ -64,12 +69,14 @@ def vehicle_detail(request, pk):
         and SavedVehicle.objects.filter(user=request.user, vehicle=car).exists()
     )
 
-    seller_reviews = []
-    seller_avg     = None
+    seller_reviews  = []
+    seller_avg      = None
+    seller_badge_info = None
     if car.owner:
         seller_reviews = car.owner.reviews_received.select_related('reviewer__profile').all()
         prof = getattr(car.owner, 'profile', None)
-        seller_avg = prof.average_rating() if prof else None
+        seller_avg        = prof.average_rating() if prof else None
+        seller_badge_info = prof.get_badge_info() if prof else None
 
     user_already_reviewed = (
         request.user.is_authenticated and car.owner
@@ -98,6 +105,7 @@ def vehicle_detail(request, pk):
         'car_bids': car_bids,
         'user_bid': user_bid,
         'accepted_bid': accepted_bid,
+        'seller_badge_info': seller_badge_info,
     })
 
 
@@ -330,8 +338,9 @@ def send_message_ajax(request, user_pk):
     body   = request.POST.get('body', '').strip()
     vid    = request.POST.get('vehicle_id')
     attach = request.FILES.get('attachment')
+    gif_url = request.POST.get('gif_url', '').strip()
 
-    if not body and not attach:
+    if not body and not attach and not gif_url:
         return JsonResponse({'error': 'Empty message'}, status=400)
 
     vehicle = Vehicle.objects.filter(pk=vid).first() if vid else None
@@ -342,6 +351,7 @@ def send_message_ajax(request, user_pk):
         subject='',
         body=body,
         attachment=attach or None,
+        gif_url=gif_url,
     )
 
     # Only send a notification if the recipient is NOT currently viewing this chat
@@ -362,6 +372,7 @@ def send_message_ajax(request, user_pk):
         'id':             msg.pk,
         'body':           msg.body,
         'attachment_url': msg.attachment.url if msg.attachment else None,
+        'gif_url':        msg.gif_url,
         'time':           msg.created_at.strftime('%H:%M'),
         'date':           msg.created_at.strftime('%-d %b %Y'),
         'is_mine':        True,
@@ -411,6 +422,7 @@ def poll_messages(request, user_pk):
             'id':             m.pk,
             'body':           m.body,
             'attachment_url': m.attachment.url if m.attachment else None,
+            'gif_url':        m.gif_url,
             'time':           m.created_at.strftime('%H:%M'),
             'date':           m.created_at.strftime('%-d %b %Y'),
             'is_mine':        is_mine,
@@ -647,32 +659,114 @@ _MODELS = {
 _FUELS         = ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'Petrol', 'Diesel']
 _TRANSMISSIONS = ['Manual', 'Automatic', 'Manual', 'Manual', 'Automatic']
 _COLOURS       = ['White', 'Black', 'Silver', 'Grey', 'Blue', 'Red', 'Green', 'Orange']
+_ENGINES       = ['1.0', '1.2', '1.4', '1.6', '1.8', '2.0', '2.5', '3.0']
+_CO2           = [89, 99, 109, 119, 129, 139, 149, 179]
+
+# Thread pool for VRM lookups (ready for real DVLA API integration)
+_VRM_EXECUTOR = concurrent.futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix='dvla_lookup')
+
+
+def _do_vrm_lookup(reg):
+    """Deterministic mock lookup — replace body with real DVLA API call when ready."""
+    seed  = int(hashlib.md5(reg.encode()).hexdigest(), 16)
+    make  = _MAKES[seed % len(_MAKES)]
+    model = _MODELS[make][(seed // len(_MAKES)) % len(_MODELS[make])]
+    return {
+        'reg':          reg,
+        'make':         make,
+        'model':        model,
+        'year':         2005 + (seed % 19),
+        'fuel':         _FUELS[seed % len(_FUELS)],
+        'transmission': _TRANSMISSIONS[seed % len(_TRANSMISSIONS)],
+        'colour':       _COLOURS[seed % len(_COLOURS)],
+        'engine':       _ENGINES[seed % len(_ENGINES)] + 'L',
+        'co2_gkm':      _CO2[seed % len(_CO2)],
+        'mileage':      f'{(seed % 150) * 1000 + 5000:,} mi',
+        'source':       'motormatch',
+    }
 
 
 def dvla_lookup(request):
+    from django.core.cache import cache as _cache
+
+    # ── Rate limiting: 20 requests per IP per 10 minutes ──────────────────
+    ip = (
+        request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', ''))
+        .split(',')[0].strip() or '127.0.0.1'
+    )
+    rl_key = f'dvla_rl_{ip}'
+    count  = _cache.get(rl_key, 0)
+    if count >= 20:
+        return JsonResponse(
+            {'error': 'Rate limit exceeded. Please try again in 10 minutes.', 'retry_after': 600},
+            status=429,
+        )
+    _cache.set(rl_key, count + 1, timeout=600)
+
+    # ── Validate registration ──────────────────────────────────────────────
     reg = request.GET.get('reg', '').replace(' ', '').upper()
     if not reg:
         return JsonResponse({'error': 'No registration provided.'}, status=400)
-    valid = bool(
-        re.match(r'^[A-Z]{2}\d{2}[A-Z]{3}$', reg)
-        or re.match(r'^[A-Z]\d{3}[A-Z]{3}$', reg)
-        or re.match(r'^[A-Z]{3}\d{3}[A-Z]$', reg)
+
+    # Accept standard formats AND UK private/cherished plates (2-8 alphanumeric)
+    if not re.match(r'^[A-Z0-9]{2,8}$', reg):
+        return JsonResponse(
+            {'error': 'Invalid registration. Must be 2–8 letters/digits (spaces are ignored).'},
+            status=400,
+        )
+
+    # ── Lookup in thread pool ──────────────────────────────────────────────
+    try:
+        future = _VRM_EXECUTOR.submit(_do_vrm_lookup, reg)
+        data   = future.result(timeout=5)
+        return JsonResponse(data)
+    except concurrent.futures.TimeoutError:
+        return JsonResponse({'error': 'Lookup timed out. Please try again.'}, status=503)
+    except Exception:
+        return JsonResponse({'error': 'Lookup failed. Please try again.'}, status=500)
+
+
+@login_required
+def tenor_search(request):
+    """Proxy Tenor GIF API — keeps API key server-side and applies per-user rate limiting."""
+    from django.core.cache import cache as _cache
+    import json as _json
+
+    # Rate limit: 30 GIF lookups per user per minute
+    rl_key = f'tenor_rl_{request.user.pk}'
+    count  = _cache.get(rl_key, 0)
+    if count >= 30:
+        return JsonResponse({'error': 'Too many GIF requests. Try again shortly.'}, status=429)
+    _cache.set(rl_key, count + 1, timeout=60)
+
+    q        = request.GET.get('q', '').strip()[:100]
+    endpoint = 'search' if q else 'trending'
+    api_key  = getattr(settings, 'TENOR_API_KEY', 'LIVDSRZULELA')
+    url      = (
+        f'https://api.tenor.com/v1/{endpoint}'
+        f'?q={urllib.parse.quote(q)}'
+        f'&key={api_key}'
+        f'&limit=12'
+        f'&media_filter=minimal'
+        f'&contentfilter=medium'
     )
-    if not valid:
-        return JsonResponse({'error': 'Enter a valid UK registration (e.g. AB12 CDE).'}, status=400)
-    seed    = int(hashlib.md5(reg.encode()).hexdigest(), 16)
-    make    = _MAKES[seed % len(_MAKES)]
-    model   = _MODELS[make][(seed // len(_MAKES)) % len(_MODELS[make])]
-    year    = 2005 + (seed % 19)
-    fuel    = _FUELS[seed % len(_FUELS)]
-    trans   = _TRANSMISSIONS[seed % len(_TRANSMISSIONS)]
-    colour  = _COLOURS[seed % len(_COLOURS)]
-    mileage = f'{(seed % 150) * 1000 + 5000:,} mi'
-    return JsonResponse({
-        'make': make, 'model': model, 'year': year,
-        'fuel': fuel, 'transmission': trans,
-        'colour': colour, 'mileage': mileage, 'reg': reg,
-    })
+
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'MotorMatch/1.0'})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = _json.loads(resp.read())
+
+        gifs = []
+        for r in data.get('results', []):
+            media = r.get('media', [{}])[0]
+            gif_url = media.get('gif', {}).get('url', '')
+            preview = media.get('tinygif', {}).get('url', gif_url)
+            if gif_url:
+                gifs.append({'url': gif_url, 'preview': preview, 'title': r.get('title', '')})
+
+        return JsonResponse({'gifs': gifs})
+    except Exception:
+        return JsonResponse({'error': 'Could not fetch GIFs. Please try again.'}, status=503)
 
 
 @login_required
@@ -704,6 +798,17 @@ def delete_vehicle(request, pk):
     vehicle.is_removed = True
     vehicle.save(update_fields=['is_removed'])
     messages.success(request, 'Listing removed successfully.')
+    return redirect('dashboard')
+
+
+@login_required
+@require_POST
+def hard_delete_vehicle(request, pk):
+    """Permanently delete a listing and all associated data from the DB."""
+    vehicle = get_object_or_404(Vehicle, pk=pk, owner=request.user)
+    title = vehicle.title
+    vehicle.delete()
+    messages.success(request, f'Listing "{title}" has been permanently deleted.')
     return redirect('dashboard')
 
 

@@ -179,3 +179,9 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 CSRF_TRUSTED_ORIGINS = [
     "https://*.codeinstitute-ide.net",
 ]
+
+# ── Third-party API keys ────────────────────────────────────────────────────────
+# Tenor GIF API — set TENOR_API_KEY in env.py / environment to override the demo key
+TENOR_API_KEY = os.environ.get('TENOR_API_KEY', 'LIVDSRZULELA')
+# DVLA VRM lookup — optional real API key (leave blank to use built-in mock data)
+DVLA_API_KEY  = os.environ.get('DVLA_API_KEY', '')

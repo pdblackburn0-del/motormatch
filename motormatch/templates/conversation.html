@@ -1,5 +1,5 @@
-{% load static %}
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Chat with {{ other_profile.get_display_name }} — Motor Match{% endblock %}
 
 {% block extra_css %}
@@ -83,7 +83,7 @@
                 {% endif %}
                 <div class="bubble-col">
                     <div class="bubble {% if msg.sender == request.user %}mine{% else %}theirs{% endif %}">
-                        {% if msg.body %}{{ msg.body }}{% endif %}
+                        {% if msg.gif_url %}<img src="{{ msg.gif_url }}" class="attach gif-attach" onclick="window.open(this.src)" alt="GIF">{% elif msg.body %}{{ msg.body }}{% endif %}
                         {% if msg.attachment %}
                         <img src="{{ msg.attachment.url }}" class="attach" onclick="window.open(this.src)" alt="attachment">
                         {% endif %}
@@ -126,11 +126,19 @@
                 <img id="attachThumb" src="" alt="">
                 <button class="remove-attach" onclick="clearAttachment()" title="Remove">&times;</button>
             </div>
+            <!-- GIF picker panel -->
+            <div id="gifPicker" class="gif-picker d-none">
+                <input type="text" id="gifSearch" class="form-control form-control-sm mb-2" placeholder="Search GIFs…" autocomplete="off">
+                <div id="gifGrid" class="gif-grid"></div>
+            </div>
             <div class="d-flex gap-2 align-items-end">
-                <label class="btn btn-light border-0 flex-shrink-0 p-2" title="Attach image or GIF" style="cursor:pointer;">
+                <label class="btn btn-light border-0 flex-shrink-0 p-2" title="Attach image" style="cursor:pointer;">
                     <i class="bi bi-image fs-5 text-muted"></i>
                     <input type="file" id="attachInput" accept="image/*,.gif" class="d-none">
                 </label>
+                <button type="button" id="gifBtn" class="btn btn-light border-0 flex-shrink-0 p-2" title="Send GIF">
+                    <span style="font-size:.72rem;font-weight:700;color:#6366f1;letter-spacing:.02em;">GIF</span>
+                </button>
                 <textarea id="msgInput" rows="1"
                           class="form-control"
                           placeholder="Type a message…"></textarea>

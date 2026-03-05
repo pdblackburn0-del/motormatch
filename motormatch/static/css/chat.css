@@ -10,8 +10,8 @@
 
 /* Sticky header */
 .chat-header {
-    background: #fff;
-    border-bottom: 1px solid var(--mm-border);
+    background: linear-gradient(135deg, #f5f3ff 0%, #fff 100%);
+    border-bottom: 1px solid #e5e7eb;
     padding: 14px 20px;
     display: flex;
     align-items: center;
@@ -24,7 +24,7 @@
 
 /* Message scroll area */
 .chat-messages {
-    background: #f8f9ff;
+    background: #f0f2fe;
     padding: 20px;
     min-height: 420px;
     max-height: 560px;
@@ -56,14 +56,15 @@
 }
 .bubble.theirs {
     background: #fff;
-    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 6px rgba(0,0,0,.07);
     border-bottom-left-radius: 4px;
     color: #111;
 }
 .bubble.mine {
-    background: #4f46e5;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
     color: #fff;
     border-bottom-right-radius: 4px;
+    box-shadow: 0 2px 8px rgba(79,70,229,.28);
 }
 
 /* Attachment images inside bubbles */
@@ -74,6 +75,10 @@
     display: block;
     cursor: zoom-in;
     margin-top: 6px;
+}
+.bubble img.gif-attach {
+    margin-top: 0;
+    border-radius: 12px;
 }
 
 /* Timestamp + tick row */
@@ -100,14 +105,14 @@
     font-size: .72rem;
     font-weight: 700;
     flex-shrink: 0;
-    background: #4f46e5;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
     color: #fff;
 }
 
 /* Compose footer */
 .chat-footer {
     background: #fff;
-    border-top: 1px solid var(--mm-border);
+    border-top: 1px solid #e5e7eb;
     padding: 12px 16px;
     border-radius: 0 0 14px 14px;
 }
@@ -126,7 +131,7 @@
     position: absolute;
     top: 50%;
     height: 1px;
-    background: #e9ecef;
+    background: #dde0f5;
     width: calc(50% - 56px);
 }
 .date-divider::before { left: 0; }
@@ -143,7 +148,7 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #adb5bd;
+    background: #a5b4fc;
     animation: mm-blink 1.2s infinite;
 }
 .typing-bubble span:nth-child(2) { animation-delay: .2s; }
@@ -162,7 +167,7 @@
 #attachPreview img {
     max-height: 80px;
     border-radius: 8px;
-    border: 1px solid var(--mm-border);
+    border: 1px solid #e5e7eb;
 }
 .remove-attach {
     position: absolute;
@@ -198,6 +203,51 @@
     background: #fff;
     box-shadow: 0 0 0 2px rgba(79, 70, 229, .2);
 }
+
+/* GIF picker panel */
+.gif-picker {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 16px rgba(79,70,229,.1);
+}
+.gif-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+.gif-item {
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: opacity .15s, transform .15s;
+    background: #f0f2fe;
+}
+.gif-item:hover {
+    opacity: .85;
+    transform: scale(1.04);
+}
+.gif-item img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+}
+#gifBtn {
+    border-radius: 10px !important;
+    min-width: 36px;
+    height: 42px;
+    transition: background .15s;
+}
+#gifBtn.active,
+#gifBtn:hover {
+    background: #ede9fe !important;
+}
+
 
 /* Send button */
 #sendBtn {

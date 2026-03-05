@@ -8,6 +8,32 @@ User = get_user_model()
 
 
 class UserProfile(models.Model):
+    BADGE_NONE       = ''
+    BADGE_MEMBER     = 'member'
+    BADGE_VERIFIED   = 'verified'
+    BADGE_TRUSTED    = 'trusted'
+    BADGE_TOP_SELLER = 'top_seller'
+    BADGE_DEALER     = 'dealer'
+    BADGE_STAFF      = 'staff'
+    BADGE_CHOICES = [
+        (BADGE_NONE,       'None'),
+        (BADGE_MEMBER,     'Member'),
+        (BADGE_VERIFIED,   'Verified'),
+        (BADGE_TRUSTED,    'Trusted'),
+        (BADGE_TOP_SELLER, 'Top Seller'),
+        (BADGE_DEALER,     'Dealer'),
+        (BADGE_STAFF,      'Staff'),
+    ]
+    # Maps badge value → (label, Bootstrap bg class, hex colour)
+    BADGE_META = {
+        BADGE_MEMBER:     ('Member',     'bg-secondary',           '#6b7280'),
+        BADGE_VERIFIED:   ('Verified',   'bg-primary',             '#2563eb'),
+        BADGE_TRUSTED:    ('Trusted',    'bg-success',             '#16a34a'),
+        BADGE_TOP_SELLER: ('Top Seller', 'bg-warning text-dark',   '#d97706'),
+        BADGE_DEALER:     ('Dealer',     'bg-info text-dark',      '#0891b2'),
+        BADGE_STAFF:      ('Staff',      'bg-danger',              '#dc2626'),
+    }
+
     user       = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     first_name = models.CharField(max_length=100, blank=True)
     last_name  = models.CharField(max_length=100, blank=True)
@@ -15,7 +41,12 @@ class UserProfile(models.Model):
     avatar     = models.ImageField(upload_to='avatars/', blank=True, null=True)
     bio        = models.TextField(blank=True)
     location   = models.CharField(max_length=100, blank=True)
+    badge      = models.CharField(max_length=20, choices=BADGE_CHOICES, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def get_badge_info(self):
+        """Returns (label, bg_class, hex) or None if no badge."""
+        return self.BADGE_META.get(self.badge) if self.badge else None
 
     def get_display_name(self):
         full = f"{self.first_name} {self.last_name}".strip()
@@ -170,6 +201,7 @@ class Message(models.Model):
     subject    = models.CharField(max_length=200, blank=True)
     body       = models.TextField(blank=True)
     attachment = models.ImageField(upload_to='message_attachments/', blank=True, null=True)
+    gif_url    = models.CharField(max_length=500, blank=True)  # Tenor GIF direct URL
     is_read    = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

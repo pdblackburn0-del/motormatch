@@ -18,6 +18,13 @@ TRANSMISSION_CHOICES = [
 
 
 class VehicleEditForm(forms.ModelForm):
+    # Override URLField with CharField to skip strict URL validation
+    image = forms.CharField(
+        required=False,
+        label='Image URL (alternative to upload)',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'https://...'})
+    )
+
     class Meta:
         model = Vehicle
         fields = ['title', 'variant', 'price', 'mileage', 'year', 'fuel',
@@ -33,7 +40,6 @@ class VehicleEditForm(forms.ModelForm):
             'location':     forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. London, UK'}),
             'description':  forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'image_file':   forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'image':        forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://...'}),
         }
         labels = {
             'image': 'Image URL (alternative to upload)',
@@ -50,7 +56,7 @@ class SellForm(forms.Form):
     fuel         = forms.ChoiceField(choices=FUEL_CHOICES, label='Fuel Type', widget=forms.Select(attrs={'class': 'form-select'}))
     transmission = forms.ChoiceField(choices=TRANSMISSION_CHOICES, label='Transmission', widget=forms.Select(attrs={'class': 'form-select'}))
     image_file   = forms.ImageField(label='Main Photo', required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
-    image_url    = forms.URLField(label='Or paste an image URL', required=False, widget=forms.URLInput(attrs={'placeholder': 'https://...', 'class': 'form-control'}))
+    image_url    = forms.CharField(label='Or paste an image URL', required=False, widget=forms.TextInput(attrs={'placeholder': 'https://...', 'class': 'form-control'}))
     location     = forms.CharField(max_length=100, required=False, label='Location', widget=forms.TextInput(attrs={'placeholder': 'e.g. London, UK', 'class': 'form-control'}))
     description  = forms.CharField(required=False, label='Description', widget=forms.Textarea(attrs={'rows': 4, 'class': 'form-control', 'placeholder': 'Tell buyers about the car — service history, modifications, reason for sale...'}))
 

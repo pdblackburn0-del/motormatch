@@ -1,7 +1,8 @@
 /* ============================================================
    Motor Match – Chat page JS
    Handles: AJAX send, polling (messages + typing + read
-   receipts), attachment preview, auto-grow textarea.
+   receipts), attachment preview, auto-grow textarea,
+   GIF picker (Tenor API proxy).
 
    Depends on globals set inline in conversation.html:
      OTHER_PK, CSRF, MY_INITS, SEND_URL, POLL_URL, TYPING_URL
@@ -10,9 +11,11 @@
 (function () {
     'use strict';
 
-    var lastId       = 0;
-    var typingTimer  = null;
-    var POLL_MS      = 2500;
+    var lastId         = 0;
+    var typingTimer    = null;
+    var POLL_MS        = 2500;
+    var pendingGif     = null;
+    var gifSearchTimer = null;
 
     // ── DOM refs ───────────────────────────────────────────────
     var box          = document.getElementById('chatMessages');
@@ -21,6 +24,10 @@
     var typingStatus = document.getElementById('typingStatus');
     var typingBubble = document.getElementById('typingBubble');
     var attachInput  = document.getElementById('attachInput');
+    var gifBtn       = document.getElementById('gifBtn');
+    var gifPicker    = document.getElementById('gifPicker');
+    var gifSearch    = document.getElementById('gifSearch');
+    var gifGrid      = document.getElementById('gifGrid');
 
     if (!box || !input) return; // Not on chat page
 
@@ -70,23 +77,85 @@
         if (attachInput) attachInput.value = '';
         document.getElementById('attachPreview').style.display = 'none';
         document.getElementById('attachThumb').src = '';
+        pendingGif = null;
     };
+
+    // ── GIF picker ─────────────────────────────────────────────
+    if (gifBtn && gifPicker) {
+        gifBtn.addEventListener('click', function () {
+            var isOpen = !gifPicker.classList.contains('d-none');
+            gifPicker.classList.toggle('d-none');
+            gifBtn.classList.toggle('active', !isOpen);
+            if (!isOpen && gifGrid && gifGrid.children.length === 0) {
+                fetchGifs('');
+            }
+        });
+    }
+
+    if (gifSearch) {
+        gifSearch.addEventListener('input', function () {
+            clearTimeout(gifSearchTimer);
+            var q = this.value.trim();
+            gifSearchTimer = setTimeout(function () { fetchGifs(q); }, 400);
+        });
+    }
+
+    function fetchGifs(q) {
+        if (!gifGrid) return;
+        gifGrid.innerHTML = '<p class="text-muted small text-center py-2 mb-0">Loading\u2026</p>';
+        fetch('/api/tenor/?q=' + encodeURIComponent(q))
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                gifGrid.innerHTML = '';
+                var list = d.gifs || [];
+                if (!list.length) {
+                    gifGrid.innerHTML = '<p class="text-muted small text-center py-2 mb-0">No GIFs found</p>';
+                    return;
+                }
+                list.forEach(function (g) {
+                    var div = document.createElement('div');
+                    div.className = 'gif-item';
+                    var img = document.createElement('img');
+                    img.src = g.preview;
+                    img.loading = 'lazy';
+                    img.alt = g.title || 'GIF';
+                    div.appendChild(img);
+                    div.addEventListener('click', function () {
+                        pendingGif = g.url;
+                        document.getElementById('attachThumb').src = g.url;
+                        document.getElementById('attachPreview').style.display = 'block';
+                        gifPicker.classList.add('d-none');
+                        gifBtn.classList.remove('active');
+                        doSend();
+                    });
+                    gifGrid.appendChild(div);
+                });
+            })
+            .catch(function () {
+                gifGrid.innerHTML = '<p class="text-muted small text-center py-2 mb-0">Failed to load GIFs</p>';
+            });
+    }
 
     // ── Send ───────────────────────────────────────────────────
     function doSend() {
         var body = input.value.trim();
         var file = attachInput ? attachInput.files[0] : null;
-        if (!body && !file) return;
+        if (!body && !file && !pendingGif) return;
 
         var fd = new FormData();
         if (body) fd.append('body', body);
         if (file) fd.append('attachment', file);
+        if (pendingGif) fd.append('gif_url', pendingGif);
+
+        var gifForBubble = pendingGif;
+        pendingGif = null;
 
         // Optimistic bubble immediately
         var tmpId = 'tmp_' + Date.now();
         appendBubble({
             id: tmpId,
             body: body,
+            gif_url: gifForBubble,
             attachment_url: file ? URL.createObjectURL(file) : null,
             time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
             is_mine: true,
@@ -101,7 +170,6 @@
         fetch(SEND_URL, { method: 'POST', headers: { 'X-CSRFToken': CSRF }, body: fd })
             .then(function (r) { return r.json(); })
             .then(function (d) {
-                // Replace temp id with real server id
                 var tmpEl = document.querySelector('.bubble-wrap[data-id="' + tmpId + '"]');
                 if (tmpEl && d.id) {
                     tmpEl.setAttribute('data-id', d.id);
@@ -125,9 +193,12 @@
         wrap.className = 'bubble-wrap ' + (m.is_mine ? 'mine' : 'theirs');
         wrap.setAttribute('data-id', m.id);
 
-        var avatar   = m.is_mine ? '' : '<div class="avatar-sm flex-shrink-0">' + esc(m.initials) + '</div>';
-        var bodyHtml = m.body ? esc(m.body) : '';
-        var imgHtml  = m.attachment_url
+        var avatar  = m.is_mine ? '' : '<div class="avatar-sm flex-shrink-0">' + esc(m.initials) + '</div>';
+        var gifHtml = m.gif_url
+            ? '<img src="' + m.gif_url + '" class="attach gif-attach" onclick="window.open(this.src)" alt="GIF">'
+            : '';
+        var bodyHtml = (!m.gif_url && m.body) ? esc(m.body) : '';
+        var imgHtml  = (!m.gif_url && m.attachment_url)
             ? '<img src="' + m.attachment_url + '" class="attach" onclick="window.open(this.src)" alt="attachment">'
             : '';
         var tick = m.is_mine
@@ -136,7 +207,7 @@
 
         wrap.innerHTML = avatar +
             '<div class="bubble-col">' +
-                '<div class="bubble ' + (m.is_mine ? 'mine' : 'theirs') + '">' + bodyHtml + imgHtml + '</div>' +
+                '<div class="bubble ' + (m.is_mine ? 'mine' : 'theirs') + '">' + gifHtml + bodyHtml + imgHtml + '</div>' +
                 '<div class="bubble-time">' + m.time + tick + '</div>' +
             '</div>';
 
@@ -150,7 +221,6 @@
         fetch(POLL_URL + '?after=' + lastId, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) { return r.json(); })
             .then(function (d) {
-                // Append new messages from the other person
                 d.messages.forEach(function (m) {
                     if (!document.querySelector('.bubble-wrap[data-id="' + m.id + '"]')) {
                         appendBubble(m);
@@ -158,17 +228,15 @@
                     }
                 });
 
-                // Typing indicator
                 if (d.typing) {
                     typingBubble.classList.remove('d-none');
-                    typingStatus.textContent = 'typing\u2026';
+                    if (typingStatus) typingStatus.textContent = 'typing\u2026';
                     scrollBottom(false);
                 } else {
                     typingBubble.classList.add('d-none');
-                    typingStatus.textContent = '';
+                    if (typingStatus) typingStatus.textContent = '';
                 }
 
-                // Read receipts – upgrade grey tick to blue double-tick
                 if (d.read_up_to) {
                     document.querySelectorAll('.bubble-wrap.mine').forEach(function (el) {
                         var id = parseInt(el.getAttribute('data-id'), 10);
