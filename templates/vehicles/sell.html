@@ -115,7 +115,10 @@
 {% endblock %}
 
 {% block extra_js %}
+{% url 'dvla_lookup' as dvla_url %}
+{{ dvla_url|json_script:"data-dvla-url" }}
 <script>
+var DVLA_URL = JSON.parse(document.getElementById('data-dvla-url').textContent);
 document.getElementById('dvlaLookupBtn').addEventListener('click', function () {
     const reg = document.getElementById('dvlaReg').value.replace(/\s/g, '').toUpperCase();
     const msgEl = document.getElementById('dvlaMsg');
@@ -123,7 +126,7 @@ document.getElementById('dvlaLookupBtn').addEventListener('click', function () {
     msgEl.className = 'small mt-1 text-muted';
     msgEl.textContent = 'Looking up...';
     msgEl.classList.remove('d-none');
-    fetch(`{% url 'dvla_lookup' %}?reg=${encodeURIComponent(reg)}`)
+    fetch(DVLA_URL + '?reg=' + encodeURIComponent(reg))
         .then(r => r.json())
         .then(data => {
             if (data.error) {

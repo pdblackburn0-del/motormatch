@@ -61,6 +61,8 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'cloudinary',
+    'cloudinary_storage',
     # Legacy app — keep registered so existing migrations stay valid
     'motormatch',
     # New structured apps
@@ -162,7 +164,13 @@ STATICFILES_DIRS = [
     BASE_DIR / 'motormatch' / 'static',
 ]
 
-# Media files (user uploads)
+# Media files (user uploads) — served via Cloudinary
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+    'API_KEY':    os.environ.get('CLOUDINARY_API_KEY', ''),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+}
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 

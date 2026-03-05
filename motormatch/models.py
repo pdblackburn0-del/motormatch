@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from cloudinary.models import CloudinaryField
 
 User = get_user_model()
 
@@ -38,7 +39,7 @@ class UserProfile(models.Model):
     first_name = models.CharField(max_length=100, blank=True)
     last_name  = models.CharField(max_length=100, blank=True)
     phone      = models.CharField(max_length=30, blank=True)
-    avatar     = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    avatar     = CloudinaryField('avatar', folder='avatars', blank=True, null=True)
     bio        = models.TextField(blank=True)
     location   = models.CharField(max_length=100, blank=True)
     badge      = models.CharField(max_length=20, choices=BADGE_CHOICES, blank=True, default='')
@@ -90,7 +91,7 @@ class Vehicle(models.Model):
     badge        = models.CharField(max_length=50, blank=True, null=True)
     badge_color  = models.CharField(max_length=20, blank=True, null=True)
     image        = models.URLField(max_length=500, blank=True, null=True)
-    image_file   = models.ImageField(upload_to='car_images/', blank=True, null=True)
+    image_file   = CloudinaryField('image', folder='car_images', blank=True, null=True)
     location     = models.CharField(max_length=100, blank=True)
     description  = models.TextField(blank=True)
     is_removed   = models.BooleanField(default=False)
@@ -200,7 +201,7 @@ class Message(models.Model):
     vehicle    = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True, blank=True, related_name='messages')
     subject    = models.CharField(max_length=200, blank=True)
     body       = models.TextField(blank=True)
-    attachment = models.ImageField(upload_to='message_attachments/', blank=True, null=True)
+    attachment = CloudinaryField('attachment', folder='message_attachments', blank=True, null=True)
     gif_url    = models.CharField(max_length=500, blank=True)  # Tenor GIF direct URL
     is_read    = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
