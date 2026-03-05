@@ -8,9 +8,8 @@
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb small">
             <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-primary">Home</a></li>
-            <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-primary">Used Cars</a></li>
-            <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-primary">Toyota</a></li>
-            <li class="breadcrumb-item active">2021 Toyota Camry SE</li>
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-primary">Used Cars</a></li>
+            <li class="breadcrumb-item active">{{ car.title }}</li>
         </ol>
     </nav>
 
@@ -19,10 +18,10 @@
         <div class="col-lg-8">
 
             <div class="rounded overflow-hidden mb-3 bg-white border" style="max-height:400px;">
-                <img src="https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=900&h=420&fit=crop"
-                     class="w-100" alt="Car" style="height:380px; object-fit:cover;">
+                <img src="{{ car.get_image }}"
+                     class="w-100" alt="{{ car.title }}" style="height:380px; object-fit:cover;">
                 <div class="position-relative" style="margin-top:-36px;">
-                    <span class="badge bg-dark bg-opacity-60 text-white ms-3" style="font-size:.75rem;"><i class="bi bi-camera me-1"></i>1 / 15</span>
+                    <span class="badge bg-dark bg-opacity-60 text-white ms-3" style="font-size:.75rem;"><i class="bi bi-camera me-1"></i>{{ car.fuel }} &middot; {{ car.transmission }}</span>
                 </div>
             </div>
 
@@ -40,7 +39,7 @@
             <div class="card border-0 bg-white shadow-sm mb-3">
                 <div class="card-body">
                     <h5 class="fw-semibold mb-3">Description</h5>
-                    <p class="text-muted mb-1" style="font-size:.92rem;">Well maintained 2021 Toyota Camry SE. Single owner, garage kept, and non-smoker. Features include leather seats, sunroof, navigation system, and advanced safety features. All scheduled maintenance completed at the dealership. Tires were replaced 5k miles ago. Great fuel economy for city and highway driving.</p>
+                    <p class="text-muted mb-1" style="font-size:.92rem;">{{ car.variant }} &mdash; listed at £{{ car.price }}. {{ car.year }} {{ car.title }}, {{ car.mileage }}, {{ car.fuel }}, {{ car.transmission }}.</p>
                     <a href="#" class="text-primary text-decoration-none small">Read more <i class="bi bi-chevron-down"></i></a>
                 </div>
             </div>
@@ -67,13 +66,13 @@
 
                     <div class="d-flex justify-content-between align-items-start mb-1">
                         <div>
-                            <h1 class="h4 fw-bold mb-0">2021 Toyota Camry SE</h1>
-                            <p class="text-muted small mb-0"><i class="bi bi-geo-alt me-1"></i>Truro, TR1</p>
+                            <h1 class="h4 fw-bold mb-0">{{ car.title }}</h1>
+                            <p class="text-muted small mb-0"><i class="bi bi-calendar3 me-1"></i>{{ car.year }} &middot; <i class="bi bi-speedometer2 me-1"></i>{{ car.mileage }}</p>
                         </div>
                         <button class="btn btn-light border-0"><i class="bi bi-heart text-muted"></i></button>
                     </div>
 
-                    <h2 class="fw-bold my-3" style="font-size:1.7rem;">£24,000</h2>
+                    <h2 class="fw-bold my-3" style="font-size:1.7rem;">£{{ car.price }}</h2>
 
                     <p class="text-muted fw-semibold mb-2" style="font-size:.75rem; letter-spacing:.05em;">VEHICLE DETAILS</p>
                     <div class="row g-2 mb-3">
@@ -82,7 +81,7 @@
                                 <i class="bi bi-calendar3 text-primary"></i>
                                 <div>
                                     <p class="mb-0 text-muted" style="font-size:.72rem;">Year</p>
-                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">2021</p>
+                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">{{ car.year }}</p>
                                 </div>
                             </div>
                         </div>
@@ -91,7 +90,7 @@
                                 <i class="bi bi-speedometer2 text-primary"></i>
                                 <div>
                                     <p class="mb-0 text-muted" style="font-size:.72rem;">Mileage</p>
-                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">34,200 mi</p>
+                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">{{ car.mileage }}</p>
                                 </div>
                             </div>
                         </div>
@@ -100,7 +99,7 @@
                                 <i class="bi bi-fuel-pump text-primary"></i>
                                 <div>
                                     <p class="mb-0 text-muted" style="font-size:.72rem;">Fuel Type</p>
-                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">Hybrid</p>
+                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">{{ car.fuel }}</p>
                                 </div>
                             </div>
                         </div>
@@ -109,7 +108,7 @@
                                 <i class="bi bi-gear text-primary"></i>
                                 <div>
                                     <p class="mb-0 text-muted" style="font-size:.72rem;">Transmission</p>
-                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">Automatic</p>
+                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">{{ car.transmission }}</p>
                                 </div>
                             </div>
                         </div>
