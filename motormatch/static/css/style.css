@@ -87,6 +87,51 @@ p, span, a, li {
     border-color: #fff;
     color: #111827;
 }
+
+/* Icon buttons (bell, chat) */
+.nav-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    color: #9ca3af;
+    text-decoration: none;
+    transition: background .15s, color .15s;
+}
+.nav-icon-btn:hover {
+    background: rgba(255,255,255,.1);
+    color: #fff;
+}
+
+/* My Account button */
+.nav-account-btn {
+    color: #d1d5db;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 8px;
+    font-size: .85rem;
+    transition: background .15s, color .15s;
+}
+.nav-account-btn:hover {
+    background: rgba(255,255,255,.16);
+    color: #fff;
+}
+
+/* Log Out button */
+.nav-logout-btn {
+    background: #4f46e5;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: .85rem;
+    transition: background .15s;
+}
+.nav-logout-btn:hover {
+    background: #4338ca;
+    color: #fff;
+}
 .navbar-toggler {
     border-color: rgba(255, 255, 255, .3) !important;
 }
@@ -318,15 +363,6 @@ body.dashboard-body {
 }
 .nav-link:hover {
     color: #93c5fd !important;
-}
-.navbar .btn-outline-secondary {
-    color: #fff;
-    border-color: rgba(255, 255, 255, .4);
-}
-.navbar .btn-outline-secondary:hover {
-    background-color: #fff;
-    border-color: #fff;
-    color: #13141c;
 }
 .navbar-toggler {
     border-color: rgba(255, 255, 255, .3) !important;
