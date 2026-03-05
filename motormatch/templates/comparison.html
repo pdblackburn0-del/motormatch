@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Vehicle Comparison - Motor Match{% endblock %}
+{% block title %}Compare Vehicles - Motor Match{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -12,100 +12,144 @@
         </ol>
     </nav>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h4 fw-bold mb-0">Vehicle Comparison</h1>
-        <a href="#" class="text-primary text-decoration-none small"><i class="bi bi-plus-circle me-1"></i>Add another car</a>
+    <!-- Picker form -->
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius:12px; background:#f8faff;">
+        <h5 class="fw-bold mb-1">Compare Two Cars</h5>
+        <p class="text-muted small mb-3">Pick any two live listings to compare side-by-side.</p>
+        <form method="get" action="{% url 'comparison' %}" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold">Car 1</label>
+                <select name="car1" class="form-select form-select-sm">
+                    <option value="">— Choose a car —</option>
+                    {% for v in all_vehicles %}
+                    <option value="{{ v.pk }}" {% if car1 and car1.pk == v.pk %}selected{% endif %}>{{ v.title }} ({{ v.year }}) — {{ v.price }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold">Car 2</label>
+                <select name="car2" class="form-select form-select-sm">
+                    <option value="">— Choose a car —</option>
+                    {% for v in all_vehicles %}
+                    <option value="{{ v.pk }}" {% if car2 and car2.pk == v.pk %}selected{% endif %}>{{ v.title }} ({{ v.year }}) — {{ v.price }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold">Compare</button>
+            </div>
+        </form>
     </div>
+
+    {% if car1 and car2 %}
 
     <div class="row g-4">
-
+        {% for car in cars %}
         <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100" style="border-radius:12px; overflow:hidden;">
                 <div class="position-relative">
-                    <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=320&fit=crop"
-                         class="w-100" alt="Tesla Model 3" style="height:240px; object-fit:cover;">
-                    <span class="badge position-absolute top-0 start-0 m-3 px-2 py-1 text-white fw-semibold" style="background:#f97316; font-size:.75rem; border-radius:5px;">HIGHER PERFORMANCE</span>
-                    <button class="btn btn-sm btn-light border-0 position-absolute top-0 end-0 m-2 rounded-circle"><i class="bi bi-x"></i></button>
+                    {% with img=car.get_image %}
+                    {% if img %}
+                    <img src="{{ img }}" class="w-100" alt="{{ car.title }}" style="height:240px; object-fit:cover;">
+                    {% else %}
+                    <div class="w-100 bg-light d-flex align-items-center justify-content-center" style="height:240px;">
+                        <i class="bi bi-car-front text-muted" style="font-size:3rem;"></i>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    {% if car.badge %}
+                    <span class="badge position-absolute top-0 start-0 m-3 px-2 py-1 text-white fw-semibold" style="font-size:.75rem; border-radius:5px; background:#2563eb;">{{ car.badge }}</span>
+                    {% endif %}
+                    <a href="{% url 'vehicle_detail' car.pk %}" class="btn btn-sm btn-light border-0 position-absolute top-0 end-0 m-2 rounded-circle" title="View listing">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
                 </div>
+
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-0">2021 Tesla Model 3</h5>
-                    <p class="text-primary fw-bold fs-5 mb-1">£34,900 <small class="text-muted text-decoration-line-through fw-normal fs-6">£36,500</small></p>
+                    <h5 class="fw-bold mb-0">{{ car.title }}</h5>
+                    <p class="text-muted small mb-1">{{ car.variant }}</p>
+                    <p class="fw-bold fs-5 mb-3" style="color:#2563eb;">{{ car.price }}</p>
 
                     <hr class="my-3">
 
-                    {% for spec in car1_specs %}
+                    <!-- Specs -->
                     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                        <span class="text-muted small d-flex align-items-center gap-2">
-                            <i class="{{ spec.icon }} text-muted"></i> {{ spec.label }}
-                        </span>
-                        <span class="fw-semibold small {% if spec.highlight %}text-warning{% endif %}">
-                            {{ spec.value }}
-                            {% if spec.highlight %}<span class="badge bg-warning text-dark ms-1" style="font-size:.65rem;">{{ spec.highlight }}</span>{% endif %}
-                        </span>
+                        <span class="text-muted small d-flex align-items-center gap-2"><i class="bi bi-calendar3"></i> Year</span>
+                        <span class="fw-semibold small">{{ car.year|default:"—" }}</span>
                     </div>
-                    {% endfor %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted small d-flex align-items-center gap-2"><i class="bi bi-speedometer2"></i> Mileage</span>
+                        <span class="fw-semibold small">{{ car.mileage|default:"—" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted small d-flex align-items-center gap-2"><i class="bi bi-fuel-pump"></i> Fuel</span>
+                        <span class="fw-semibold small">{{ car.fuel|default:"—" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted small d-flex align-items-center gap-2"><i class="bi bi-gear"></i> Transmission</span>
+                        <span class="fw-semibold small">{{ car.transmission|default:"—" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted small d-flex align-items-center gap-2"><i class="bi bi-geo-alt"></i> Location</span>
+                        <span class="fw-semibold small">{{ car.location|default:"Not specified" }}</span>
+                    </div>
 
-                    <button class="btn btn-primary w-100 mt-4 fw-semibold">
-                        <i class="bi bi-chat-dots me-1"></i> Contact Seller
-                    </button>
-                    <div class="d-flex justify-content-center gap-3 mt-2">
-                        <span class="text-muted small"><i class="bi bi-shield-check me-1 text-success"></i>Verified Dealer</span>
-                        <span class="text-muted small"><i class="bi bi-check-circle me-1 text-success"></i>Clean History</span>
+                    {% if car.owner %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted small d-flex align-items-center gap-2"><i class="bi bi-person"></i> Seller</span>
+                        <span class="fw-semibold small">{% with p=car.owner.profile %}{{ p.get_display_name }}{% endwith %}</span>
                     </div>
+                    {% with avg=car.owner.profile.average_rating %}
+                    {% if avg %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted small d-flex align-items-center gap-2"><i class="bi bi-star"></i> Seller Rating</span>
+                        <span class="fw-semibold small">
+                            <span class="star-rating" data-stars="{{ avg|floatformat:0 }}"></span>
+                            {{ avg }}/5
+                        </span>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    {% endif %}
+
+                    <a href="{% url 'vehicle_detail' car.pk %}" class="btn btn-primary w-100 mt-4 fw-semibold">
+                        <i class="bi bi-arrow-right-circle me-1"></i> View Full Listing
+                    </a>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100" style="border-radius:12px; overflow:hidden;">
-                <div class="position-relative">
-                    <img src="https://images.unsplash.com/photo-1606152421802-db97b9c7a11b?w=600&h=320&fit=crop"
-                         class="w-100" alt="Audi Q5" style="height:240px; object-fit:cover;">
-                    <span class="badge position-absolute top-0 start-0 m-3 px-2 py-1 text-white fw-semibold" style="background:#0d6efd; font-size:.75rem; border-radius:5px;">BETTER VALUE</span>
-                    <button class="btn btn-sm btn-light border-0 position-absolute top-0 end-0 m-2 rounded-circle"><i class="bi bi-x"></i></button>
-                </div>
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-0">2022 Audi Q5</h5>
-                    <p class="text-primary fw-bold fs-5 mb-1">£41,200</p>
-
-                    <hr class="my-3">
-
-                    {% for spec in car2_specs %}
-                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                        <span class="text-muted small d-flex align-items-center gap-2">
-                            <i class="{{ spec.icon }} text-muted"></i> {{ spec.label }}
-                        </span>
-                        <span class="fw-semibold small {% if spec.highlight %}text-primary{% endif %}">
-                            {{ spec.value }}
-                            {% if spec.highlight %}<span class="badge bg-primary text-white ms-1" style="font-size:.65rem;">{{ spec.highlight }}</span>{% endif %}
-                        </span>
-                    </div>
-                    {% endfor %}
-
-                    <button class="btn btn-primary w-100 mt-4 fw-semibold">
-                        <i class="bi bi-chat-dots me-1"></i> Contact Seller
-                    </button>
-                    <div class="d-flex justify-content-center gap-3 mt-2">
-                        <span class="text-muted small"><i class="bi bi-shield-check me-1 text-success"></i>Verified Dealer</span>
-                        <span class="text-muted small"><i class="bi bi-check-circle me-1 text-success"></i>Clean History</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        {% endfor %}
     </div>
 
-    <div class="card border-0 mt-4 p-4" style="background:#eff6ff; border-radius:12px;">
-        <div class="d-flex gap-3 align-items-start">
-            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:36px;height:36px;">
-                <i class="bi bi-info-lg text-white"></i>
-            </div>
-            <div>
-                <p class="fw-semibold mb-1">Our Recommendation</p>
-                <p class="text-muted mb-0 small">Based on the comparison, the <a href="#" class="text-primary fw-semibold">2021 Tesla Model 3</a> offers better performance and lower long-term fuel costs, making it ideal for daily commuting. However, the <a href="#" class="text-primary fw-semibold">2022 Audi Q5</a> provides more luxurious interior space and a traditional driving feel that might be preferable for long family trips.</p>
-            </div>
-        </div>
+    {% elif car1 or car2 %}
+    <div class="alert alert-info border-0 rounded-3">
+        <i class="bi bi-info-circle me-2"></i>Please select <strong>both</strong> cars to compare them.
     </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-car-front-fill d-block mb-3" style="font-size:3rem; color:#d1d5db;"></i>
+        <h5 class="fw-semibold text-dark">No cars selected</h5>
+        <p class="small">Use the form above to pick two listings and compare them.</p>
+    </div>
+    {% endif %}
 
 </div>
+
+<style>
+.star-rating::before {
+    content: '★★★★★';
+    letter-spacing: 2px;
+    font-size: .95rem;
+    background: linear-gradient(90deg, #f59e0b calc(var(--stars,5)/5*100%), #d1d5db calc(var(--stars,5)/5*100%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.star-rating[data-stars="1"] { --stars: 1; }
+.star-rating[data-stars="2"] { --stars: 2; }
+.star-rating[data-stars="3"] { --stars: 3; }
+.star-rating[data-stars="4"] { --stars: 4; }
+.star-rating[data-stars="5"] { --stars: 5; }
+</style>
+
 {% endblock %}
+

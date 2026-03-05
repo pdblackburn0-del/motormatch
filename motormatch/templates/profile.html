@@ -25,19 +25,32 @@
         <div style="background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%); height: 100px;"></div>
 
         <div class="card-body px-4 pb-4 pt-0">
-            <!-- Avatar -->
+            <!-- Avatar with camera overlay -->
             <div class="d-flex align-items-end justify-content-between" style="margin-top: -48px;">
-                <div>
-                    {% if profile.avatar %}
-                    <img src="{{ profile.avatar.url }}" alt="Avatar"
-                         class="rounded-circle border border-4 border-white shadow"
-                         style="width:90px; height:90px; object-fit:cover;">
-                    {% else %}
-                    <div class="rounded-circle border border-4 border-white shadow bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
-                         style="width:90px; height:90px; font-size:1.8rem;">
-                        {{ profile.get_initials }}
+                <div class="position-relative" style="display:inline-block;">
+                    <!-- Avatar circle -->
+                    <div id="avatarWrapper">
+                        {% if profile.avatar %}
+                        <img id="avatarPreview" src="{{ profile.avatar.url }}" alt="Avatar"
+                             class="rounded-circle border border-4 border-white shadow"
+                             style="width:90px; height:90px; object-fit:cover; display:block;">
+                        {% else %}
+                        <div id="avatarInitials" class="rounded-circle border border-4 border-white shadow bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
+                             style="width:90px; height:90px; font-size:1.8rem;">
+                            {{ profile.get_initials }}
+                        </div>
+                        <img id="avatarPreview" src="" alt="Avatar"
+                             class="rounded-circle border border-4 border-white shadow"
+                             style="width:90px; height:90px; object-fit:cover; display:none;">
+                        {% endif %}
                     </div>
-                    {% endif %}
+                    <!-- Camera icon button -->
+                    <button type="button" id="avatarEditBtn"
+                            class="btn btn-sm btn-dark rounded-circle position-absolute d-flex align-items-center justify-content-center border-2 border-white"
+                            style="width:28px;height:28px;bottom:2px;right:2px;padding:0;"
+                            title="Change photo" onclick="document.getElementById('id_avatar').click()">
+                        <i class="bi bi-camera-fill" style="font-size:.75rem;"></i>
+                    </button>
                 </div>
                 <form method="post" action="{% url 'account_logout' %}">
                     {% csrf_token %}
@@ -75,12 +88,9 @@
                         <label class="form-label small fw-medium">Bio <span class="text-muted fw-normal">(Optional)</span></label>
                         {{ form.bio }}
                     </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-medium">Profile Photo</label>
+                    <!-- Hidden file input for avatar, triggered by camera button -->
+                    <div class="d-none">
                         {{ form.avatar }}
-                        {% if profile.avatar %}
-                        <p class="text-muted small mt-1">Current photo will be replaced if you upload a new one.</p>
-                        {% endif %}
                     </div>
                 </div>
 
@@ -110,6 +120,13 @@
                     <p class="text-muted mb-0" style="font-size:.8rem;">{{ request.user.date_joined|date:"F j, Y" }}</p>
                 </div>
             </div>
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <div>
+                    <p class="fw-medium mb-0 small">Password</p>
+                    <p class="text-muted mb-0" style="font-size:.8rem;">Change your account password.</p>
+                </div>
+                <a href="{% url 'account_change_password' %}" class="btn btn-outline-secondary btn-sm px-3">Change</a>
+            </div>
             <div class="d-flex justify-content-between align-items-center pt-3">
                 <div>
                     <p class="fw-medium mb-0 small text-danger">Sign Out</p>
@@ -123,5 +140,65 @@
         </div>
     </div>
 
+    <!-- Reviews received -->
+    {% with reviews=request.user.reviews_received.all %}
+    {% if reviews %}
+    <div class="card border-0 shadow-sm mt-3" style="border-radius:12px;">
+        <div class="card-body p-4">
+            <h6 class="fw-bold mb-3">
+                Reviews <span class="text-muted fw-normal">({{ reviews|length }})</span>
+            </h6>
+            {% for review in reviews %}
+            <div class="d-flex align-items-start gap-3 mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0 fw-bold"
+                     style="width:36px;height:36px;font-size:.75rem;">
+                    {% with rp=review.reviewer.profile %}{{ rp.get_initials }}{% endwith %}
+                </div>
+                <div>
+                    <p class="fw-semibold mb-0 small">{% with rp=review.reviewer.profile %}{{ rp.get_display_name }}{% endwith %}</p>
+                    <div class="star-rating mb-1" data-stars="{{ review.rating }}"></div>
+                    {% if review.comment %}<p class="text-muted mb-0 small">{{ review.comment }}</p>{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+
 </div>
+
+<style>
+.star-rating::before {
+    content: '★★★★★';
+    letter-spacing: 2px;
+    font-size: 1rem;
+    background: linear-gradient(90deg, #f59e0b calc(var(--stars,5)/5*100%), #d1d5db calc(var(--stars,5)/5*100%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.star-rating[data-stars="1"] { --stars: 1; }
+.star-rating[data-stars="2"] { --stars: 2; }
+.star-rating[data-stars="3"] { --stars: 3; }
+.star-rating[data-stars="4"] { --stars: 4; }
+.star-rating[data-stars="5"] { --stars: 5; }
+</style>
+
+<script>
+// Live preview of avatar when a new file is selected
+document.getElementById('id_avatar')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const preview = document.getElementById('avatarPreview');
+        const initials = document.getElementById('avatarInitials');
+        preview.src = ev.target.result;
+        preview.style.display = 'block';
+        if (initials) initials.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+});
+</script>
+
 {% endblock %}

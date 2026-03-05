@@ -65,7 +65,7 @@
         </div>
 
         <div class="col-lg-4">
-            <div class="card border-0 bg-white shadow-sm sticky-top" style="top:80px;">
+            <div class="card border-0 bg-white shadow-sm" style="position:sticky; top:80px; max-height:calc(100vh - 100px); overflow-y:auto;">
                 <div class="card-body p-4">
 
                     <div class="d-flex justify-content-between align-items-start mb-1">
@@ -130,23 +130,21 @@
                             {% if car.owner.profile.avatar %}
                             <img src="{{ car.owner.profile.avatar.url }}" class="w-100 h-100" style="object-fit:cover;" alt="seller">
                             {% else %}
-                            <span class="small fw-bold">{{ car.owner.email|slice:":2"|upper }}</span>
+                            <span class="small fw-bold">{{ car.owner.profile.get_initials }}</span>
                             {% endif %}
                         </div>
                         <div class="flex-grow-1">
                             <p class="mb-0 fw-semibold" style="font-size:.85rem;">
                                 {% with p=car.owner.profile %}{{ p.get_display_name }}{% endwith %}
                             </p>
-                            {% with avg=car.average_rating %}
-                            {% if avg %}
-                            <p class="mb-0 text-warning" style="font-size:.72rem;">
-                                {% for i in "12345" %}{% if forloop.counter <= avg|floatformat:0|add:"0" %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}
-                                <span class="text-muted">({{ car.reviews.count }} review{{ car.reviews.count|pluralize }})</span>
+                            {% if seller_avg %}
+                            <p class="mb-0" style="font-size:.72rem;">
+                                <span class="star-rating" data-stars="{{ seller_avg|floatformat:0 }}"></span>
+                                <span class="text-muted ms-1">({{ seller_reviews|length }} review{{ seller_reviews|length|pluralize }})</span>
                             </p>
                             {% else %}
                             <p class="mb-0 text-muted" style="font-size:.72rem;">No reviews yet</p>
                             {% endif %}
-                            {% endwith %}
                         </div>
                         <span class="badge text-success border border-success bg-white" style="font-size:.72rem;">Member</span>
                     </div>
@@ -178,7 +176,7 @@
                             {% csrf_token %}
                             <div class="input-group input-group-sm mb-2">
                                 <span class="input-group-text">£</span>
-                                <input type="number" name="amount" class="form-control" placeholder="Your offer..." min="1" required step="100">
+                                <input type="number" name="amount" class="form-control" placeholder="Your offer..." min="1" step="1" required>
                             </div>
                             <textarea name="note" rows="2" class="form-control form-control-sm mb-2" placeholder="Optional note to seller..."></textarea>
                             <button type="submit" class="btn btn-success btn-sm w-100">Submit Bid</button>
@@ -191,6 +189,11 @@
                     </a>
                     {% elif car.owner == request.user %}
                     <div class="alert alert-info py-2 mb-2 small text-center">This is your listing.</div>
+                    <a href="{% url 'sell' %}" class="btn btn-outline-primary btn-sm w-100 mb-1"><i class="bi bi-pencil me-1"></i>Edit Listing</a>
+                    <form method="post" action="{% url 'delete_vehicle' car.pk %}" onsubmit="return confirm('Permanently remove this listing?')">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100"><i class="bi bi-trash me-1"></i>Remove Listing</button>
+                    </form>
                     {% else %}
                     <div class="alert alert-secondary py-2 mb-2 small text-center">No seller linked to this listing.</div>
                     {% endif %}
@@ -203,29 +206,42 @@
 
     </div>
 
-    <!-- Reviews Section -->
+    <!-- Reviews Section — reviews are about the SELLER, not the vehicle -->
     <div class="row mt-5">
-        <div class="col-12">
-            <h4 class="fw-bold mb-4">Reviews</h4>
+        <div class="col-12 mb-3">
+            <h4 class="fw-bold">
+                Seller Reviews
+                {% if seller_avg %}
+                <span class="fs-6 fw-normal text-muted ms-2">
+                    <span class="star-rating" data-stars="{{ seller_avg|floatformat:0 }}"></span>
+                    {{ seller_avg }}/5 &middot; {{ seller_reviews|length }} review{{ seller_reviews|length|pluralize }}
+                </span>
+                {% endif %}
+            </h4>
         </div>
 
-        {% if car.reviews.all %}
+        {% if seller_reviews %}
         <div class="col-lg-8">
-            {% for review in car.reviews.all %}
-            <div class="card border-0 shadow-sm mb-3 p-3">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:40px;height:40px;font-size:.8rem;">
-                        {{ review.reviewer.email|slice:":2"|upper }}
+            {% for review in seller_reviews %}
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body d-flex align-items-start gap-3">
+                    <!-- Reviewer avatar -->
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0 fw-bold"
+                         style="width:42px;height:42px;font-size:.85rem;">
+                        {% with rp=review.reviewer.profile %}{{ rp.get_initials }}{% endwith %}
                     </div>
                     <div class="flex-grow-1">
-                        <div class="d-flex justify-content-between">
-                            <p class="fw-semibold mb-0 small">{{ review.reviewer.email }}</p>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <p class="fw-semibold mb-0" style="font-size:.9rem;">
+                                {% with rp=review.reviewer.profile %}{{ rp.get_display_name }}{% endwith %}
+                            </p>
                             <p class="text-muted mb-0" style="font-size:.75rem;">{{ review.created_at|date:'d M Y' }}</p>
                         </div>
-                        <p class="text-warning mb-1" style="font-size:.85rem;">
-                            {% for i in "12345" %}{% if forloop.counter <= review.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}
-                        </p>
-                        {% if review.comment %}<p class="text-muted mb-0 small">{{ review.comment }}</p>{% endif %}
+                        <!-- CSS star rating -->
+                        <div class="star-rating mb-1" data-stars="{{ review.rating }}"></div>
+                        {% if review.comment %}
+                        <p class="text-muted mb-0" style="font-size:.88rem;">{{ review.comment }}</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -233,43 +249,106 @@
         </div>
         {% else %}
         <div class="col-12 mb-3">
-            <p class="text-muted small">No reviews yet — be the first to leave one!</p>
+            <p class="text-muted small">No reviews for this seller yet — be the first!</p>
         </div>
         {% endif %}
 
         <!-- Add Review Form -->
-        {% if request.user.is_authenticated and car.owner != request.user %}
-        <div class="col-lg-8">
+        {% if request.user.is_authenticated and car.owner and car.owner != request.user %}
+        <div class="col-lg-8 mt-2">
             <div class="card border-0 shadow-sm p-4">
-                <h6 class="fw-bold mb-3">Leave a Review</h6>
+                {% if user_already_reviewed %}
+                <h6 class="fw-bold mb-1">Update Your Review</h6>
+                <p class="text-muted small mb-3">You've already reviewed this seller — you can update it below.</p>
+                {% else %}
+                <h6 class="fw-bold mb-1">Review this Seller</h6>
+                <p class="text-muted small mb-3">Share your experience with other buyers.</p>
+                {% endif %}
                 <form method="post" action="{% url 'add_review' car.pk %}">
                     {% csrf_token %}
+                    <!-- Interactive star picker -->
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Rating</label>
-                        <div class="d-flex gap-2">
+                        <label class="form-label small fw-semibold d-block">Your Rating</label>
+                        <div class="star-picker d-flex gap-1" id="starPicker">
                             {% for n in "12345" %}
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="rating" id="star{{ forloop.counter }}" value="{{ forloop.counter }}" {% if forloop.counter == 5 %}checked{% endif %} required>
-                                <label class="form-check-label text-warning" for="star{{ forloop.counter }}" style="font-size:1.2rem;">&#9733;</label>
-                            </div>
+                            <label class="star-label" for="star-{{ forloop.counter }}" title="{{ forloop.counter }} star{{ forloop.counter|pluralize }}">
+                                <input type="radio" name="rating" id="star-{{ forloop.counter }}" value="{{ forloop.counter }}" class="d-none" {% if forloop.counter == 5 %}checked{% endif %}>
+                                <i class="bi bi-star-fill" style="font-size:1.5rem; cursor:pointer; color:#d1d5db; transition:color .15s;"></i>
+                            </label>
                             {% endfor %}
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Comment (optional)</label>
-                        <textarea name="comment" class="form-control" rows="3" placeholder="Share your experience..."></textarea>
+                        <label class="form-label small fw-semibold">Comment <span class="fw-normal text-muted">(optional)</span></label>
+                        <textarea name="comment" class="form-control" rows="3" placeholder="Describe your experience with this seller..."></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-sm">Submit Review</button>
+                    <button type="submit" class="btn btn-primary fw-semibold px-4">Submit Review</button>
                 </form>
             </div>
         </div>
         {% elif not request.user.is_authenticated %}
-        <div class="col-lg-8">
-            <p class="small"><a href="{% url 'account_login' %}">Log in</a> to leave a review.</p>
+        <div class="col-lg-8 mt-2">
+            <p class="small text-muted"><a href="{% url 'account_login' %}" class="text-primary">Log in</a> to leave a review for this seller.</p>
         </div>
         {% endif %}
     </div>
 
+<style>
+/* CSS star rating display */
+.star-rating::before {
+    content: '★★★★★';
+    letter-spacing: 2px;
+    font-size: 1rem;
+    background: linear-gradient(90deg, #f59e0b calc(var(--stars,5)/5*100%), #d1d5db calc(var(--stars,5)/5*100%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.star-rating[data-stars="1"]  { --stars: 1; }
+.star-rating[data-stars="2"]  { --stars: 2; }
+.star-rating[data-stars="3"]  { --stars: 3; }
+.star-rating[data-stars="4"]  { --stars: 4; }
+.star-rating[data-stars="5"]  { --stars: 5; }
+
+/* interactive star picker */
+.star-picker .star-label i { color: #d1d5db; transition: color .15s; }
+.star-picker .star-label:hover i,
+.star-picker .star-label:hover ~ .star-label i { color: #d1d5db !important; }
+.star-picker:hover .star-label i { color: #f59e0b; }
+.star-picker .star-label:hover ~ .star-label i { color: #d1d5db !important; }
+.star-picker input:checked ~ label i { color: #d1d5db !important; }
+</style>
+<script>
+// Star picker: highlight up to hovered/selected star
+(function(){
+    const container = document.getElementById('starPicker');
+    if (!container) return;
+    const labels = Array.from(container.querySelectorAll('.star-label'));
+    const icons  = labels.map(l => l.querySelector('i'));
+
+    function paint(upTo) {
+        icons.forEach((ic, idx) => {
+            ic.style.color = idx <= upTo ? '#f59e0b' : '#d1d5db';
+        });
+    }
+
+    labels.forEach((lbl, idx) => {
+        lbl.addEventListener('mouseenter', () => paint(idx));
+        lbl.addEventListener('click', () => {
+            paint(idx);
+            lbl.querySelector('input').checked = true;
+        });
+    });
+    container.addEventListener('mouseleave', () => {
+        const checkedIdx = labels.findIndex(l => l.querySelector('input').checked);
+        paint(checkedIdx >= 0 ? checkedIdx : 4);
+    });
+    // Init colour from checked input
+    const initIdx = labels.findIndex(l => l.querySelector('input').checked);
+    paint(initIdx >= 0 ? initIdx : 4);
+})();
+</script>
+
 </div>
+
 {% endblock %}
 
