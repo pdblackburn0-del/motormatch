@@ -477,64 +477,104 @@ footer a:hover {
     z-index: 1090;
     display: flex;
     flex-direction: column;
-    gap: .6rem;
+    gap: .5rem;
     pointer-events: none;
 }
 
 .mm-toast {
     display: flex;
-    align-items: center;
-    gap: .75rem;
-    min-width: 280px;
+    align-items: flex-start;
+    gap: .7rem;
+    min-width: 300px;
     max-width: 380px;
-    background: var(--mm-dark);
-    color: #fff;
+    background: #ffffff;
+    color: #0f172a;
     border-radius: 12px;
-    padding: .85rem 1rem;
-    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    padding: .85rem 1rem .75rem;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,.08), 0 10px 30px -5px rgba(0,0,0,.12);
     pointer-events: all;
-    border-left: 4px solid var(--mm-primary);
-    animation: mmToastIn .3s cubic-bezier(.22,.68,0,1.2) forwards;
+    border: 1px solid rgba(0,0,0,.07);
+    border-top: 3px solid #3b82f6;
+    position: relative;
+    overflow: hidden;
+    animation: mmToastIn .28s cubic-bezier(.22,.68,0,1.15) forwards;
 }
 
-.mm-toast--success { border-left-color: var(--mm-success); }
-.mm-toast--success .mm-toast__icon { color: #4ade80; }
-
+/* Variant top borders */
+.mm-toast--success { border-top-color: #2563eb; }
 .mm-toast--error,
-.mm-toast--danger  { border-left-color: var(--mm-danger); }
-.mm-toast--error .mm-toast__icon,
-.mm-toast--danger .mm-toast__icon { color: #f87171; }
+.mm-toast--danger  { border-top-color: #ef4444; }
+.mm-toast--warning { border-top-color: #f97316; }
+.mm-toast--info    { border-top-color: #64748b; }
 
-.mm-toast--warning { border-left-color: var(--mm-warning); }
-.mm-toast--warning .mm-toast__icon { color: #fbbf24; }
+/* Icon circles */
+.mm-toast__icon {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    background: #eff6ff;
+    color: #2563eb;
+    margin-top: .05rem;
+}
+.mm-toast--success .mm-toast__icon { background: #eff6ff; color: #2563eb; }
+.mm-toast--error   .mm-toast__icon,
+.mm-toast--danger  .mm-toast__icon { background: #fef2f2; color: #dc2626; }
+.mm-toast--warning .mm-toast__icon { background: #fff7ed; color: #f97316; }
+.mm-toast--info    .mm-toast__icon { background: #f1f5f9; color: #475569; }
 
-.mm-toast--info    { border-left-color: var(--mm-primary); }
-.mm-toast--info .mm-toast__icon { color: #60a5fa; }
-
-.mm-toast__icon { font-size: 1.15rem; flex-shrink: 0; }
-
-.mm-toast__msg { font-size: .875rem; flex-grow: 1; line-height: 1.4; }
+.mm-toast__body { flex-grow: 1; min-width: 0; }
+.mm-toast__msg  { font-size: .845rem; font-weight: 500; line-height: 1.45; color: #0f172a; }
 
 .mm-toast__close {
     background: none;
     border: none;
-    color: rgba(255,255,255,.5);
-    font-size: 1.2rem;
+    color: #94a3b8;
+    font-size: .95rem;
     line-height: 1;
     cursor: pointer;
-    padding: 0;
+    padding: .1rem;
     flex-shrink: 0;
-    transition: color .15s;
+    transition: color .12s;
+    margin-top: .05rem;
 }
-.mm-toast__close:hover { color: #fff; }
+.mm-toast__close:hover { color: #0f172a; }
+
+/* Auto-dismiss progress bar */
+.mm-toast__progress {
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 3px;
+    border-radius: 0 0 12px 12px;
+    background: #e2e8f0;
+    width: 100%;
+}
+.mm-toast__progress::after {
+    content: '';
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    width: 100%;
+    animation: mmToastProgress var(--toast-duration, 3.5s) linear forwards;
+}
+.mm-toast--success .mm-toast__progress::after { background: #2563eb; }
+.mm-toast--error   .mm-toast__progress::after,
+.mm-toast--danger  .mm-toast__progress::after { background: #ef4444; }
+.mm-toast--warning .mm-toast__progress::after { background: #f97316; }
+.mm-toast--info    .mm-toast__progress::after { background: #64748b; }
 
 @keyframes mmToastIn {
-    from { opacity: 0; transform: translateX(2rem) scale(.95); }
+    from { opacity: 0; transform: translateX(1.5rem) scale(.97); }
     to   { opacity: 1; transform: translateX(0) scale(1); }
 }
 @keyframes mmToastOut {
     from { opacity: 1; transform: translateX(0) scale(1); }
-    to   { opacity: 0; transform: translateX(2rem) scale(.95); }
+    to   { opacity: 0; transform: translateX(1.5rem) scale(.97); }
+}
+@keyframes mmToastProgress {
+    from { width: 100%; }
+    to   { width: 0%; }
 }
 
 /* ── Offer badges ─────────────────────────────────────────── */

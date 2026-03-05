@@ -110,8 +110,11 @@
                     {% elif 'warning' in message.tags %}<i class="bi bi-exclamation-triangle-fill"></i>
                     {% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
                 </div>
-                <span class="mm-toast__msg">{{ message }}</span>
-                <button class="mm-toast__close" onclick="this.closest('.mm-toast').remove()" aria-label="Close">&times;</button>
+                <div class="mm-toast__body">
+                    <span class="mm-toast__msg">{{ message }}</span>
+                </div>
+                <button class="mm-toast__close" onclick="this.closest('.mm-toast').remove()" aria-label="Close"><i class="bi bi-x"></i></button>
+                <div class="mm-toast__progress"></div>
             </div>
             {% endfor %}
         </div>

@@ -304,6 +304,7 @@
 
     /* ── Toast helper (injects into base.html mm-toast system) ── */
     function showToast(type, msg) {
+        var duration = 3500;
         var iconMap = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', warning: 'bi-exclamation-triangle-fill', info: 'bi-info-circle-fill' };
         var icon = iconMap[type] || iconMap.info;
         var container = document.querySelector('.mm-toast-container');
@@ -316,14 +317,17 @@
         var toast = document.createElement('div');
         toast.className = 'mm-toast mm-toast--' + type;
         toast.setAttribute('role', 'alert');
-        toast.innerHTML = '<div class="mm-toast__icon"><i class="bi ' + icon + '"></i></div>' +
-            '<span class="mm-toast__msg">' + msg + '</span>' +
-            '<button class="mm-toast__close" onclick="this.closest(\'.mm-toast\').remove()" aria-label="Close">&times;</button>';
+        toast.style.setProperty('--toast-duration', duration + 'ms');
+        toast.innerHTML =
+            '<div class="mm-toast__icon"><i class="bi ' + icon + '"></i></div>' +
+            '<div class="mm-toast__body"><span class="mm-toast__msg">' + msg + '</span></div>' +
+            '<button class="mm-toast__close" onclick="this.closest(\'.mm-toast\').remove()" aria-label="Close"><i class="bi bi-x"></i></button>' +
+            '<div class="mm-toast__progress"></div>';
         container.appendChild(toast);
         setTimeout(function () {
-            toast.style.animation = 'mmToastOut .3s ease forwards';
-            setTimeout(function () { toast.remove(); }, 300);
-        }, 3500);
+            toast.style.animation = 'mmToastOut .28s ease forwards';
+            setTimeout(function () { toast.remove(); }, 280);
+        }, duration);
     }
 
     /* ── Confirm modal helper ── */

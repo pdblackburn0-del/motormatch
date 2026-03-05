@@ -7,11 +7,13 @@
 
     /* ── Toast auto-dismiss ─────────────────────────────── */
     function initToasts() {
+        var duration = 3500;
         document.querySelectorAll('.mm-toast').forEach(function (toast) {
+            toast.style.setProperty('--toast-duration', duration + 'ms');
             setTimeout(function () {
-                toast.style.animation = 'mmToastOut .3s ease forwards';
-                setTimeout(function () { toast.remove(); }, 300);
-            }, 4000);
+                toast.style.animation = 'mmToastOut .28s ease forwards';
+                setTimeout(function () { toast.remove(); }, 280);
+            }, duration);
         });
     }
 
