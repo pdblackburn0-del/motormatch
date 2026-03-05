@@ -39,8 +39,12 @@
             <div class="card border-0 bg-white shadow-sm mb-3">
                 <div class="card-body">
                     <h5 class="fw-semibold mb-3">Description</h5>
-                    <p class="text-muted mb-1" style="font-size:.92rem;">{{ car.variant }} &mdash; listed at £{{ car.price }}. {{ car.year }} {{ car.title }}, {{ car.mileage }}, {{ car.fuel }}, {{ car.transmission }}.</p>
-                    <a href="#" class="text-primary text-decoration-none small">Read more <i class="bi bi-chevron-down"></i></a>
+                    {% if car.description %}
+                    <p class="text-muted" style="font-size:.92rem; white-space:pre-line;">{{ car.description }}</p>
+                    {% else %}
+                    <p class="text-muted mb-1" style="font-size:.92rem;">{{ car.year }} {{ car.title }} — {{ car.variant }}. {{ car.mileage }}, {{ car.fuel }}, {{ car.transmission }}.</p>
+                    <p class="text-muted small">The seller hasn't added a description for this listing.</p>
+                    {% endif %}
                 </div>
             </div>
 
@@ -77,7 +81,7 @@
                         </form>
                     </div>
 
-                    <h2 class="fw-bold my-3" style="font-size:1.7rem;">£{{ car.price }}</h2>
+                    <h2 class="fw-bold my-3" style="font-size:1.7rem;">{{ car.price }}</h2>
 
                     <p class="text-muted fw-semibold mb-2" style="font-size:.75rem; letter-spacing:.05em;">VEHICLE DETAILS</p>
                     <div class="row g-2 mb-3">
@@ -119,23 +123,78 @@
                         </div>
                     </div>
 
+                    <!-- Seller -->
+                    {% if car.owner %}
                     <div class="d-flex align-items-center gap-2 mb-3">
-                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:38px;height:38px;">
-                            <i class="bi bi-person-fill small"></i>
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0 overflow-hidden" style="width:38px;height:38px;">
+                            {% if car.owner.profile.avatar %}
+                            <img src="{{ car.owner.profile.avatar.url }}" class="w-100 h-100" style="object-fit:cover;" alt="seller">
+                            {% else %}
+                            <span class="small fw-bold">{{ car.owner.email|slice:":2"|upper }}</span>
+                            {% endif %}
                         </div>
                         <div class="flex-grow-1">
-                            <p class="mb-0 fw-semibold" style="font-size:.85rem;">Alex Johnson</p>
-                            <p class="mb-0 text-warning" style="font-size:.72rem;">&#9733;&#9733;&#9733;&#9733;&#9733; <span class="text-muted">(124 reviews)</span></p>
+                            <p class="mb-0 fw-semibold" style="font-size:.85rem;">
+                                {% with p=car.owner.profile %}{{ p.get_display_name }}{% endwith %}
+                            </p>
+                            {% with avg=car.average_rating %}
+                            {% if avg %}
+                            <p class="mb-0 text-warning" style="font-size:.72rem;">
+                                {% for i in "12345" %}{% if forloop.counter <= avg|floatformat:0|add:"0" %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}
+                                <span class="text-muted">({{ car.reviews.count }} review{{ car.reviews.count|pluralize }})</span>
+                            </p>
+                            {% else %}
+                            <p class="mb-0 text-muted" style="font-size:.72rem;">No reviews yet</p>
+                            {% endif %}
+                            {% endwith %}
                         </div>
-                        <span class="badge text-success border border-success bg-white" style="font-size:.72rem;">Verified</span>
+                        <span class="badge text-success border border-success bg-white" style="font-size:.72rem;">Member</span>
                     </div>
+                    {% endif %}
 
-                    <button class="btn btn-primary w-100 mb-2 fw-semibold">
+                    <!-- Message Seller -->
+                    {% if request.user.is_authenticated and car.owner and car.owner != request.user %}
+                    <button class="btn btn-primary w-100 mb-2 fw-semibold" data-bs-toggle="collapse" data-bs-target="#messageForm">
                         <i class="bi bi-chat-dots me-1"></i> Message Seller
                     </button>
-                    <button class="btn btn-outline-secondary w-100 mb-3">
-                        <i class="bi bi-telephone me-1"></i> Call Seller
+                    <div class="collapse mb-2" id="messageForm">
+                        <form method="post" action="{% url 'send_message' car.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="recipient_id" value="{{ car.owner.pk }}">
+                            <input type="hidden" name="vehicle_id" value="{{ car.pk }}">
+                            <div class="mb-2">
+                                <textarea name="body" rows="3" class="form-control form-control-sm" placeholder="Type your message..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm w-100">Send Message</button>
+                        </form>
+                    </div>
+
+                    <!-- Place Bid -->
+                    <button class="btn btn-success w-100 mb-2 fw-semibold" data-bs-toggle="collapse" data-bs-target="#bidForm">
+                        <i class="bi bi-tag me-1"></i> Place a Bid
                     </button>
+                    <div class="collapse mb-3" id="bidForm">
+                        <form method="post" action="{% url 'place_bid' car.pk %}">
+                            {% csrf_token %}
+                            <div class="input-group input-group-sm mb-2">
+                                <span class="input-group-text">£</span>
+                                <input type="number" name="amount" class="form-control" placeholder="Your offer..." min="1" required step="100">
+                            </div>
+                            <textarea name="note" rows="2" class="form-control form-control-sm mb-2" placeholder="Optional note to seller..."></textarea>
+                            <button type="submit" class="btn btn-success btn-sm w-100">Submit Bid</button>
+                        </form>
+                    </div>
+
+                    {% elif not request.user.is_authenticated %}
+                    <a href="{% url 'account_login' %}" class="btn btn-primary w-100 mb-2 fw-semibold">
+                        <i class="bi bi-chat-dots me-1"></i> Log In to Contact Seller
+                    </a>
+                    {% elif car.owner == request.user %}
+                    <div class="alert alert-info py-2 mb-2 small text-center">This is your listing.</div>
+                    {% else %}
+                    <div class="alert alert-secondary py-2 mb-2 small text-center">No seller linked to this listing.</div>
+                    {% endif %}
+
                     <p class="text-muted text-center mb-0" style="font-size:.72rem;">By contacting, you agree to our <a href="#" class="text-muted">Terms</a> and <a href="#" class="text-muted">Privacy Policy</a>.</p>
 
                 </div>
@@ -143,5 +202,74 @@
         </div>
 
     </div>
+
+    <!-- Reviews Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="fw-bold mb-4">Reviews</h4>
+        </div>
+
+        {% if car.reviews.all %}
+        <div class="col-lg-8">
+            {% for review in car.reviews.all %}
+            <div class="card border-0 shadow-sm mb-3 p-3">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:40px;height:40px;font-size:.8rem;">
+                        {{ review.reviewer.email|slice:":2"|upper }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <p class="fw-semibold mb-0 small">{{ review.reviewer.email }}</p>
+                            <p class="text-muted mb-0" style="font-size:.75rem;">{{ review.created_at|date:'d M Y' }}</p>
+                        </div>
+                        <p class="text-warning mb-1" style="font-size:.85rem;">
+                            {% for i in "12345" %}{% if forloop.counter <= review.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}
+                        </p>
+                        {% if review.comment %}<p class="text-muted mb-0 small">{{ review.comment }}</p>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="col-12 mb-3">
+            <p class="text-muted small">No reviews yet — be the first to leave one!</p>
+        </div>
+        {% endif %}
+
+        <!-- Add Review Form -->
+        {% if request.user.is_authenticated and car.owner != request.user %}
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm p-4">
+                <h6 class="fw-bold mb-3">Leave a Review</h6>
+                <form method="post" action="{% url 'add_review' car.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Rating</label>
+                        <div class="d-flex gap-2">
+                            {% for n in "12345" %}
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="rating" id="star{{ forloop.counter }}" value="{{ forloop.counter }}" {% if forloop.counter == 5 %}checked{% endif %} required>
+                                <label class="form-check-label text-warning" for="star{{ forloop.counter }}" style="font-size:1.2rem;">&#9733;</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Comment (optional)</label>
+                        <textarea name="comment" class="form-control" rows="3" placeholder="Share your experience..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Submit Review</button>
+                </form>
+            </div>
+        </div>
+        {% elif not request.user.is_authenticated %}
+        <div class="col-lg-8">
+            <p class="small"><a href="{% url 'account_login' %}">Log in</a> to leave a review.</p>
+        </div>
+        {% endif %}
+    </div>
+
 </div>
 {% endblock %}
+

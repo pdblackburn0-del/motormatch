@@ -6,9 +6,10 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .forms import ProfileForm, SellForm
-from .models import SavedVehicle, UserProfile, Vehicle
+from .models import Bid, Message, Notification, Review, SavedVehicle, UserProfile, Vehicle
 
 
 def index(request):
@@ -102,7 +103,8 @@ def sell(request):
         form = SellForm(request.POST, request.FILES)
 
         if form.is_valid():
-            vehicle = form.save()
+            vehicle = form.save(owner=request.user)
+            messages.success(request, 'Your listing has been published!')
             return redirect('vehicle_detail', pk=vehicle.pk)
 
     else:
@@ -115,14 +117,19 @@ def sell(request):
 def dashboard(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
-    my_listings = Vehicle.objects.filter(owner=request.user)
-
+    my_listings = Vehicle.objects.filter(owner=request.user).order_by('-created_at')
     saved_count = SavedVehicle.objects.filter(user=request.user).count()
+    my_bids     = Bid.objects.filter(bidder=request.user).select_related('vehicle').order_by('-created_at')[:10]
+    my_messages = Message.objects.filter(recipient=request.user).select_related('sender', 'vehicle').order_by('-created_at')[:5]
+    unread_notifications = Notification.objects.filter(user=request.user, is_read=False).count()
 
     return render(request, 'dashboard.html', {
         'profile': profile,
         'my_listings': my_listings,
         'saved_count': saved_count,
+        'my_bids': my_bids,
+        'my_messages': my_messages,
+        'unread_notifications': unread_notifications,
     })
 
 
@@ -178,6 +185,186 @@ def profile(request):
     else:
         form = ProfileForm(instance=prof)
     return render(request, 'profile.html', {'form': form, 'profile': prof})
+
+
+# ---------------------------------------------------------------------------
+# Notifications
+# ---------------------------------------------------------------------------
+
+@login_required
+def notifications_list(request):
+    notifs = Notification.objects.filter(user=request.user).order_by('-created_at')
+    # Mark all as read on page visit
+    notifs.filter(is_read=False).update(is_read=True)
+    return render(request, 'notifications.html', {'notifications': notifs})
+
+
+@login_required
+@require_POST
+def mark_notification_read(request, pk):
+    notif = get_object_or_404(Notification, pk=pk, user=request.user)
+    notif.is_read = True
+    notif.save()
+    return JsonResponse({'ok': True})
+
+
+# ---------------------------------------------------------------------------
+# Reviews
+# ---------------------------------------------------------------------------
+
+@login_required
+@require_POST
+def add_review(request, pk):
+    vehicle = get_object_or_404(Vehicle, pk=pk)
+    rating  = request.POST.get('rating')
+    comment = request.POST.get('comment', '').strip()
+
+    if not rating or not rating.isdigit() or not (1 <= int(rating) <= 5):
+        messages.error(request, 'Please select a rating between 1 and 5.')
+        return redirect('vehicle_detail', pk=pk)
+
+    Review.objects.update_or_create(
+        vehicle=vehicle,
+        reviewer=request.user,
+        defaults={'rating': int(rating), 'comment': comment},
+    )
+    messages.success(request, 'Review submitted!')
+    return redirect('vehicle_detail', pk=pk)
+
+
+# ---------------------------------------------------------------------------
+# Messaging
+# ---------------------------------------------------------------------------
+
+@login_required
+def inbox(request):
+    received = Message.objects.filter(recipient=request.user).select_related('sender', 'vehicle').order_by('-created_at')
+    sent     = Message.objects.filter(sender=request.user).select_related('recipient', 'vehicle').order_by('-created_at')
+    # Mark received as read on open
+    received.filter(is_read=False).update(is_read=True)
+    return render(request, 'inbox.html', {'received': received, 'sent': sent})
+
+
+@login_required
+@require_POST
+def send_message(request):
+    recipient_id = request.POST.get('recipient_id')
+    vehicle_id   = request.POST.get('vehicle_id')
+    subject      = request.POST.get('subject', '').strip()
+    body         = request.POST.get('body', '').strip()
+
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    if not recipient_id or not body:
+        messages.error(request, 'Message body is required.')
+        return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+    recipient = get_object_or_404(User, pk=recipient_id)
+    vehicle   = Vehicle.objects.filter(pk=vehicle_id).first() if vehicle_id else None
+
+    msg = Message.objects.create(
+        sender=request.user,
+        recipient=recipient,
+        vehicle=vehicle,
+        subject=subject or (f'Re: {vehicle.title}' if vehicle else 'New message'),
+        body=body,
+    )
+
+    # Notify recipient
+    Notification.objects.create(
+        user=recipient,
+        title='New message',
+        message=f'{request.user.email} sent you a message{": " + vehicle.title if vehicle else ""}.',
+        notif_type='info',
+        url=f'/inbox/',
+    )
+
+    messages.success(request, 'Message sent!')
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+
+# ---------------------------------------------------------------------------
+# Bids
+# ---------------------------------------------------------------------------
+
+@login_required
+@require_POST
+def place_bid(request, pk):
+    vehicle = get_object_or_404(Vehicle, pk=pk)
+    amount  = request.POST.get('amount', '').strip()
+    note    = request.POST.get('note', '').strip()
+
+    try:
+        from decimal import Decimal
+        amount_dec = Decimal(amount.replace(',', '').replace('£', ''))
+    except Exception:
+        messages.error(request, 'Please enter a valid bid amount.')
+        return redirect('vehicle_detail', pk=pk)
+
+    bid, created = Bid.objects.update_or_create(
+        vehicle=vehicle,
+        bidder=request.user,
+        defaults={'amount': amount_dec, 'note': note, 'status': 'pending'},
+    )
+
+    # Notify the seller
+    if vehicle.owner:
+        Notification.objects.create(
+            user=vehicle.owner,
+            title='New bid on your listing',
+            message=f'{request.user.email} placed a bid of £{amount_dec:,.0f} on {vehicle.title}.',
+            notif_type='success',
+            url=f'/vehicle/{vehicle.pk}/',
+        )
+
+    messages.success(request, f'Bid of £{amount_dec:,.0f} placed!' if created else f'Bid updated to £{amount_dec:,.0f}.')
+    return redirect('vehicle_detail', pk=pk)
+
+
+@login_required
+@require_POST
+def respond_bid(request, pk):
+    bid    = get_object_or_404(Bid, pk=pk, vehicle__owner=request.user)
+    action = request.POST.get('action')  # 'accept' | 'decline' | 'counter'
+
+    if action not in ('accept', 'decline', 'counter'):
+        messages.error(request, 'Invalid action.')
+        return redirect('dashboard')
+
+    if action == 'counter':
+        counter_amount = request.POST.get('counter_amount', '').strip()
+        try:
+            from decimal import Decimal
+            ca = Decimal(counter_amount.replace(',', '').replace('£', ''))
+        except Exception:
+            messages.error(request, 'Enter a valid counter amount.')
+            return redirect('dashboard')
+        bid.status = 'countered'
+        bid.note   = f'Counter offer: £{ca:,.0f}. ' + (bid.note or '')
+        bid.save()
+        Notification.objects.create(
+            user=bid.bidder,
+            title='Counter offer received',
+            message=f'A counter offer of £{ca:,.0f} was made on {bid.vehicle.title}.',
+            notif_type='info',
+            url=f'/vehicle/{bid.vehicle.pk}/',
+        )
+        messages.success(request, 'Counter offer sent.')
+    else:
+        bid.status = 'accepted' if action == 'accept' else 'declined'
+        bid.save()
+        verb = 'accepted' if action == 'accept' else 'declined'
+        Notification.objects.create(
+            user=bid.bidder,
+            title=f'Bid {verb}',
+            message=f'Your bid on {bid.vehicle.title} was {verb}.',
+            notif_type='success' if action == 'accept' else 'warning',
+            url=f'/vehicle/{bid.vehicle.pk}/',
+        )
+        messages.success(request, f'Bid {verb}.')
+
+    return redirect('dashboard')
 
 
 _MAKES = ['Ford', 'Vauxhall', 'BMW', 'Audi', 'Toyota', 'Honda', 'Volkswagen',

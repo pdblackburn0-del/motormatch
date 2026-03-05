@@ -28,8 +28,10 @@ class SellForm(forms.Form):
     transmission = forms.ChoiceField(choices=TRANSMISSION_CHOICES, label='Transmission', widget=forms.Select(attrs={'class': 'form-select'}))
     image_file   = forms.ImageField(label='Main Photo', required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
     image_url    = forms.URLField(label='Or paste an image URL', required=False, widget=forms.URLInput(attrs={'placeholder': 'https://...', 'class': 'form-control'}))
+    location     = forms.CharField(max_length=100, required=False, label='Location', widget=forms.TextInput(attrs={'placeholder': 'e.g. London, UK', 'class': 'form-control'}))
+    description  = forms.CharField(required=False, label='Description', widget=forms.Textarea(attrs={'rows': 4, 'class': 'form-control', 'placeholder': 'Tell buyers about the car — service history, modifications, reason for sale...'}))
 
-    def save(self, commit=True):
+    def save(self, owner=None, commit=True):
         data = self.cleaned_data
         vehicle = Vehicle(
             title=f"{data['year']} {data['make']} {data['model']}",
@@ -42,6 +44,9 @@ class SellForm(forms.Form):
             badge='Used',
             badge_color='default',
             image=data.get('image_url') or '',
+            location=data.get('location') or '',
+            description=data.get('description') or '',
+            owner=owner,
         )
         if data.get('image_file'):
             vehicle.image_file = data['image_file']

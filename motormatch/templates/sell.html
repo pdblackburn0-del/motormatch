@@ -92,6 +92,17 @@
                         {{ form.image_url }}
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label small fw-medium">{{ form.location.label }}</label>
+                        {{ form.location }}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-medium">{{ form.description.label }}</label>
+                        {{ form.description }}
+                        <div class="form-text text-muted">Include service history, modifications, reason for sale, etc.</div>
+                    </div>
+
                     <div class="d-flex gap-3 mt-4">
                         <a href="{% url 'home' %}" class="btn btn-outline-secondary px-4">Cancel</a>
                         <button type="submit" class="btn btn-primary px-5 flex-grow-1 fw-semibold">List My Car</button>

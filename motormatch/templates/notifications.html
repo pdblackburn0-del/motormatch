@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Motor Match{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:760px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Notifications</h2>
+            <p class="text-muted small mb-0">All your recent alerts and updates.</p>
+        </div>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    {% if notifications %}
+    <div class="list-group shadow-sm">
+        {% for notif in notifications %}
+        <div class="list-group-item list-group-item-action d-flex gap-3 py-3
+            {% if not notif.is_read %}list-group-item-light border-start border-4 border-primary{% endif %}">
+            <div class="d-flex align-items-start flex-shrink-0 mt-1">
+                {% if notif.notif_type == 'success' %}
+                <span class="rounded-circle d-flex align-items-center justify-content-center bg-success text-white" style="width:36px;height:36px;">
+                    <i class="bi bi-check-lg small"></i>
+                </span>
+                {% elif notif.notif_type == 'warning' %}
+                <span class="rounded-circle d-flex align-items-center justify-content-center bg-warning text-dark" style="width:36px;height:36px;">
+                    <i class="bi bi-exclamation small"></i>
+                </span>
+                {% else %}
+                <span class="rounded-circle d-flex align-items-center justify-content-center bg-primary text-white" style="width:36px;height:36px;">
+                    <i class="bi bi-info-lg small"></i>
+                </span>
+                {% endif %}
+            </div>
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between">
+                    <p class="mb-0 fw-semibold small">{{ notif.title }}</p>
+                    <span class="text-muted" style="font-size:.75rem; white-space:nowrap; margin-left:8px;">{{ notif.created_at|timesince }} ago</span>
+                </div>
+                <p class="text-muted small mb-0">{{ notif.message }}</p>
+                {% if notif.url %}
+                <a href="{{ notif.url }}" class="text-primary text-decoration-none" style="font-size:.78rem;">View &rarr;</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-bell-slash fs-1 d-block mb-3"></i>
+        <h5>No notifications yet</h5>
+        <p class="small">You'll see login alerts, bid updates, messages, and more here.</p>
+        <a href="{% url 'home' %}" class="btn btn-primary btn-sm mt-2">Browse Cars</a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
