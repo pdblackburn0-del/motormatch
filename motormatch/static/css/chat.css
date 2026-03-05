@@ -4,14 +4,16 @@
    ============================================================ */
 
 .chat-outer {
-    max-width: 800px;
+    max-width: 740px;
     margin: 0 auto;
+    padding-bottom: 40px;
 }
 
-/* Card wrapper – no overflow:hidden so dropdowns escape */
+/* Card wrapper */
 .chat-card {
     border-radius: 16px;
     position: relative;
+    overflow: hidden;
 }
 
 /* Header */
@@ -32,9 +34,9 @@
     background-image: radial-gradient(circle at 1px 1px, #e8eaf6 1px, transparent 0);
     background-size: 24px 24px;
     padding: 20px;
+    height: calc(100vh - 300px);
+    max-height: 540px;
     min-height: 300px;
-    height: calc(100vh - 340px);
-    max-height: 640px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
@@ -342,12 +344,12 @@
 
 /* Mobile */
 @media (max-width: 576px) {
-    .chat-outer  { padding-left: 0; padding-right: 0; }
+    .chat-outer  { padding-left: 0; padding-right: 0; padding-bottom: 0; }
     .bubble-col  { max-width: 82%; }
     .chat-vehicle-chip { display: none; }
     .chat-header { border-radius: 0; }
     .chat-card   { border-radius: 0; }
-    .chat-messages { height: calc(100vh - 290px); max-height: none; }
+    .chat-messages { height: calc(100vh - 220px); max-height: none; }
 }
 
 /* ── Theme swatches ── */
