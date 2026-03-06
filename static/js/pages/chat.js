@@ -155,8 +155,16 @@
                 if (tmpEl && d.id) {
                     tmpEl.setAttribute('data-id', d.id);
                     lastId = Math.max(lastId, d.id);
-                    var delBtn = tmpEl.querySelector('.bubble-delete-btn');
-                    if (delBtn) delBtn.dataset.msgid = d.id;
+                    var bubbleRow = tmpEl.querySelector('.bubble-row');
+                    if (bubbleRow && !tmpEl.querySelector('.bubble-delete-btn')) {
+                        var newBtn = document.createElement('button');
+                        newBtn.className = 'bubble-delete-btn';
+                        newBtn.dataset.msgid = d.id;
+                        newBtn.title = 'Delete message';
+                        newBtn.innerHTML = '<i class="bi bi-trash3"></i>';
+                        newBtn.addEventListener('click', function () { openDeleteMsgModal(parseInt(this.dataset.msgid, 10)); });
+                        bubbleRow.appendChild(newBtn);
+                    }
                 }
             })
             .catch(function () {});
@@ -194,7 +202,8 @@
             ? '<i class="bi bi-check2 tick-icon" style="color:#adb5bd;"></i>'
             : '';
 
-        var deleteBtn = (m.is_mine && !m.is_deleted)
+        var isTmp = typeof m.id === 'string' && m.id.indexOf('tmp_') === 0;
+        var deleteBtn = (m.is_mine && !m.is_deleted && !isTmp)
             ? '<button class="bubble-delete-btn" data-msgid="' + m.id + '" title="Delete message">'
               + '<i class="bi bi-trash3"></i></button>'
             : '';
