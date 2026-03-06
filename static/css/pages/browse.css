@@ -1,3 +1,4 @@
+/* ═══════════════════════════════════════
    HERO BANNER
 ═══════════════════════════════════════ */
 .browse-hero {
@@ -37,6 +38,7 @@
 }
 .browse-hero__search .s-btn:hover { background: #1d4ed8; }
 
+/* ═══════════════════════════════════════
    ACTIVE FILTER CHIPS
 ═══════════════════════════════════════ */
 .active-chips {
@@ -62,6 +64,7 @@
 }
 .clear-all-chip:hover { background: #fee2e2; color: #b91c1c; }
 
+/* ═══════════════════════════════════════
    LAYOUT
 ═══════════════════════════════════════ */
 .browse-layout {
@@ -70,6 +73,7 @@
     padding-top: 1.4rem; padding-bottom: 3rem;
 }
 
+/* ═══════════════════════════════════════
    SIDEBAR
 ═══════════════════════════════════════ */
 .filter-panel { width: 245px; flex-shrink: 0; position: sticky; top: 72px; }
@@ -114,6 +118,7 @@
 }
 .filter-panel__apply:hover { background: #1e293b; }
 
+/* ═══════════════════════════════════════
    RESULTS HEADER
 ═══════════════════════════════════════ */
 .results-header {
@@ -134,6 +139,7 @@
 }
 .f-sort:focus { outline: none; border-color: #2563eb; }
 
+/* ═══════════════════════════════════════
    VEHICLE CARDS
 ═══════════════════════════════════════ */
 .vc {
@@ -181,6 +187,7 @@
 .vc__loc i { color: #cbd5e1; }
 .vc__divider { border-top: 1px solid #f1f5f9; margin: .55rem 0 .5rem; }
 
+/* ═══════════════════════════════════════
    EMPTY STATE
 ═══════════════════════════════════════ */
 .browse-empty {
@@ -194,6 +201,7 @@
 }
 .browse-empty__icon i { font-size: 1.8rem; color: #94a3b8; }
 
+/* ═══════════════════════════════════════
    MOBILE
 ═══════════════════════════════════════ */
 .mobile-filter-btn {
