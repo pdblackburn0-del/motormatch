@@ -51,13 +51,29 @@ class MotorMatchAdminSite(AdminSite):
     index_title = 'Overview'
 
     def index(self, request, extra_context=None):
+        from datetime import timedelta
+        from django.utils import timezone
         extra_context = extra_context or {}
         try:
+            now   = timezone.now()
+            today = now.date()
+            week_ago = now - timedelta(days=7)
             extra_context.update({
-                'stat_users':    User.objects.count(),
-                'stat_vehicles': Vehicle.objects.filter(is_removed=False).count(),
-                'stat_bids':     Bid.objects.filter(status=Bid.STATUS_PENDING).count(),
-                'stat_messages': Message.objects.filter(is_read=False).count(),
+                # ── Primary stats ──────────────────────────────────
+                'stat_users':         User.objects.count(),
+                'stat_vehicles':      Vehicle.objects.filter(is_removed=False).count(),
+                'stat_bids':          Bid.objects.filter(status=Bid.STATUS_PENDING).count(),
+                'stat_messages':      Message.objects.filter(is_read=False).count(),
+                # ── Secondary stats ────────────────────────────────
+                'stat_reviews':       Review.objects.count(),
+                'stat_saved':         SavedVehicle.objects.count(),
+                'stat_notifications': Notification.objects.filter(is_read=False).count(),
+                'stat_removed':       Vehicle.objects.filter(is_removed=True).count(),
+                'stat_new_users_today': User.objects.filter(date_joined__date=today).count(),
+                'stat_bids_accepted': Bid.objects.filter(status=Bid.STATUS_ACCEPTED).count(),
+                'stat_logins_week':   LoginEvent.objects.filter(created_at__gte=week_ago).count(),
+                'stat_active_staff':  User.objects.filter(is_staff=True, is_active=True).count(),
+                # ── Recent activity ────────────────────────────────
                 'recent_logins':   (LoginEvent.objects
                                     .select_related('user')
                                     .order_by('-created_at')[:6]),
@@ -68,6 +84,9 @@ class MotorMatchAdminSite(AdminSite):
                 'recent_bids':     (Bid.objects
                                     .select_related('bidder', 'vehicle')
                                     .order_by('-created_at')[:5]),
+                'recent_reviews':  (Review.objects
+                                    .select_related('reviewer', 'reviewed_user')
+                                    .order_by('-created_at')[:4]),
             })
         except Exception:
             pass

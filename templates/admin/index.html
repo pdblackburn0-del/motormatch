@@ -2,51 +2,169 @@
 {% load i18n static %}
 
 {% block title %}Overview | Motor Match Admin{% endblock %}
-{% block content_title %}<h1>Overview</h1>{% endblock %}
+{% block content_title %}<h1>Dashboard</h1>{% endblock %}
 
 {% block content %}
 
-<div class="mm-admin-stats">
+{# ── Quick Actions bar ─────────────────────────────────────────── #}
+<div class="mm-quick-actions">
+    <a class="mm-quick-btn mm-quick-btn--primary" href="{% url 'motormatch_admin:motormatch_vehicle_add' %}">
+        <i class="bi bi-plus-circle-fill"></i> Add Vehicle
+    </a>
+    <a class="mm-quick-btn mm-quick-btn--indigo" href="{% url 'motormatch_admin:auth_user_add' %}">
+        <i class="bi bi-person-plus-fill"></i> Add User
+    </a>
+    <a class="mm-quick-btn mm-quick-btn--amber" href="{% url 'motormatch_admin:motormatch_bid_changelist' %}">
+        <i class="bi bi-tag-fill"></i> Manage Bids
+    </a>
+    <a class="mm-quick-btn mm-quick-btn--teal" href="{% url 'motormatch_admin:motormatch_review_changelist' %}">
+        <i class="bi bi-star-fill"></i> Manage Reviews
+    </a>
+    <a class="mm-quick-btn mm-quick-btn--slate" href="{% url 'motormatch_admin:motormatch_notification_changelist' %}">
+        <i class="bi bi-bell-fill"></i> Notifications
+    </a>
+    <a class="mm-quick-btn mm-quick-btn--rose" href="{% url 'motormatch_admin:motormatch_vehicle_changelist' %}?is_removed__exact=1">
+        <i class="bi bi-slash-circle-fill"></i> Removed ({{ stat_removed|default:"0" }})
+    </a>
+</div>
 
-    <div class="mm-stat-card">
-        <div class="mm-stat-card__icon mm-stat-card__icon--blue">
-            <i class="bi bi-people-fill"></i>
+{# ── Primary stats ─────────────────────────────────────────────── #}
+<div class="mm-stats-primary">
+
+    <div class="mm-stat-card mm-stat-card--blue">
+        <div class="mm-stat-card__top">
+            <div class="mm-stat-card__icon-wrap">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="mm-stat-card__trend">
+                <span class="mm-stat-badge mm-stat-badge--blue">+{{ stat_new_users_today|default:"0" }} today</span>
+            </div>
         </div>
-        <div class="mm-stat-card__label">Total Users</div>
         <div class="mm-stat-card__value">{{ stat_users|default:"0" }}</div>
+        <div class="mm-stat-card__label">Total Users</div>
     </div>
 
-    <div class="mm-stat-card">
-        <div class="mm-stat-card__icon mm-stat-card__icon--green">
-            <i class="bi bi-car-front-fill"></i>
+    <div class="mm-stat-card mm-stat-card--green">
+        <div class="mm-stat-card__top">
+            <div class="mm-stat-card__icon-wrap">
+                <i class="bi bi-car-front-fill"></i>
+            </div>
+            <div class="mm-stat-card__trend">
+                <span class="mm-stat-badge mm-stat-badge--red">{{ stat_removed|default:"0" }} removed</span>
+            </div>
         </div>
-        <div class="mm-stat-card__label">Active Listings</div>
         <div class="mm-stat-card__value">{{ stat_vehicles|default:"0" }}</div>
+        <div class="mm-stat-card__label">Active Listings</div>
     </div>
 
-    <div class="mm-stat-card">
-        <div class="mm-stat-card__icon mm-stat-card__icon--amber">
-            <i class="bi bi-tag-fill"></i>
+    <div class="mm-stat-card mm-stat-card--amber">
+        <div class="mm-stat-card__top">
+            <div class="mm-stat-card__icon-wrap">
+                <i class="bi bi-tag-fill"></i>
+            </div>
+            <div class="mm-stat-card__trend">
+                <span class="mm-stat-badge mm-stat-badge--green">{{ stat_bids_accepted|default:"0" }} accepted</span>
+            </div>
         </div>
-        <div class="mm-stat-card__label">Pending Bids</div>
         <div class="mm-stat-card__value">{{ stat_bids|default:"0" }}</div>
+        <div class="mm-stat-card__label">Pending Bids</div>
     </div>
 
-    <div class="mm-stat-card">
-        <div class="mm-stat-card__icon mm-stat-card__icon--red">
-            <i class="bi bi-chat-dots-fill"></i>
+    <div class="mm-stat-card mm-stat-card--purple">
+        <div class="mm-stat-card__top">
+            <div class="mm-stat-card__icon-wrap">
+                <i class="bi bi-bell-fill"></i>
+            </div>
+            <div class="mm-stat-card__trend">
+                <span class="mm-stat-badge mm-stat-badge--purple">unread</span>
+            </div>
         </div>
-        <div class="mm-stat-card__label">Unread Messages</div>
-        <div class="mm-stat-card__value">{{ stat_messages|default:"0" }}</div>
+        <div class="mm-stat-card__value">{{ stat_notifications|default:"0" }}</div>
+        <div class="mm-stat-card__label">Unread Notifications</div>
     </div>
 
 </div>
 
-<div class="mm-admin-recent">
+{# ── Secondary stats ───────────────────────────────────────────── #}
+<div class="mm-stats-secondary">
+
+    <div class="mm-stat-tile">
+        <div class="mm-stat-tile__icon mm-stat-tile__icon--blue"><i class="bi bi-person-plus-fill"></i></div>
+        <div>
+            <div class="mm-stat-tile__value">{{ stat_new_users_today|default:"0" }}</div>
+            <div class="mm-stat-tile__label">New Users Today</div>
+        </div>
+    </div>
+
+    <div class="mm-stat-tile">
+        <div class="mm-stat-tile__icon mm-stat-tile__icon--slate"><i class="bi bi-shield-check-fill"></i></div>
+        <div>
+            <div class="mm-stat-tile__value">{{ stat_logins_week|default:"0" }}</div>
+            <div class="mm-stat-tile__label">Logins This Week</div>
+        </div>
+    </div>
+
+    <div class="mm-stat-tile">
+        <div class="mm-stat-tile__icon mm-stat-tile__icon--green"><i class="bi bi-check2-circle"></i></div>
+        <div>
+            <div class="mm-stat-tile__value">{{ stat_bids_accepted|default:"0" }}</div>
+            <div class="mm-stat-tile__label">Accepted Bids</div>
+        </div>
+    </div>
+
+    <div class="mm-stat-tile">
+        <div class="mm-stat-tile__icon mm-stat-tile__icon--amber"><i class="bi bi-star-fill"></i></div>
+        <div>
+            <div class="mm-stat-tile__value">{{ stat_reviews|default:"0" }}</div>
+            <div class="mm-stat-tile__label">Total Reviews</div>
+        </div>
+    </div>
+
+    <div class="mm-stat-tile">
+        <div class="mm-stat-tile__icon mm-stat-tile__icon--teal"><i class="bi bi-bookmark-fill"></i></div>
+        <div>
+            <div class="mm-stat-tile__value">{{ stat_saved|default:"0" }}</div>
+            <div class="mm-stat-tile__label">Saved Vehicles</div>
+        </div>
+    </div>
+
+    <div class="mm-stat-tile">
+        <div class="mm-stat-tile__icon mm-stat-tile__icon--rose"><i class="bi bi-slash-circle-fill"></i></div>
+        <div>
+            <div class="mm-stat-tile__value">{{ stat_removed|default:"0" }}</div>
+            <div class="mm-stat-tile__label">Removed Listings</div>
+        </div>
+    </div>
+
+    <div class="mm-stat-tile">
+        <div class="mm-stat-tile__icon mm-stat-tile__icon--indigo"><i class="bi bi-person-badge-fill"></i></div>
+        <div>
+            <div class="mm-stat-tile__value">{{ stat_active_staff|default:"0" }}</div>
+            <div class="mm-stat-tile__label">Active Staff</div>
+        </div>
+    </div>
+
+    <div class="mm-stat-tile">
+        <div class="mm-stat-tile__icon mm-stat-tile__icon--blue"><i class="bi bi-chat-dots-fill"></i></div>
+        <div>
+            <div class="mm-stat-tile__value">{{ stat_messages|default:"0" }}</div>
+            <div class="mm-stat-tile__label">Unread Messages</div>
+        </div>
+    </div>
+
+</div>
+
+{# ── Section label ─────────────────────────────────────────────── #}
+<div class="mm-section-label">
+    <i class="bi bi-activity"></i> Recent Activity
+</div>
+
+{# ── Activity panels ───────────────────────────────────────────── #}
+<div class="mm-activity-grid">
 
     <div class="mm-recent-card">
         <div class="mm-recent-card__header">
-            <span class="mm-recent-card__title">Recent Logins</span>
+            <span class="mm-recent-card__title"><i class="bi bi-box-arrow-in-right"></i> Recent Logins</span>
             <a class="mm-recent-card__link" href="{% url 'motormatch_admin:motormatch_loginevent_changelist' %}">View all &rarr;</a>
         </div>
         {% for event in recent_logins %}
@@ -54,32 +172,30 @@
             <div class="mm-avatar">{{ event.user.email|first|upper }}</div>
             <div style="flex:1;min-width:0;">
                 <div class="mm-recent-item__label">{{ event.user.email }}</div>
-                <div class="mm-recent-item__sub">
-                    {{ event.location_string }}
-                </div>
+                <div class="mm-recent-item__sub">{{ event.location_string }}</div>
             </div>
-            <div class="mm-recent-item__sub">{{ event.created_at|date:"d M, H:i" }}</div>
+            <div class="mm-recent-item__sub" style="white-space:nowrap;">{{ event.created_at|date:"d M, H:i" }}</div>
         </div>
         {% empty %}
-        <div class="mm-recent-item" style="color:#9ca3af;">No login events yet.</div>
+        <div class="mm-empty-state"><i class="bi bi-inbox"></i> No login events yet.</div>
         {% endfor %}
     </div>
 
     <div class="mm-recent-card">
         <div class="mm-recent-card__header">
-            <span class="mm-recent-card__title">Recent Listings</span>
+            <span class="mm-recent-card__title"><i class="bi bi-car-front-fill"></i> Recent Listings</span>
             <a class="mm-recent-card__link" href="{% url 'motormatch_admin:motormatch_vehicle_changelist' %}">View all &rarr;</a>
         </div>
         {% for v in recent_vehicles %}
         <div class="mm-recent-item">
             {% if v.get_image %}
             <img src="{{ v.get_image }}" alt="{{ v.title }}"
-                 style="width:44px;height:32px;object-fit:cover;border-radius:4px;
+                 style="width:44px;height:32px;object-fit:cover;border-radius:5px;
                         border:1px solid #e5e7eb;flex-shrink:0;">
             {% else %}
-            <div style="width:44px;height:32px;background:#f3f4f6;border-radius:4px;
+            <div style="width:44px;height:32px;background:#f1f5f9;border-radius:5px;
                         border:1px solid #e5e7eb;flex-shrink:0;display:flex;
-                        align-items:center;justify-content:center;color:#9ca3af;">
+                        align-items:center;justify-content:center;color:#94a3b8;">
                 <i class="bi bi-car-front" style="font-size:14px;"></i>
             </div>
             {% endif %}
@@ -90,16 +206,16 @@
                     &nbsp;&middot;&nbsp; {{ v.price }}
                 </div>
             </div>
-            <div class="mm-recent-item__sub">{{ v.created_at|date:"d M" }}</div>
+            <div class="mm-recent-item__sub" style="white-space:nowrap;">{{ v.created_at|date:"d M" }}</div>
         </div>
         {% empty %}
-        <div class="mm-recent-item" style="color:#9ca3af;">No listings yet.</div>
+        <div class="mm-empty-state"><i class="bi bi-inbox"></i> No listings yet.</div>
         {% endfor %}
     </div>
 
     <div class="mm-recent-card">
         <div class="mm-recent-card__header">
-            <span class="mm-recent-card__title">Recent Bids</span>
+            <span class="mm-recent-card__title"><i class="bi bi-tag-fill"></i> Recent Bids</span>
             <a class="mm-recent-card__link" href="{% url 'motormatch_admin:motormatch_bid_changelist' %}">View all &rarr;</a>
         </div>
         {% for bid in recent_bids %}
@@ -111,71 +227,108 @@
             </div>
             <div>
                 {% if bid.status == "pending" %}
-                <span style="background:#fef3c7;color:#d97706;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;">Pending</span>
+                <span class="mm-badge mm-badge--amber">Pending</span>
                 {% elif bid.status == "accepted" %}
-                <span style="background:#dcfce7;color:#16a34a;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;">Accepted</span>
+                <span class="mm-badge mm-badge--green">Accepted</span>
                 {% elif bid.status == "declined" %}
-                <span style="background:#fee2e2;color:#dc2626;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;">Declined</span>
+                <span class="mm-badge mm-badge--red">Declined</span>
                 {% else %}
-                <span style="background:#dbeafe;color:#2563eb;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;">{{ bid.get_status_display }}</span>
+                <span class="mm-badge mm-badge--blue">{{ bid.get_status_display }}</span>
                 {% endif %}
             </div>
         </div>
         {% empty %}
-        <div class="mm-recent-item" style="color:#9ca3af;">No bids yet.</div>
+        <div class="mm-empty-state"><i class="bi bi-inbox"></i> No bids yet.</div>
+        {% endfor %}
+    </div>
+
+    <div class="mm-recent-card">
+        <div class="mm-recent-card__header">
+            <span class="mm-recent-card__title"><i class="bi bi-star-fill"></i> Recent Reviews</span>
+            <a class="mm-recent-card__link" href="{% url 'motormatch_admin:motormatch_review_changelist' %}">View all &rarr;</a>
+        </div>
+        {% for review in recent_reviews %}
+        <div class="mm-recent-item">
+            <div class="mm-avatar mm-avatar--amber">{{ review.reviewer.email|first|upper }}</div>
+            <div style="flex:1;min-width:0;">
+                <div class="mm-recent-item__label">{{ review.reviewer.email }}</div>
+                <div class="mm-recent-item__sub">
+                    &rarr; {{ review.reviewed_user.email }}
+                </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+                <div class="mm-stars">
+                    {% for i in "12345" %}
+                    <i class="bi bi-star{% if forloop.counter <= review.rating %}-fill{% endif %}"
+                       style="font-size:11px;color:{% if forloop.counter <= review.rating %}#f59e0b{% else %}#d1d5db{% endif %};"></i>
+                    {% endfor %}
+                </div>
+                <div class="mm-recent-item__sub" style="white-space:nowrap;">{{ review.created_at|date:"d M" }}</div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="mm-empty-state"><i class="bi bi-inbox"></i> No reviews yet.</div>
         {% endfor %}
     </div>
 
 </div>
 
-<div style="margin-bottom:8px;">
-    <h2 style="font-size:13px;font-weight:700;color:#6b7280;text-transform:uppercase;
-               letter-spacing:.5px;margin:0 0 12px;">All Sections</h2>
+{# ── Section label ─────────────────────────────────────────────── #}
+<div class="mm-section-label">
+    <i class="bi bi-grid-fill"></i> Manage Sections
 </div>
 
-{% for app in app_list %}
-<div class="module" style="margin-bottom:12px;">
-    <table style="width:100%;border-collapse:collapse;">
-        <caption style="text-align:left;padding:10px 16px;font-size:11.5px;
-                        font-weight:700;text-transform:uppercase;letter-spacing:.5px;
-                        color:#6b7280;border-bottom:1px solid #f3f4f6;">
-            {{ app.name }}
-        </caption>
+{# ── Section cards grid (replaces table-based All Sections) ──────── #}
+{% with section_meta="|Users|person-fill|blue|User accounts & permissions|auth_user|,|User Profiles|person-badge-fill|indigo|Badges, avatars & seller info|motormatch_userprofile|,|Vehicles|car-front-fill|green|Listings, photos & details|motormatch_vehicle|,|Saved Vehicles|bookmark-fill|teal|Watchlisted cars|motormatch_savedvehicle|,|Bids|tag-fill|amber|Offers & bid management|motormatch_bid|,|Reviews|star-fill|yellow|Ratings & feedback|motormatch_review|,|Notifications|bell-fill|purple|User alerts & messages|motormatch_notification|,|Login Events|shield-check-fill|slate|Login history & security|motormatch_loginevent|" %}
+<div class="mm-section-cards">
+    {% for app in app_list %}
         {% for model in app.models %}
-        <tr style="border-bottom:1px solid #f9fafb;">
-            <td style="padding:10px 16px;font-size:13.5px;font-weight:500;color:#111827;">
-                {% if model.admin_url %}
-                <a href="{{ model.admin_url }}" style="color:#111827;text-decoration:none;">{{ model.name }}</a>
-                {% else %}
-                {{ model.name }}
-                {% endif %}
-            </td>
-            <td style="padding:10px 16px;text-align:right;">
-                <div style="display:flex;gap:8px;justify-content:flex-end;">
-                    {% if model.admin_url %}
-                    <a href="{{ model.admin_url }}"
-                       style="font-size:12px;color:#2563eb;text-decoration:none;
-                              padding:3px 10px;border:1px solid #bfdbfe;border-radius:5px;
-                              background:#eff6ff;font-weight:500;">
-                        View
-                    </a>
-                    {% endif %}
-                    {% if model.add_url %}
-                    <a href="{{ model.add_url }}"
-                       style="font-size:12px;color:#fff;text-decoration:none;
-                              padding:3px 10px;border-radius:5px;
-                              background:#2563eb;font-weight:500;">
-                        + Add
-                    </a>
+        <div class="mm-section-card">
+            <div class="mm-section-card__body">
+                <div class="mm-section-card__icon-area">
+                    {% if model.name == "Users" or model.name == "User" %}
+                    <div class="mm-section-icon mm-section-icon--blue"><i class="bi bi-people-fill"></i></div>
+                    {% elif model.name == "User profiles" or model.name == "User profile" %}
+                    <div class="mm-section-icon mm-section-icon--indigo"><i class="bi bi-person-badge-fill"></i></div>
+                    {% elif model.name == "Vehicles" or model.name == "Vehicle" %}
+                    <div class="mm-section-icon mm-section-icon--green"><i class="bi bi-car-front-fill"></i></div>
+                    {% elif model.name == "Saved vehicles" or model.name == "Saved vehicle" %}
+                    <div class="mm-section-icon mm-section-icon--teal"><i class="bi bi-bookmark-fill"></i></div>
+                    {% elif model.name == "Bids" or model.name == "Bid" %}
+                    <div class="mm-section-icon mm-section-icon--amber"><i class="bi bi-tag-fill"></i></div>
+                    {% elif model.name == "Reviews" or model.name == "Review" %}
+                    <div class="mm-section-icon mm-section-icon--yellow"><i class="bi bi-star-fill"></i></div>
+                    {% elif model.name == "Notifications" or model.name == "Notification" %}
+                    <div class="mm-section-icon mm-section-icon--purple"><i class="bi bi-bell-fill"></i></div>
+                    {% elif model.name == "Login events" or model.name == "Login event" %}
+                    <div class="mm-section-icon mm-section-icon--slate"><i class="bi bi-shield-check-fill"></i></div>
+                    {% else %}
+                    <div class="mm-section-icon mm-section-icon--blue"><i class="bi bi-grid-3x3-gap-fill"></i></div>
                     {% endif %}
                 </div>
-            </td>
-        </tr>
+                <div class="mm-section-card__info">
+                    <div class="mm-section-card__name">{{ model.name }}</div>
+                    <div class="mm-section-card__app">{{ app.name }}</div>
+                </div>
+            </div>
+            <div class="mm-section-card__actions">
+                {% if model.admin_url %}
+                <a href="{{ model.admin_url }}" class="mm-section-card__btn mm-section-card__btn--view">
+                    <i class="bi bi-eye-fill"></i> View
+                </a>
+                {% endif %}
+                {% if model.add_url %}
+                <a href="{{ model.add_url }}" class="mm-section-card__btn mm-section-card__btn--add">
+                    <i class="bi bi-plus-lg"></i> Add
+                </a>
+                {% endif %}
+            </div>
+        </div>
         {% endfor %}
-    </table>
+    {% empty %}
+    <p style="color:#6b7280;grid-column:1/-1;">You don't have permission to view or edit anything.</p>
+    {% endfor %}
 </div>
-{% empty %}
-<p style="color:#6b7280;">You don't have permission to view or edit anything.</p>
-{% endfor %}
+{% endwith %}
 
 {% endblock %}
