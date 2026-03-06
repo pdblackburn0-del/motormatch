@@ -1,53 +1,13 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Saved Vehicles - Motor Match{% endblock %}
 
-{% block content %}
-<style>
-    .saved-card {
-        cursor: pointer;
-        transition: box-shadow .18s, transform .15s;
-        border-radius: 10px !important;
-        overflow: hidden;
-        border: 2px solid transparent !important;
-    }
-    .saved-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.1) !important; transform: translateY(-2px); }
-    .saved-card.is-selected {
-        border: 2px solid #2563eb !important;
-        box-shadow: 0 0 0 4px rgba(37,99,235,.12) !important;
-    }
-    .select-badge {
-        position: absolute; top: 8px; left: 8px; z-index: 5;
-        width: 26px; height: 26px; border-radius: 50%;
-        background: rgba(255,255,255,.9); border: 2px solid #cbd5e1;
-        display: flex; align-items: center; justify-content: center;
-        font-size: .75rem; color: #94a3b8;
-        transition: background .15s, border-color .15s;
-        pointer-events: none;
-    }
-    .saved-card.is-selected .select-badge {
-        background: #2563eb; border-color: #2563eb; color: #fff;
-    }
-    .compare-bar {
-        background: #f0f5ff; border-radius: 14px;
-        padding: 1.5rem 2rem; transition: all .2s;
-    }
-    .compare-bar.ready { background: #eff6ff; border: 1.5px solid #bfdbfe; }
-    .compare-slots { display: flex; gap: .75rem; justify-content: center; margin-bottom: 1rem; }
-    .compare-slot {
-        flex: 1; max-width: 180px; height: 52px;
-        border: 1.5px dashed #cbd5e1; border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: .8rem; color: #94a3b8; background: #fff;
-        transition: all .2s; overflow: hidden;
-    }
-    .compare-slot.filled {
-        border-style: solid; border-color: #2563eb;
-        color: #1e40af; font-weight: 600; background: #eff6ff;
-        padding: 0 .6rem; text-align: center; font-size: .76rem; line-height: 1.2;
-    }
-</style>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/saved.css' %}">
+{% endblock %}
 
+{% block content %}
 <div class="container py-4">
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb small">
@@ -177,188 +137,6 @@
     {% endif %}
 </div>
 
-<script>
-(function () {
-    var selected = [];          // holds PKs of selected cars (max 2)
-    var selectedTitles = {};    // pk → title
-
-    /* ── Selection toggle ── */
-    function toggleSelect(card) {
-        var pk = card.dataset.pk;
-        var title = card.dataset.title;
-
-        if (card.classList.contains('is-selected')) {
-            // deselect
-            card.classList.remove('is-selected');
-            selected = selected.filter(function (id) { return id !== pk; });
-            delete selectedTitles[pk];
-        } else {
-            if (selected.length >= 2) {
-                // flash the card to indicate "full"
-                card.style.transition = 'none';
-                card.style.border = '2px solid #ef4444 !important';
-                setTimeout(function () { card.style.border = ''; card.style.transition = ''; }, 600);
-                return;
-            }
-            card.classList.add('is-selected');
-            selected.push(pk);
-            selectedTitles[pk] = title;
-        }
-        updateCompareBar();
-    }
-    window.toggleSelect = toggleSelect;
-
-    /* ── Update compare bar ── */
-    function updateCompareBar() {
-        var n = selected.length;
-        var bar      = document.getElementById('compareBar');
-        var titleEl  = document.getElementById('compareTitle');
-        var subEl    = document.getElementById('compareSubtitle');
-        var btn      = document.getElementById('compareBtn');
-        var slot0    = document.getElementById('slot0');
-        var slot1    = document.getElementById('slot1');
-
-        // Update slots
-        [slot0, slot1].forEach(function (slot, i) {
-            var pk = selected[i];
-            if (pk) {
-                slot.className = 'compare-slot filled';
-                slot.innerHTML = '<i class="bi bi-car-front me-1"></i>' + selectedTitles[pk];
-            } else {
-                slot.className = 'compare-slot';
-                slot.innerHTML = '<i class="bi bi-plus me-1"></i>Car ' + (i + 1);
-            }
-        });
-
-        if (n === 0) {
-            titleEl.textContent = 'Select 2 vehicles to compare';
-            subEl.textContent   = 'Click any saved car above to add it to your comparison.';
-            btn.classList.add('disabled');
-            btn.setAttribute('aria-disabled', 'true');
-            btn.href = '#';
-            bar.classList.remove('ready');
-        } else if (n === 1) {
-            titleEl.textContent = '1 vehicle selected — pick one more';
-            subEl.textContent   = 'Select a second car to unlock the comparison.';
-            btn.classList.add('disabled');
-            btn.setAttribute('aria-disabled', 'true');
-            btn.href = '#';
-            bar.classList.remove('ready');
-        } else {
-            titleEl.textContent = 'Ready to compare!';
-            subEl.textContent   = 'You\'ve selected 2 vehicles. Analyse their specs side-by-side.';
-            btn.classList.remove('disabled');
-            btn.removeAttribute('aria-disabled');
-            btn.href = '{% url "comparison" %}?car1=' + selected[0] + '&car2=' + selected[1];
-            bar.classList.add('ready');
-        }
-    }
-
-    /* ── Clear selection ── */
-    document.getElementById('clearSelectionBtn').addEventListener('click', function () {
-        document.querySelectorAll('.saved-card.is-selected').forEach(function (c) {
-            c.classList.remove('is-selected');
-        });
-        selected = [];
-        selectedTitles = {};
-        updateCompareBar();
-    });
-
-    /* ── Clear All ── */
-    var clearAllBtn = document.getElementById('clearAllBtn');
-    if (clearAllBtn) {
-        clearAllBtn.addEventListener('click', function () {
-            showConfirm(
-                'Remove all saved vehicles?',
-                'This will clear your entire saved list and cannot be undone.',
-                function () {
-                    fetch('{% url "clear_saved_vehicles" %}', {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': getCsrf(), 'X-Requested-With': 'XMLHttpRequest' }
-                    }).then(function (r) { return r.json(); }).then(function (data) {
-                        if (data.ok) {
-                            var grid = document.getElementById('savedGrid');
-                            if (grid) {
-                                grid.outerHTML = '<div class="text-center py-5 text-muted" id="emptyState">' +
-                                    '<i class="bi bi-heart fs-1 d-block mb-3 text-secondary"></i>' +
-                                    '<h5 class="fw-semibold">No saved vehicles yet</h5>' +
-                                    '<p class="small mb-3">Browse cars and click the heart icon to save them here.</p>' +
-                                    '<a href="{% url "browse" %}" class="btn btn-primary">Browse Cars</a></div>';
-                            }
-                            clearAllBtn.remove();
-                            selected = [];
-                            selectedTitles = {};
-                            updateCompareBar();
-                            showToast('success', 'All saved vehicles removed.');
-                        }
-                    });
-                }
-            );
-        });
-    }
-
-    function getCsrf() {
-        var m = document.cookie.match(/csrftoken=([^;]+)/);
-        return m ? m[1] : '';
-    }
-
-    /* ── Toast helper (injects into base.html mm-toast system) ── */
-    function showToast(type, msg) {
-        var duration = 3500;
-        var iconMap = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', warning: 'bi-exclamation-triangle-fill', info: 'bi-info-circle-fill' };
-        var icon = iconMap[type] || iconMap.info;
-        var container = document.querySelector('.mm-toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.className = 'mm-toast-container';
-            container.setAttribute('aria-live', 'polite');
-            document.body.appendChild(container);
-        }
-        var toast = document.createElement('div');
-        toast.className = 'mm-toast mm-toast--' + type;
-        toast.setAttribute('role', 'alert');
-        toast.style.setProperty('--toast-duration', duration + 'ms');
-        toast.innerHTML =
-            '<div class="mm-toast__icon"><i class="bi ' + icon + '"></i></div>' +
-            '<div class="mm-toast__body"><span class="mm-toast__msg">' + msg + '</span></div>' +
-            '<button class="mm-toast__close" onclick="this.closest(\'.mm-toast\').remove()" aria-label="Close"><i class="bi bi-x"></i></button>' +
-            '<div class="mm-toast__progress"></div>';
-        container.appendChild(toast);
-        setTimeout(function () {
-            toast.style.animation = 'mmToastOut .28s ease forwards';
-            setTimeout(function () { toast.remove(); }, 280);
-        }, duration);
-    }
-
-    /* ── Confirm modal helper ── */
-    function showConfirm(title, subtitle, onConfirm) {
-        var modal = document.getElementById('mmConfirmModal');
-        document.getElementById('mmConfirmTitle').textContent = title;
-        document.getElementById('mmConfirmSubtitle').textContent = subtitle;
-        var confirmBtn = document.getElementById('mmConfirmOk');
-        var newBtn = confirmBtn.cloneNode(true);
-        confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
-        newBtn.addEventListener('click', function () {
-            closeConfirmModal();
-            onConfirm();
-        });
-        modal.style.display = 'flex';
-        setTimeout(function () { modal.classList.add('mm-modal--in'); }, 10);
-    }
-    function closeConfirmModal() {
-        var modal = document.getElementById('mmConfirmModal');
-        modal.classList.remove('mm-modal--in');
-        setTimeout(function () { modal.style.display = 'none'; }, 200);
-    }
-    document.getElementById('mmConfirmCancel').addEventListener('click', closeConfirmModal);
-    document.getElementById('mmConfirmModal').addEventListener('click', function (e) {
-        if (e.target === this) closeConfirmModal();
-    });
-
-    updateCompareBar();
-})();
-</script>
-
 <div id="mmConfirmModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(15,23,42,.45); backdrop-filter:blur(3px); transition:opacity .2s;">
     <div style="background:#fff; border-radius:16px; padding:2rem 2rem 1.5rem; max-width:380px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,.18); transform:scale(.96); transition:transform .2s;" id="mmConfirmBox">
         <div style="width:44px; height:44px; border-radius:50%; background:#fef2f2; display:flex; align-items:center; justify-content:center; margin-bottom:1rem;">
@@ -372,7 +150,13 @@
         </div>
     </div>
 </div>
-<style>
-    .mm-modal--in #mmConfirmBox { transform: scale(1) !important; }
-</style>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+window.COMPARE_BASE_URL = '{% url "comparison" %}';
+window.CLEAR_SAVED_URL  = '{% url "clear_saved_vehicles" %}';
+window.BROWSE_URL       = '{% url "browse" %}';
+</script>
+<script src="{% static 'js/pages/saved.js' %}"></script>
 {% endblock %}

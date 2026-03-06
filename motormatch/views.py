@@ -623,6 +623,21 @@ def send_message_ajax(request, user_pk):
     })
 
 @login_required
+@require_POST
+def delete_message(request, user_pk, msg_pk):
+    msg = get_object_or_404(Message, pk=msg_pk)
+    if msg.sender != request.user and msg.recipient != request.user:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+    if msg.is_deleted:
+        return JsonResponse({'ok': True, 'id': msg.pk})
+    msg.is_deleted = True
+    msg.deleted_by_staff = False
+    msg.body = ''
+    msg.gif_url = ''
+    msg.save(update_fields=['is_deleted', 'deleted_by_staff', 'body', 'gif_url'])
+    return JsonResponse({'ok': True, 'id': msg.pk})
+
+@login_required
 
 def poll_messages(request, user_pk):
 

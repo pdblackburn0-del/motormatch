@@ -1,0 +1,8 @@
+.conv-row { transition: background .12s; }
+.conv-row:hover { background: #f8f9ff !important; }
+.conv-row:first-child { border-radius: 14px 14px 0 0; }
+.conv-row:last-child { border-bottom: none !important; border-radius: 0 0 14px 14px; }
+.conv-menu-btn { opacity: 0; transition: opacity .15s; border-radius: 6px; }
+.conv-row:hover .conv-menu-btn,
+.conv-menu-btn:focus,
+.conv-menu-btn[aria-expanded="true"] { opacity: 1; }

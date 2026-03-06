@@ -60,6 +60,8 @@ urlpatterns = [
 
     path('inbox/<int:user_pk>/delete/', views.delete_conversation, name='delete_conversation'),
 
+    path('inbox/<int:user_pk>/message/<int:msg_pk>/delete/', views.delete_message, name='delete_message'),
+
     path('messages/send/', views.send_message, name='send_message_direct'),
 
     path('bids/<int:pk>/respond/', views.respond_bid, name='respond_bid'),

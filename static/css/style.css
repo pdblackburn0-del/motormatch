@@ -548,3 +548,19 @@ footer a:hover {
 
 .offer-avatar { width: 34px; height: 34px; font-size: .75rem; }
 .dyn-badge    { font-size: .72rem; color: #fff; }
+
+/* ── Shared star rating display ── */
+.star-rating::before {
+    content: '★★★★★';
+    letter-spacing: 2px;
+    font-size: 1rem;
+    background: linear-gradient(90deg, #f59e0b calc(var(--stars,5)/5*100%), #d1d5db calc(var(--stars,5)/5*100%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.star-rating[data-stars="1"] { --stars: 1; }
+.star-rating[data-stars="2"] { --stars: 2; }
+.star-rating[data-stars="3"] { --stars: 3; }
+.star-rating[data-stars="4"] { --stars: 4; }
+.star-rating[data-stars="5"] { --stars: 5; }

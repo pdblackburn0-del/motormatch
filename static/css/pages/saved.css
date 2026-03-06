@@ -1,0 +1,43 @@
+.saved-card {
+    cursor: pointer;
+    transition: box-shadow .18s, transform .15s;
+    border-radius: 10px !important;
+    overflow: hidden;
+    border: 2px solid transparent !important;
+}
+.saved-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.1) !important; transform: translateY(-2px); }
+.saved-card.is-selected {
+    border: 2px solid #2563eb !important;
+    box-shadow: 0 0 0 4px rgba(37,99,235,.12) !important;
+}
+.select-badge {
+    position: absolute; top: 8px; left: 8px; z-index: 5;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(255,255,255,.9); border: 2px solid #cbd5e1;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; color: #94a3b8;
+    transition: background .15s, border-color .15s;
+    pointer-events: none;
+}
+.saved-card.is-selected .select-badge {
+    background: #2563eb; border-color: #2563eb; color: #fff;
+}
+.compare-bar {
+    background: #f0f5ff; border-radius: 14px;
+    padding: 1.5rem 2rem; transition: all .2s;
+}
+.compare-bar.ready { background: #eff6ff; border: 1.5px solid #bfdbfe; }
+.compare-slots { display: flex; gap: .75rem; justify-content: center; margin-bottom: 1rem; }
+.compare-slot {
+    flex: 1; max-width: 180px; height: 52px;
+    border: 1.5px dashed #cbd5e1; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .8rem; color: #94a3b8; background: #fff;
+    transition: all .2s; overflow: hidden;
+}
+.compare-slot.filled {
+    border-style: solid; border-color: #2563eb;
+    color: #1e40af; font-weight: 600; background: #eff6ff;
+    padding: 0 .6rem; text-align: center; font-size: .76rem; line-height: 1.2;
+}
+.mm-modal--in #mmConfirmBox { transform: scale(1) !important; }

@@ -1,0 +1,8 @@
+'use strict';
+
+function openDeleteModal(userPk, name) {
+    document.getElementById('inboxDeleteText').textContent =
+        'All messages with ' + name + ' will be permanently removed. This cannot be undone.';
+    document.getElementById('inboxDeleteForm').action = '/inbox/' + userPk + '/delete/';
+    new bootstrap.Modal(document.getElementById('inboxDeleteModal')).show();
+}

@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Browse Cars – Motor Match{% endblock %}
 
 {% block extra_css %}
-<style>
+<link rel="stylesheet" href="{% static 'css/pages/browse.css' %}">
 /* ═══════════════════════════════════════
    HERO BANNER
 ═══════════════════════════════════════ */
@@ -230,7 +231,6 @@
     .browse-hero { padding: 1.5rem 0 1.5rem; }
     .vc__img, .vc__img-placeholder { height: 148px; }
 }
-</style>
 {% endblock %}
 
 {% block content %}

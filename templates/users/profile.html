@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}My Profile - Motor Match{% endblock %}
 
@@ -151,38 +152,8 @@
 
 </div>
 
-<style>
-.star-rating::before {
-    content: '★★★★★';
-    letter-spacing: 2px;
-    font-size: 1rem;
-    background: linear-gradient(90deg, #f59e0b calc(var(--stars,5)/5*100%), #d1d5db calc(var(--stars,5)/5*100%));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.star-rating[data-stars="1"] { --stars: 1; }
-.star-rating[data-stars="2"] { --stars: 2; }
-.star-rating[data-stars="3"] { --stars: 3; }
-.star-rating[data-stars="4"] { --stars: 4; }
-.star-rating[data-stars="5"] { --stars: 5; }
-</style>
+{% endblock content %}
 
-<script>
-// Live preview of avatar when a new file is selected
-document.getElementById('id_avatar')?.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-        const preview = document.getElementById('avatarPreview');
-        const initials = document.getElementById('avatarInitials');
-        preview.src = ev.target.result;
-        preview.style.display = 'block';
-        if (initials) initials.style.display = 'none';
-    };
-    reader.readAsDataURL(file);
-});
-</script>
-
+{% block extra_js %}
+<script src="{% static 'js/pages/profile.js' %}"></script>
 {% endblock %}

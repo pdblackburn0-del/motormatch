@@ -1,6 +1,11 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Messages - Motor Match{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/inbox.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container py-4" style="max-width:680px;">
@@ -110,23 +115,8 @@
     </div>
 </div>
 
-<style>
-.conv-row { transition: background .12s; }
-.conv-row:hover { background: #f8f9ff !important; }
-.conv-row:first-child { border-radius: 14px 14px 0 0; }
-.conv-row:last-child { border-bottom: none !important; border-radius: 0 0 14px 14px; }
-.conv-menu-btn { opacity: 0; transition: opacity .15s; border-radius: 6px; }
-.conv-row:hover .conv-menu-btn,
-.conv-menu-btn:focus,
-.conv-menu-btn[aria-expanded="true"] { opacity: 1; }
-</style>
+{% endblock content %}
 
-<script>
-function openDeleteModal(userPk, name) {
-    document.getElementById('inboxDeleteText').textContent =
-        'All messages with ' + name + ' will be permanently removed. This cannot be undone.';
-    document.getElementById('inboxDeleteForm').action = '/inbox/' + userPk + '/delete/';
-    new bootstrap.Modal(document.getElementById('inboxDeleteModal')).show();
-}
-</script>
+{% block extra_js %}
+<script src="{% static 'js/pages/inbox.js' %}"></script>
 {% endblock %}

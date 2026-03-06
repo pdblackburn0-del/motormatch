@@ -1,6 +1,11 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ car.title }} - Motor Match{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/vehicle-detail.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -385,86 +390,10 @@
         {% endif %}
     </div>
 
-<style>
-/* CSS star rating display */
-.star-rating::before {
-    content: '★★★★★';
-    letter-spacing: 2px;
-    font-size: 1rem;
-    background: linear-gradient(90deg, #f59e0b calc(var(--stars,5)/5*100%), #d1d5db calc(var(--stars,5)/5*100%));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.star-rating[data-stars="1"]  { --stars: 1; }
-.star-rating[data-stars="2"]  { --stars: 2; }
-.star-rating[data-stars="3"]  { --stars: 3; }
-.star-rating[data-stars="4"]  { --stars: 4; }
-.star-rating[data-stars="5"]  { --stars: 5; }
-
-/* interactive star picker */
-.star-picker .star-label i { color: #d1d5db; transition: color .15s; }
-.star-picker .star-label:hover i,
-.star-picker .star-label:hover ~ .star-label i { color: #d1d5db !important; }
-.star-picker:hover .star-label i { color: #f59e0b; }
-.star-picker .star-label:hover ~ .star-label i { color: #d1d5db !important; }
-.star-picker input:checked ~ label i { color: #d1d5db !important; }
-</style>
-<script>
-// Star picker: highlight up to hovered/selected star
-(function(){
-    const container = document.getElementById('starPicker');
-    if (!container) return;
-    const labels = Array.from(container.querySelectorAll('.star-label'));
-    const icons  = labels.map(l => l.querySelector('i'));
-
-    function paint(upTo) {
-        icons.forEach((ic, idx) => {
-            ic.style.color = idx <= upTo ? '#f59e0b' : '#d1d5db';
-        });
-    }
-
-    labels.forEach((lbl, idx) => {
-        lbl.addEventListener('mouseenter', () => paint(idx));
-        lbl.addEventListener('click', () => {
-            paint(idx);
-            lbl.querySelector('input').checked = true;
-        });
-    });
-    container.addEventListener('mouseleave', () => {
-        const checkedIdx = labels.findIndex(l => l.querySelector('input').checked);
-        paint(checkedIdx >= 0 ? checkedIdx : 4);
-    });
-    // Init colour from checked input
-    const initIdx = labels.findIndex(l => l.querySelector('input').checked);
-    paint(initIdx >= 0 ? initIdx : 4);
-})();
-</script>
-
-<script>
-function toggleSave(btn) {
-    const icon = document.getElementById('saveIcon');
-    const isSaved = btn.dataset.saved === '1';
-    fetch(btn.dataset.url, {
-        method: 'POST',
-        headers: {'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': btn.dataset.csrf}
-    })
-    .then(r => r.json())
-    .then(d => {
-        if (d.saved) {
-            icon.className = 'bi bi-heart-fill text-danger';
-            btn.title = 'Unsave';
-            btn.dataset.saved = '1';
-        } else {
-            icon.className = 'bi bi-heart text-muted';
-            btn.title = 'Save';
-            btn.dataset.saved = '0';
-        }
-    })
-    .catch(() => {});
-}
-</script>
-
 </div>
 
+{% endblock content %}
+
+{% block extra_js %}
+<script src="{% static 'js/pages/vehicle-detail.js' %}"></script>
 {% endblock %}
