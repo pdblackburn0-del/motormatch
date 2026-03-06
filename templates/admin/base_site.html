@@ -3,19 +3,43 @@
 
 {% block title %}{% if subtitle %}{{ subtitle }} — {% endif %}{{ title }} | Motor Match Admin{% endblock %}
 
+{% block extrahead %}
+{{ block.super }}
+{# Force light mode before ANY stylesheet loads #}
+<meta name="color-scheme" content="light">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<style>
+  /* Kill Django dark-mode variables BEFORE Django's stylesheet even loads */
+  html { color-scheme: light !important; }
+  :root {
+    color-scheme: light;
+    --primary: #2563eb; --secondary: #1d4ed8;
+    --body-bg: #f3f4f6; --body-fg: #1f2937;
+    --header-bg: #111827; --header-link-color: #d1d5db;
+    --breadcrumbs-bg: #f3f4f6; --breadcrumbs-fg: #6b7280;
+    --darkened-bg: #f8fafc; --selected-bg: #dbeafe;
+    --selected-row: #eff6ff; --border-color: #d1d5db;
+    --hairline-color: #e5e7eb;
+  }
+</style>
+{% endblock %}
+
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'css/admin.css' %}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 {% endblock %}
 
 {% block branding %}
-<div id="branding" style="display:flex;align-items:center;gap:10px;">
+<div id="branding" style="display:flex;align-items:center;gap:12px;">
     <img src="https://res.cloudinary.com/dwe00uiuy/image/upload/w_28,h_28,c_fit/v1772713194/Screenshot_2026-03-05_at_12.18.45_pcytig.png"
-         alt="Motor Match" style="height:28px;width:auto;">
+         alt="Motor Match" style="height:28px;width:auto;border-radius:6px;">
     <h1><a href="{% url 'motormatch_admin:index' %}">Motor Match</a></h1>
-    <span style="background:#374151;color:#9ca3af;font-size:10px;font-weight:700;
-                 padding:2px 8px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">Admin</span>
+    <span style="background:#1e3a5f;color:#60a5fa;font-size:10px;font-weight:700;
+                 padding:2px 8px;border-radius:99px;letter-spacing:.8px;
+                 text-transform:uppercase;border:1px solid #2563eb;">ADMIN</span>
 </div>
 {% endblock %}
 
