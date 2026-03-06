@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /accounts/
+Disallow: /inbox/
+Disallow: /profile/
+Disallow: /dashboard/
+Allow: /
+Allow: /browse/
+Allow: /cars/
+
+Sitemap: https://motormatch.herokuapp.com/sitemap.xml
