@@ -157,8 +157,8 @@
                     <form method="post" action="{% url 'delete_account' %}">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Type your email address to confirm</label>
-                            <input type="email" name="confirm_email" class="form-control" placeholder="{{ request.user.email }}" autocomplete="off" required>
+                            <label class="form-label small fw-semibold">Enter your password to confirm</label>
+                            <input type="password" name="confirm_password" class="form-control" placeholder="Your current password" autocomplete="current-password" required>
                         </div>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-light flex-grow-1 fw-semibold" data-bs-dismiss="modal">Cancel</button>

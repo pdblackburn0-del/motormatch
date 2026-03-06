@@ -159,9 +159,9 @@ def delete_account(request):
     if request.method != 'POST':
         return redirect('profile')
 
-    confirm_email = request.POST.get('confirm_email', '').strip().lower()
-    if confirm_email != request.user.email.lower():
-        messages.error(request, 'The email address you entered does not match your account.')
+    confirm_password = request.POST.get('confirm_password', '')
+    if not request.user.check_password(confirm_password):
+        messages.error(request, 'The password you entered is incorrect.')
         return redirect('profile')
 
     user = request.user
