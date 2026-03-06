@@ -26,7 +26,7 @@ if os.path.isfile("env.py"):
 
     import env
 
-DEBUG = "DEVELOPMENT" in os.environ
+DEBUG = False
 
 _secret_key = os.environ.get("SECRET_KEY", "")
 
@@ -248,6 +248,8 @@ STATICFILES_DIRS = [
 
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1')
 
+_redis_ssl_opts = {'ssl_cert_reqs': None} if REDIS_URL.startswith('rediss://') else {}
+
 CACHES = {
 
     'default': {
@@ -262,6 +264,8 @@ CACHES = {
 
             'IGNORE_EXCEPTIONS': True,
 
+            'CONNECTION_POOL_KWARGS': _redis_ssl_opts,
+
         },
 
         'TIMEOUT': 300,
@@ -272,6 +276,9 @@ CACHES = {
 
 ASGI_APPLICATION = 'config.asgi.application'
 
+_channel_redis_url = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/2')
+_channel_host = {'address': _channel_redis_url, **({'ssl_cert_reqs': None} if _channel_redis_url.startswith('rediss://') else {})}
+
 CHANNEL_LAYERS = {
 
     'default': {
@@ -280,7 +287,7 @@ CHANNEL_LAYERS = {
 
         'CONFIG': {
 
-            'hosts': [os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/2')],
+            'hosts': [_channel_host],
 
         },
 
