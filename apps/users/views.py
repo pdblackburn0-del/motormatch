@@ -5,6 +5,7 @@ from apps.vehicles.models import Bid, SavedVehicle, Vehicle
 from apps.messaging.models import Message
 from apps.notifications.models import Notification
 from apps.users.models import UserProfile
+from apps.users.middleware import get_recently_viewed_pks
 
 
 @login_required
@@ -17,6 +18,11 @@ def dashboard(request):
     unread_messages_count = Message.objects.filter(recipient=request.user, is_read=False).count()
     unread_notifications  = Notification.objects.filter(user=request.user, is_read=False).count()
 
+    # Recently viewed
+    rv_pks           = get_recently_viewed_pks(request.user.pk)
+    rv_vehicles_map  = {v.pk: v for v in Vehicle.objects.filter(pk__in=rv_pks)} if rv_pks else {}
+    recently_viewed  = [rv_vehicles_map[pk] for pk in rv_pks if pk in rv_vehicles_map]
+
     return render(request, 'pages/dashboard.html', {
         'profile':               profile,
         'my_listings':           my_listings,
@@ -25,6 +31,7 @@ def dashboard(request):
         'my_messages':           my_messages,
         'unread_messages_count': unread_messages_count,
         'unread_notifications':  unread_notifications,
+        'recently_viewed':       recently_viewed,
     })
 
 

@@ -12,7 +12,7 @@ from django.views.decorators.http import require_POST
 from apps.messaging.models import Message
 from apps.notifications.models import Notification
 from apps.vehicles.models import Vehicle
-from apps.users.middleware import get_online_status, invalidate_poll_cache
+from apps.users.middleware import get_online_status, invalidate_poll_cache, check_rate_limit
 
 User = get_user_model()
 
@@ -75,6 +75,10 @@ def send_message_ajax(request, user_pk):
 
     if not body and not attach and not gif_url:
         return JsonResponse({'error': 'Empty message'}, status=400)
+
+    # Rate limit: max 20 messages per minute per user
+    if check_rate_limit(request.user.pk, 'send_message', max_count=20, window=60):
+        return JsonResponse({'error': 'You are sending messages too quickly. Please slow down.'}, status=429)
 
     vehicle = Vehicle.objects.filter(pk=vid).first() if vid else None
     msg = Message.objects.create(

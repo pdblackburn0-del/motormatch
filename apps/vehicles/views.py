@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST
 from apps.vehicles.models import Bid, SavedVehicle, Vehicle
 from apps.notifications.models import Notification
 from apps.users.models import Review
+from apps.users.middleware import push_recently_viewed, check_rate_limit
 
 
 _MAKES = ['Ford', 'Vauxhall', 'BMW', 'Audi', 'Toyota', 'Honda', 'Volkswagen',
@@ -109,6 +110,10 @@ def vehicle_detail(request, pk):
     car_bids     = car.bids.select_related('bidder', 'bidder__profile').order_by('-amount')
     user_bid     = car.bids.filter(bidder=request.user).first() if request.user.is_authenticated else None
     accepted_bid = car.bids.filter(status='accepted').select_related('bidder', 'bidder__profile').first()
+
+    # Track recently viewed
+    if request.user.is_authenticated:
+        push_recently_viewed(request.user.pk, car.pk)
 
     return render(request, 'vehicles/vehicle_detail.html', {
         'car':                   car,
@@ -316,6 +321,11 @@ def add_review(request, pk):
 def place_bid(request, pk):
     from decimal import Decimal
     vehicle = get_object_or_404(Vehicle, pk=pk)
+
+    # Rate limit: max 5 bids per 10 minutes per user
+    if check_rate_limit(request.user.pk, 'place_bid', max_count=5, window=600):
+        messages.error(request, 'You are placing bids too quickly. Please wait a moment before trying again.')
+        return redirect('vehicle_detail', pk=pk)
 
     if vehicle.is_removed:
         messages.error(request, 'This listing has been removed and is no longer accepting bids.')

@@ -155,6 +155,41 @@
             </div>
 
             <!-- Listings + Messages row -->
+            {% if recently_viewed %}
+            <div class="mb-3">
+                <div class="db-card">
+                    <div class="db-card__head">
+                        <p class="db-card__title"><i class="bi bi-clock-history me-1"></i> Recently Viewed</p>
+                        <a href="{% url 'browse' %}" class="db-btn-sm">Browse all</a>
+                    </div>
+                    <div style="display:flex;gap:.75rem;overflow-x:auto;padding:.75rem 1rem 1rem;scrollbar-width:thin;">
+                        {% for car in recently_viewed %}
+                        <a href="{% url 'vehicle_detail' car.pk %}" class="text-decoration-none flex-shrink-0"
+                           style="width:170px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#fff;transition:box-shadow .15s;">
+                            <div style="height:100px;background:#f3f4f6;overflow:hidden;position:relative;">
+                                {% with img=car.get_image %}
+                                {% if img %}
+                                <img src="{{ img }}" alt="{{ car.title }}"
+                                     style="width:100%;height:100%;object-fit:cover;">
+                                {% else %}
+                                <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#9ca3af;font-size:2rem;">
+                                    <i class="bi bi-car-front"></i>
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div style="padding:.5rem .65rem;">
+                                <p style="margin:0;font-size:.76rem;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ car.title }}</p>
+                                <p style="margin:0;font-size:.72rem;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ car.variant }}</p>
+                                <p style="margin:.3rem 0 0;font-size:.78rem;font-weight:700;color:#2563eb;">{{ car.price }}</p>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="row g-3 mb-3" id="listings-section" style="scroll-margin-top:70px;">
 
                 <!-- My Listings -->
