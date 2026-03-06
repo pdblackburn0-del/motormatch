@@ -11,8 +11,9 @@ from django.core.cache import cache
 from django.utils import timezone
 
 # ── Constants ────────────────────────────────────────────────────────────────
-ONLINE_TTL    = 300   # 5-minute Redis TTL for the last-seen key
-ONLINE_WINDOW = 120   # within 2 minutes → "Online now"
+ONLINE_TTL    = 86400 * 7  # 7-day Redis TTL so last-seen persists long-term
+ONLINE_WINDOW = 120        # within 2 minutes → "Online now"
+ONLINE_WHILE  = 18000      # beyond 5 hours → "last seen in a while"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -46,17 +47,14 @@ def get_online_status(user_pk):
 
     if online:
         display = 'Online now'
-    elif seconds < 60:
-        display = 'Just now'
     elif seconds < 3600:
         m = int(seconds / 60)
         display = f'{m} min{"s" if m != 1 else ""} ago'
-    elif seconds < 86400:
+    elif seconds < ONLINE_WHILE:
         h = int(seconds / 3600)
         display = f'{h} hour{"s" if h != 1 else ""} ago'
     else:
-        d = int(seconds / 86400)
-        display = f'{d} day{"s" if d != 1 else ""} ago'
+        display = 'in a while'
 
     return {'online': online, 'last_seen': last_seen, 'display': display}
 
@@ -69,6 +67,67 @@ def invalidate_poll_cache(user_pk):
     Call this whenever a new message or notification is created for that user.
     """
     cache.delete(f'poll_counts_{user_pk}')
+
+
+# ── Recently Viewed ───────────────────────────────────────────────────────────
+
+RECENTLY_VIEWED_MAX = 10
+RECENTLY_VIEWED_TTL = 86400 * 30  # 30 days
+
+
+def push_recently_viewed(user_pk, vehicle_pk):
+    """
+    Push *vehicle_pk* to the front of the user's recently-viewed list in Redis.
+    Deduplicates (existing occurrence removed first) and caps at 10 entries.
+    Silently no-ops if Redis is unavailable.
+    """
+    try:
+        from django_redis import get_redis_connection
+        conn = get_redis_connection('default')
+        key  = f'recently_viewed:{user_pk}'
+        val  = str(vehicle_pk)
+        conn.lrem(key, 0, val)               # remove any existing duplicate
+        conn.lpush(key, val)                 # push to head
+        conn.ltrim(key, 0, RECENTLY_VIEWED_MAX - 1)  # keep max 10
+        conn.expire(key, RECENTLY_VIEWED_TTL)
+    except Exception:
+        pass
+
+
+def get_recently_viewed_pks(user_pk):
+    """Return a list of vehicle PKs (ints) from the user's recently-viewed list."""
+    try:
+        from django_redis import get_redis_connection
+        conn  = get_redis_connection('default')
+        items = conn.lrange(f'recently_viewed:{user_pk}', 0, RECENTLY_VIEWED_MAX - 1)
+        return [int(pk) for pk in items]
+    except Exception:
+        return []
+
+
+# ── Rate Limiting ─────────────────────────────────────────────────────────────
+
+def check_rate_limit(user_pk, action, max_count=5, window=60):
+    """
+    Atomic Redis-backed rate limiter using INCR + EXPIRE.
+
+    Returns True  → limit exceeded (block the action).
+    Returns False → within limit (allow the action).
+
+    Fails open (returns False) if Redis is unavailable so the site keeps working.
+    """
+    import time
+    try:
+        from django_redis import get_redis_connection
+        conn   = get_redis_connection('default')
+        bucket = int(time.time() / window)
+        key    = f'rl:{action}:{user_pk}:{bucket}'
+        count  = conn.incr(key)
+        if count == 1:
+            conn.expire(key, window * 2)   # expire well after the window closes
+        return count > max_count
+    except Exception:
+        return False  # fail open — don't block users if Redis is down
 
 
 # ── Middleware ────────────────────────────────────────────────────────────────
