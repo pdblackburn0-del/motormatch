@@ -1,0 +1,35 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="mm-confirm-card">
+    <div class="mm-confirm-icon mm-confirm-icon--danger">
+        <i class="bi bi-trash3-fill" style="font-size:1.6rem;"></i>
+    </div>
+    <h2 class="mm-confirm-title">{% trans "Are you sure?" %}</h2>
+    <p class="mm-confirm-body">
+        {% blocktranslate with escaped_object=object %}Are you sure you want to delete "{{ escaped_object }}"?{% endblocktranslate %}
+        {% if deleted_objects %}<br><span style="color:#6b7280;font-size:.9em;">All related items listed below will also be deleted.</span>{% endif %}
+    </p>
+    {% if deleted_objects %}
+    <div class="mm-confirm-summary">
+        <p class="mm-confirm-summary__header">{% trans "Objects to be deleted" %}</p>
+        <ul class="mm-confirm-summary__list">
+            {% for obj in deleted_objects %}<li>{{ obj }}</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    <div class="mm-confirm-actions">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="post" value="yes">
+            <button type="submit" class="mm-btn mm-btn--danger">
+                <i class="bi bi-trash3"></i> {% trans "Yes, delete" %}
+            </button>
+        </form>
+        <a href="javascript:history.back()" class="mm-btn mm-btn--ghost">
+            {% trans "No, take me back" %}
+        </a>
+    </div>
+</div>
+{% endblock %}

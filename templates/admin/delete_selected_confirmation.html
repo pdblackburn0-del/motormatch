@@ -1,0 +1,40 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="mm-confirm-card">
+    <div class="mm-confirm-icon mm-confirm-icon--danger">
+        <i class="bi bi-trash3-fill" style="font-size:1.6rem;"></i>
+    </div>
+    <h2 class="mm-confirm-title">{% trans "Are you sure?" %}</h2>
+    <p class="mm-confirm-body">
+        {% blocktranslate count counter=queryset.count with model=model_verbose_name models=model_verbose_name_plural %}Are you sure you want to delete the selected {{ model }}? All of the following objects and their related items will be deleted:{% plural %}Are you sure you want to delete the selected {{ models }}? All of the following objects and their related items will be deleted:{% endblocktranslate %}
+    </p>
+    {% if deletable_objects %}
+    <div class="mm-confirm-summary">
+        <p class="mm-confirm-summary__header">{% trans "Summary" %}</p>
+        <ul class="mm-confirm-summary__list">
+            {% for model_name, count in deletable_objects_count.items %}<li>{{ model_name|capfirst }}: {{ count }}</li>{% endfor %}
+        </ul>
+        <p class="mm-confirm-summary__header">{% trans "Objects" %}</p>
+        {% for objs in deletable_objects %}
+        <ul class="mm-confirm-summary__list">{% for obj in objs %}<li>{{ obj }}</li>{% endfor %}</ul>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="mm-confirm-actions">
+        <form method="post">
+            {% csrf_token %}
+            {% for obj in queryset %}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}">{% endfor %}
+            <input type="hidden" name="action" value="delete_selected">
+            <input type="hidden" name="post" value="yes">
+            <button type="submit" class="mm-btn mm-btn--danger">
+                <i class="bi bi-trash3"></i> {% trans "Yes, I'm sure" %}
+            </button>
+        </form>
+        <a href="javascript:history.back()" class="mm-btn mm-btn--ghost">
+            {% trans "No, take me back" %}
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -144,3 +144,75 @@ class OnlinePresenceMiddleware:
         if request.user.is_authenticated:
             set_user_online(request.user.pk)
         return response
+
+
+class BanSuspendMiddleware:
+    """
+    On every request, check if the logged-in user has been banned or suspended
+    since their session was created.  If so, log them out immediately and
+    redirect to the login page with an appropriate error message.
+
+    This handles the case where a moderator bans/suspends someone who is
+    already logged in — they get kicked out on their very next request.
+    """
+
+    _EXEMPT_PATHS = ('/accounts/logout/', '/accounts/login/')
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if (
+            request.user.is_authenticated
+            and not request.path.startswith(self._EXEMPT_PATHS)
+            # Skip admin paths so staff can still access the panel
+            and not request.path.startswith('/control-panel/')
+        ):
+            user = request.user
+
+            # 1. Hard ban
+            if not user.is_active:
+                from django.contrib.auth import logout
+                from django.contrib import messages as django_messages
+                from django.shortcuts import redirect
+                ban_reason = ''
+                try:
+                    ban_reason = user.profile.ban_reason or ''
+                except Exception:
+                    pass
+                logout(request)
+                msg = 'Your account has been permanently banned.'
+                if ban_reason:
+                    msg += f' Reason: {ban_reason}'
+                django_messages.error(request, msg)
+                return redirect('account_login')
+
+            # 2. Suspension
+            try:
+                profile = user.profile
+            except Exception:
+                profile = None
+
+            if profile and profile.is_suspended:
+                until = profile.suspension_until
+                if until is None or until > timezone.now():
+                    from django.contrib.auth import logout
+                    from django.contrib import messages as django_messages
+                    from django.shortcuts import redirect
+                    logout(request)
+                    if until:
+                        local_until = until.strftime('%d %b %Y at %H:%M UTC')
+                        msg = f'Your account is suspended until {local_until}.'
+                    else:
+                        msg = 'Your account is currently suspended.'
+                    if profile.ban_reason:
+                        msg += f' Reason: {profile.ban_reason}'
+                    django_messages.error(request, msg)
+                    return redirect('account_login')
+                else:
+                    # Suspension expired — lift it silently
+                    profile.is_suspended = False
+                    profile.suspension_until = None
+                    profile.save(update_fields=['is_suspended', 'suspension_until'])
+
+        return self.get_response(request)

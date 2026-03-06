@@ -194,20 +194,26 @@
         wrap.setAttribute('data-id', m.id);
 
         var avatar  = m.is_mine ? '' : (OTHER_AVATAR_URL ? '<img src="' + OTHER_AVATAR_URL + '" class="avatar-sm flex-shrink-0" style="object-fit:cover;" alt="">' : '<div class="avatar-sm flex-shrink-0">' + esc(m.initials) + '</div>');
-        var gifHtml = m.gif_url
-            ? '<img src="' + m.gif_url + '" class="attach gif-attach" onclick="window.open(this.src)" alt="GIF">'
-            : '';
-        var bodyHtml = (!m.gif_url && m.body) ? esc(m.body) : '';
-        var imgHtml  = (!m.gif_url && m.attachment_url)
-            ? '<img src="' + m.attachment_url + '" class="attach" onclick="window.open(this.src)" alt="attachment">'
-            : '';
+
+        var bubbleContent;
+        var bubbleClass = 'bubble ' + (m.is_mine ? 'mine' : 'theirs');
+        if (m.is_deleted) {
+            bubbleClass += ' bubble--deleted';
+            var notice = m.deleted_by_staff ? 'Message deleted by staff' : 'Message deleted';
+            bubbleContent = '<span class="bubble__deleted-notice"><i class="bi bi-slash-circle"></i> ' + notice + '</span>';
+        } else {
+            var gifHtml  = m.gif_url ? '<img src="' + m.gif_url + '" class="attach gif-attach" onclick="window.open(this.src)" alt="GIF">' : '';
+            var bodyHtml = (!m.gif_url && m.body) ? esc(m.body) : '';
+            var imgHtml  = (!m.gif_url && m.attachment_url) ? '<img src="' + m.attachment_url + '" class="attach" onclick="window.open(this.src)" alt="attachment">' : '';
+            bubbleContent = gifHtml + bodyHtml + imgHtml;
+        }
         var tick = m.is_mine
             ? '<i class="bi bi-check2 tick-icon" style="color:#adb5bd;"></i>'
             : '';
 
         wrap.innerHTML = avatar +
             '<div class="bubble-col">' +
-                '<div class="bubble ' + (m.is_mine ? 'mine' : 'theirs') + '">' + gifHtml + bodyHtml + imgHtml + '</div>' +
+                '<div class="' + bubbleClass + '">' + bubbleContent + '</div>' +
                 '<div class="bubble-time">' + m.time + tick + '</div>' +
             '</div>';
 
@@ -217,6 +223,16 @@
     }
 
     // ── Polling ────────────────────────────────────────────────
+    function applyDeleted(id, byStaff) {
+        var el = document.querySelector('.bubble-wrap[data-id="' + id + '"]');
+        if (!el) return;
+        var bubble = el.querySelector('.bubble');
+        if (!bubble || bubble.classList.contains('bubble--deleted')) return;
+        bubble.classList.add('bubble--deleted');
+        var notice = byStaff ? 'Message deleted by staff' : 'Message deleted';
+        bubble.innerHTML = '<span class="bubble__deleted-notice"><i class="bi bi-slash-circle"></i> ' + notice + '</span>';
+    }
+
     function poll() {
         fetch(POLL_URL + '?after=' + lastId, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) { return r.json(); })
@@ -225,8 +241,17 @@
                     if (!document.querySelector('.bubble-wrap[data-id="' + m.id + '"]')) {
                         appendBubble(m);
                         scrollBottom(true);
+                    } else if (m.is_deleted) {
+                        applyDeleted(m.id, m.deleted_by_staff);
                     }
                 });
+
+                // Apply deletions to already-rendered bubbles
+                if (d.deleted_ids && d.deleted_ids.length) {
+                    d.deleted_ids.forEach(function (id) {
+                        applyDeleted(id, true);
+                    });
+                }
 
                 if (d.typing) {
                     typingBubble.classList.remove('d-none');

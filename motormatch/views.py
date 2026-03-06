@@ -433,20 +433,34 @@ def poll_messages(request, user_pk):
         is_mine = m.sender_id == request.user.pk
         return {
             'id':             m.pk,
-            'body':           m.body,
-            'attachment_url': m.attachment.url if m.attachment else None,
-            'gif_url':        m.gif_url,
+            'body':           m.body if not m.is_deleted else None,
+            'attachment_url': (m.attachment.url if m.attachment else None) if not m.is_deleted else None,
+            'gif_url':        m.gif_url if not m.is_deleted else None,
             'time':           m.created_at.strftime('%H:%M'),
             'date':           m.created_at.strftime('%-d %b %Y'),
             'is_mine':        is_mine,
             'initials':       my_initials if is_mine else other_init,
             'is_read':        m.is_read,
+            'is_deleted':     m.is_deleted,
+            'deleted_by_staff': m.deleted_by_staff,
         }
 
+    # Also return IDs of messages in this conversation that are currently deleted
+    # so the JS can update already-rendered bubbles in real-time.
+    deleted_ids = list(
+        Message.objects
+        .filter(
+            Q(sender=request.user, recipient=other) | Q(sender=other, recipient=request.user),
+            is_deleted=True,
+        )
+        .values_list('pk', flat=True)
+    )
+
     return JsonResponse({
-        'messages':   [serialise(m) for m in new_msgs],
-        'typing':     is_typing,
-        'read_up_to': read_up_to,
+        'messages':    [serialise(m) for m in new_msgs],
+        'typing':      is_typing,
+        'read_up_to':  read_up_to,
+        'deleted_ids': deleted_ids,
     })
 
 
