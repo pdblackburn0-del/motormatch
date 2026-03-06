@@ -220,15 +220,14 @@
                     {% elif car.owner == request.user %}
                     <div class="alert alert-info py-2 mb-2 small text-center">This is your listing.</div>
                     <a href="{% url 'edit_vehicle' car.pk %}" class="btn btn-outline-primary btn-sm w-100 mb-1"><i class="bi bi-pencil me-1"></i>Edit Listing</a>
-                    <form method="post" action="{% url 'delete_vehicle' car.pk %}" onsubmit="return confirm('Permanently remove this listing?')">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger btn-sm w-100"><i class="bi bi-trash me-1"></i>Remove Listing</button>
-                    </form>
+                    <button type="button" class="btn btn-danger btn-sm w-100" data-bs-toggle="modal" data-bs-target="#removeListingModal">
+                        <i class="bi bi-trash me-1"></i>Remove Listing
+                    </button>
                     {% else %}
                     <div class="alert alert-secondary py-2 mb-2 small text-center">No seller linked to this listing.</div>
                     {% endif %}
 
-                    <p class="text-muted text-center mb-0" style="font-size:.72rem;">By contacting, you agree to our <a href="#" class="text-muted">Terms</a> and <a href="#" class="text-muted">Privacy Policy</a>.</p>
+                    <p class="text-muted text-center mb-0" style="font-size:.72rem;">By contacting, you agree to our <a href="{% url 'terms' %}" class="text-muted">Terms</a> and <a href="{% url 'privacy' %}" class="text-muted">Privacy Policy</a>.</p>
 
                 </div>
             </div>
@@ -390,6 +389,27 @@
         {% endif %}
     </div>
 
+</div>
+
+<div class="modal fade" id="removeListingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:380px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:16px;">
+            <div class="modal-body p-4 text-center">
+                <div style="width:52px;height:52px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                    <i class="bi bi-trash3" style="color:#dc2626;font-size:1.2rem;"></i>
+                </div>
+                <h6 class="fw-bold mb-1">Remove this listing?</h6>
+                <p class="text-muted mb-4" style="font-size:.83rem;">Your car will be hidden from buyers. You can re-list it from your dashboard at any time.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button class="btn btn-light px-4 fw-semibold" data-bs-dismiss="modal">Cancel</button>
+                    <form method="post" action="{% url 'delete_vehicle' car.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger px-4 fw-semibold">Remove</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock content %}

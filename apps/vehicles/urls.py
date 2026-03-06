@@ -38,4 +38,10 @@ urlpatterns = [
 
     path('api/dvla/', views.dvla_lookup, name='dvla_lookup'),
 
+    path('about/', views.about, name='about'),
+
+    path('terms/', views.terms, name='terms'),
+
+    path('privacy/', views.privacy, name='privacy'),
+
 ]

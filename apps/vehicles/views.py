@@ -915,3 +915,15 @@ def dvla_lookup(request):
     except Exception:
 
         return JsonResponse({'error': 'Lookup failed. Please try again.'}, status=500)
+
+
+def about(request):
+    return render(request, 'legal/about.html')
+
+
+def terms(request):
+    return render(request, 'legal/terms.html')
+
+
+def privacy(request):
+    return render(request, 'legal/privacy.html')
