@@ -421,59 +421,6 @@ class BidAdmin(admin.ModelAdmin):
         self.message_user(request, f'{updated} bid(s) declined.')
 
 
-# ── Message ────────────────────────────────────────────────────────────────────
-
-class MessageAdmin(admin.ModelAdmin):
-    list_display    = ('sender', 'recipient', '_vehicle', '_subject', '_read_pill', 'created_at')
-    list_filter     = ('is_read',)
-    search_fields   = ('sender__email', 'recipient__email', 'subject')
-    ordering        = ('-created_at',)
-    date_hierarchy  = 'created_at'
-    readonly_fields = ('created_at', 'sender', 'recipient', 'vehicle')
-    list_per_page   = 25
-    actions         = ['mark_read', 'mark_unread']
-    fieldsets       = (
-        ('Participants', {
-            'fields': ('sender', 'recipient', 'vehicle'),
-        }),
-        ('Content', {
-            'fields': ('subject', 'body', 'attachment', 'gif_url'),
-        }),
-        ('Status', {
-            'fields': ('is_read', 'created_at'),
-        }),
-    )
-
-    def _vehicle(self, obj):
-        if not obj.vehicle:
-            return _dash()
-        return str(obj.vehicle.title)
-    _vehicle.short_description = 'Vehicle'
-
-    def _subject(self, obj):
-        text = obj.subject or obj.body or ''
-        if len(text) > 60:
-            text = text[:57] + '…'
-        return text if text else _dash()
-    _subject.short_description = 'Subject / Preview'
-
-    def _read_pill(self, obj):
-        if obj.is_read:
-            return _pill('Read', '#16a34a', '#dcfce7')
-        return _pill('Unread', '#dc2626', '#fee2e2')
-    _read_pill.short_description = 'Status'
-
-    @admin.action(description='Mark selected messages as read')
-    def mark_read(self, request, queryset):
-        updated = queryset.update(is_read=True)
-        self.message_user(request, f'{updated} message(s) marked as read.')
-
-    @admin.action(description='Mark selected messages as unread')
-    def mark_unread(self, request, queryset):
-        updated = queryset.update(is_read=False)
-        self.message_user(request, f'{updated} message(s) marked as unread.')
-
-
 # ── Notification ───────────────────────────────────────────────────────────────
 
 class NotificationAdmin(admin.ModelAdmin):
@@ -557,19 +504,19 @@ class ReviewAdmin(admin.ModelAdmin):
 # ── LoginEvent ─────────────────────────────────────────────────────────────────
 
 class LoginEventAdmin(admin.ModelAdmin):
-    list_display    = ('user', 'ip_address', '_location', 'isp', '_confirmed', 'created_at')
+    list_display    = ('user', '_masked_ip', '_location', 'isp', '_confirmed', 'created_at')
     list_filter     = ('is_confirmed', 'country')
-    search_fields   = ('user__email', 'ip_address', 'city', 'country')
+    search_fields   = ('user__email', 'city', 'country')
     ordering        = ('-created_at',)
     date_hierarchy  = 'created_at'
     list_per_page   = 25
     readonly_fields = (
-        'user', 'ip_address', 'user_agent', 'city', 'region', 'country',
+        'user', '_masked_ip', 'user_agent', 'city', 'region', 'country',
         'country_code', 'isp', 'lat', 'lon', 'is_confirmed', 'created_at',
     )
     fieldsets = (
         ('Session', {
-            'fields': ('user', 'ip_address', 'user_agent', 'created_at'),
+            'fields': ('user', '_masked_ip', 'user_agent', 'created_at'),
         }),
         ('Location', {
             'fields': ('city', 'region', 'country', 'country_code', 'isp', 'lat', 'lon'),
@@ -578,6 +525,23 @@ class LoginEventAdmin(admin.ModelAdmin):
             'fields': ('is_confirmed',),
         }),
     )
+
+    def _masked_ip(self, obj):
+        """Show only the first two octets of the IP — e.g. 192.168.x.x"""
+        ip = obj.ip_address or ''
+        parts = ip.split('.')
+        if len(parts) == 4:
+            masked = f'{parts[0]}.{parts[1]}.x.x'
+        elif ':' in ip:  # IPv6 — show first two groups only
+            groups = ip.split(':')
+            masked = ':'.join(groups[:2]) + ':x:x:x:x:x:x'
+        else:
+            masked = '*.*.x.x'
+        return format_html(
+            '<span style="font-family:monospace;color:#6b7280;">{}</span>',
+            masked,
+        )
+    _masked_ip.short_description = 'IP Address'
 
     def _location(self, obj):
         return obj.location_string()
@@ -603,7 +567,6 @@ admin_site.register(UserProfile,  UserProfileAdmin)
 admin_site.register(Vehicle,      VehicleAdmin)
 admin_site.register(SavedVehicle, SavedVehicleAdmin)
 admin_site.register(Bid,          BidAdmin)
-admin_site.register(Message,      MessageAdmin)
 admin_site.register(Notification, NotificationAdmin)
 admin_site.register(Review,       ReviewAdmin)
 admin_site.register(LoginEvent,   LoginEventAdmin)
