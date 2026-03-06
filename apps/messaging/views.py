@@ -2,11 +2,15 @@ import urllib.parse
 
 import urllib.request
 
+from collections import Counter, defaultdict
+
 from django.conf import settings
 
 from django.contrib.auth import get_user_model
 
 from django.contrib.auth.decorators import login_required
+
+from django.core.cache import cache
 
 from django.db.models import Q
 
@@ -16,7 +20,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from django.views.decorators.http import require_POST
 
-from apps.messaging.models import Message
+from apps.messaging.models import Message, MessageReaction
 
 from apps.notifications.models import Notification
 
@@ -62,13 +66,36 @@ def inbox(request):
 
     return render(request, 'messaging/inbox.html', {'conversations': conversations})
 
+def _reaction_summary(msg_ids, my_pk):
+
+    rqs = MessageReaction.objects.filter(message_id__in=msg_ids).values('message_id', 'user_id', 'emoji')
+
+    by_msg = defaultdict(list)
+
+    for r in rqs:
+
+        by_msg[r['message_id']].append(r)
+
+    result = {}
+
+    for mid, rlist in by_msg.items():
+
+        counts = Counter(r['emoji'] for r in rlist)
+
+        mine = next((r['emoji'] for r in rlist if r['user_id'] == my_pk), None)
+
+        result[mid] = [{'emoji': e, 'count': c, 'mine': e == mine} for e, c in counts.items()]
+
+    return result
+
+
 @login_required
 
 def conversation(request, user_pk):
 
     other = get_object_or_404(User, pk=user_pk)
 
-    thread = (
+    thread = list(
 
         Message.objects
 
@@ -80,7 +107,13 @@ def conversation(request, user_pk):
 
     )
 
-    thread.filter(recipient=request.user, is_read=False).update(is_read=True)
+    Message.objects.filter(
+
+        Q(sender=request.user, recipient=other) | Q(sender=other, recipient=request.user),
+
+        recipient=request.user, is_read=False
+
+    ).update(is_read=True)
 
     vehicle       = next((m.vehicle for m in thread if m.vehicle), None)
 
@@ -88,19 +121,25 @@ def conversation(request, user_pk):
 
     my_initials   = request.user.profile.get_initials() if hasattr(request.user, 'profile') else request.user.email[:2].upper()
 
+    msg_ids       = [m.pk for m in thread]
+
+    reactions_map = _reaction_summary(msg_ids, request.user.pk)
+
     return render(request, 'messaging/conversation.html', {
 
-        'other':         other,
+        'other':              other,
 
-        'other_profile': other_profile,
+        'other_profile':      other_profile,
 
-        'thread':        thread,
+        'thread':             thread,
 
-        'vehicle':       vehicle,
+        'vehicle':            vehicle,
 
-        'my_initials':   my_initials,
+        'my_initials':        my_initials,
 
-        'other_online':  get_online_status(other.pk),
+        'other_online':       get_online_status(other.pk),
+
+        'reactions_map':      reactions_map,
 
     })
 
@@ -208,13 +247,11 @@ def send_message_ajax(request, user_pk):
 
 def poll_messages(request, user_pk):
 
-    from django.core.cache import cache
-
     other    = get_object_or_404(User, pk=user_pk)
 
     after_pk = int(request.GET.get('after', 0))
 
-    new_msgs = (
+    new_msgs = list(
 
         Message.objects
 
@@ -232,7 +269,15 @@ def poll_messages(request, user_pk):
 
     )
 
-    new_msgs.filter(recipient=request.user, is_read=False).update(is_read=True)
+    if new_msgs:
+
+        Message.objects.filter(
+
+            pk__in=[m.pk for m in new_msgs],
+
+            recipient=request.user, is_read=False
+
+        ).update(is_read=True)
 
     Notification.objects.filter(
 
@@ -268,6 +313,52 @@ def poll_messages(request, user_pk):
 
     other_init  = other_prof.get_initials() if other_prof else other.email[:2].upper()
 
+    a, b = sorted([request.user.pk, other.pk])
+
+    conv_react_key = f'react_v_{a}_{b}'
+
+    server_react_v = cache.get(conv_react_key, 0)
+
+    client_react_v = request.GET.get('react_v', None)
+
+    reaction_updates = []
+
+    if client_react_v is None or int(client_react_v) != server_react_v:
+
+        all_ids = list(
+
+            Message.objects
+
+            .filter(Q(sender=request.user, recipient=other) | Q(sender=other, recipient=request.user))
+
+            .values_list('pk', flat=True)
+
+        )
+
+        rqs = MessageReaction.objects.filter(message_id__in=all_ids).values('message_id', 'user_id', 'emoji')
+
+        by_msg = defaultdict(list)
+
+        for r in rqs:
+
+            by_msg[r['message_id']].append(r)
+
+        for mid in all_ids:
+
+            rlist = by_msg.get(mid, [])
+
+            counts = Counter(r['emoji'] for r in rlist)
+
+            mine = next((r['emoji'] for r in rlist if r['user_id'] == request.user.pk), None)
+
+            reaction_updates.append({
+
+                'id': mid,
+
+                'reactions': [{'emoji': e, 'count': c, 'mine': e == mine} for e, c in counts.items()],
+
+            })
+
     def serialise(m):
 
         is_mine = m.sender_id == request.user.pk
@@ -296,13 +387,17 @@ def poll_messages(request, user_pk):
 
     return JsonResponse({
 
-        'messages':    [serialise(m) for m in new_msgs],
+        'messages':         [serialise(m) for m in new_msgs],
 
-        'typing':      is_typing,
+        'typing':           is_typing,
 
-        'read_up_to':  read_up_to,
+        'read_up_to':       read_up_to,
 
-        'other_online': get_online_status(other.pk),
+        'other_online':     get_online_status(other.pk),
+
+        'react_v':          server_react_v,
+
+        'reaction_updates': reaction_updates,
 
     })
 
@@ -492,4 +587,41 @@ def delete_message(request, user_pk, msg_pk):
     msg.body = ''
     msg.gif_url = ''
     msg.save(update_fields=['is_deleted', 'deleted_by_staff', 'body', 'gif_url'])
+    msg.reactions.all().delete()
+    a, b = sorted([request.user.pk, int(user_pk)])
+    v = cache.get(f'react_v_{a}_{b}', 0)
+    cache.set(f'react_v_{a}_{b}', v + 1, timeout=86400)
     return JsonResponse({'ok': True, 'id': msg.pk})
+
+
+@login_required
+@require_POST
+def toggle_reaction(request, user_pk, msg_pk):
+    if check_rate_limit(request.user.pk, 'reaction', max_count=30, window=60):
+        return JsonResponse({'error': 'Rate limit exceeded'}, status=429)
+    msg = get_object_or_404(Message, pk=msg_pk)
+    if request.user.pk not in (msg.sender_id, msg.recipient_id):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+    if msg.is_deleted:
+        return JsonResponse({'error': 'Cannot react to deleted message'}, status=400)
+    emoji = request.POST.get('emoji', '').strip()
+    if emoji not in MessageReaction.ALLOWED:
+        return JsonResponse({'error': 'Invalid emoji'}, status=400)
+    existing = MessageReaction.objects.filter(message=msg, user=request.user).first()
+    if existing:
+        if existing.emoji == emoji:
+            existing.delete()
+        else:
+            existing.emoji = emoji
+            existing.save(update_fields=['emoji'])
+    else:
+        MessageReaction.objects.create(message=msg, user=request.user, emoji=emoji)
+    a, b = sorted([request.user.pk, int(user_pk)])
+    conv_key = f'react_v_{a}_{b}'
+    v = cache.get(conv_key, 0)
+    cache.set(conv_key, v + 1, timeout=86400)
+    rqs = list(MessageReaction.objects.filter(message=msg).values('user_id', 'emoji'))
+    counts = Counter(r['emoji'] for r in rqs)
+    mine_emoji = next((r['emoji'] for r in rqs if r['user_id'] == request.user.pk), None)
+    reactions = [{'emoji': e, 'count': c, 'mine': e == mine_emoji} for e, c in counts.items()]
+    return JsonResponse({'ok': True, 'msg_id': msg.pk, 'reactions': reactions})

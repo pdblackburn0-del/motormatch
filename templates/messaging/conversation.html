@@ -112,12 +112,9 @@
                 <div class="bubble-col">
                     <div class="bubble-row">
                         <div class="bubble {% if msg.sender == request.user %}mine{% else %}theirs{% endif %}{% if msg.is_deleted %} bubble--deleted{% endif %}">{% if msg.is_deleted %}<span class="bubble__deleted-notice"><i class="bi bi-slash-circle"></i> {% if msg.deleted_by_staff %}Message deleted by staff{% else %}Message deleted{% endif %}</span>{% else %}{% if msg.gif_url %}<img src="{{ msg.gif_url }}" class="attach gif-attach" onclick="window.open(this.src)" alt="GIF">{% elif msg.body %}{{ msg.body }}{% endif %}{% if msg.attachment %}<img src="{{ msg.attachment.url }}" class="attach" onclick="window.open(this.src)" alt="attachment">{% endif %}{% endif %}</div>
-                        {% if msg.sender == request.user and not msg.is_deleted %}
-                        <button class="bubble-delete-btn" data-msgid="{{ msg.pk }}" title="Delete message" onclick="openDeleteMsgModal({{ msg.pk }})">
-                            <i class="bi bi-trash3"></i>
-                        </button>
-                        {% endif %}
+                        {% if not msg.is_deleted %}<div class="bubble-actions"><div class="bact-picker"><button class="bact-emoji-btn" data-emoji="❤️">❤️</button><button class="bact-emoji-btn" data-emoji="😂">😂</button><button class="bact-emoji-btn" data-emoji="👍">👍</button><button class="bact-emoji-btn" data-emoji="😮">😮</button><button class="bact-emoji-btn" data-emoji="😢">😢</button><button class="bact-emoji-btn" data-emoji="😡">😡</button></div><button class="bact-btn bact-react" title="React"><i class="bi bi-emoji-smile"></i></button>{% if msg.sender == request.user %}<button class="bact-btn bact-delete" data-msgid="{{ msg.pk }}" title="Delete"><i class="bi bi-trash3"></i></button>{% endif %}</div>{% endif %}
                     </div>
+                    <div class="bubble-reactions" data-msgid="{{ msg.pk }}"></div>
                     <div class="bubble-time">
                         {{ msg.created_at|date:'H:i' }}
                         {% if msg.sender == request.user %}
@@ -230,14 +227,17 @@
 
 {{ other.pk|json_script:"data-other-pk" }}
 {{ my_initials|json_script:"data-my-inits" }}
+{{ reactions_map|json_script:"data-initial-reactions" }}
 <script>
-var OTHER_PK       = JSON.parse(document.getElementById('data-other-pk').textContent);
-var CSRF           = (document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||'';
-var MY_INITS       = JSON.parse(document.getElementById('data-my-inits').textContent);
+var OTHER_PK         = JSON.parse(document.getElementById('data-other-pk').textContent);
+var CSRF             = (document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||'';
+var MY_INITS         = JSON.parse(document.getElementById('data-my-inits').textContent);
 var OTHER_AVATAR_URL = '{% if other_profile and other_profile.avatar %}{{ other_profile.avatar.url }}{% endif %}';
-var SEND_URL   = '/inbox/' + OTHER_PK + '/send/';
-var POLL_URL   = '/inbox/' + OTHER_PK + '/poll/';
-var TYPING_URL = '/inbox/' + OTHER_PK + '/typing/';
+var SEND_URL         = '/inbox/' + OTHER_PK + '/send/';
+var POLL_URL         = '/inbox/' + OTHER_PK + '/poll/';
+var TYPING_URL       = '/inbox/' + OTHER_PK + '/typing/';
+var REACT_URL        = '/inbox/' + OTHER_PK + '/message/';
+var INITIAL_REACTIONS = JSON.parse(document.getElementById('data-initial-reactions').textContent);
 </script>
 <script src="{% static 'js/pages/chat.js' %}"></script>
 {% endblock extra_js %}

@@ -2,6 +2,7 @@
     'use strict';
 
     var lastId         = 0;
+    var reactV         = -1;
     var typingTimer    = null;
     var POLL_MS        = 2500;
     var pendingGif     = null;
@@ -119,6 +120,101 @@
             });
     }
 
+    function buildActionsHtml(msgId, isMine) {
+        var del = isMine
+            ? '<button class="bact-btn bact-delete" data-msgid="' + msgId + '" title="Delete"><i class="bi bi-trash3"></i></button>'
+            : '';
+        return '<div class="bubble-actions">'
+            + '<div class="bact-picker">'
+            + '<button class="bact-emoji-btn" data-emoji="\u2764\uFE0F">\u2764\uFE0F</button>'
+            + '<button class="bact-emoji-btn" data-emoji="\uD83D\uDE02">\uD83D\uDE02</button>'
+            + '<button class="bact-emoji-btn" data-emoji="\uD83D\uDC4D">\uD83D\uDC4D</button>'
+            + '<button class="bact-emoji-btn" data-emoji="\uD83D\uDE2E">\uD83D\uDE2E</button>'
+            + '<button class="bact-emoji-btn" data-emoji="\uD83D\uDE22">\uD83D\uDE22</button>'
+            + '<button class="bact-emoji-btn" data-emoji="\uD83D\uDE21">\uD83D\uDE21</button>'
+            + '</div>'
+            + '<button class="bact-btn bact-react" title="React"><i class="bi bi-emoji-smile"></i></button>'
+            + del
+            + '</div>';
+    }
+
+    function closeAllPickers() {
+        document.querySelectorAll('.bact-picker.open').forEach(function (p) {
+            p.classList.remove('open');
+        });
+    }
+
+    document.addEventListener('click', closeAllPickers);
+
+    box.addEventListener('click', function (e) {
+        var reactBtn = e.target.closest('.bact-react');
+        if (reactBtn) {
+            e.stopPropagation();
+            var picker = reactBtn.closest('.bubble-actions').querySelector('.bact-picker');
+            var wasOpen = picker.classList.contains('open');
+            closeAllPickers();
+            if (!wasOpen) picker.classList.add('open');
+            return;
+        }
+
+        var emojiBtn = e.target.closest('.bact-emoji-btn');
+        if (emojiBtn) {
+            e.stopPropagation();
+            var wrap = emojiBtn.closest('.bubble-wrap');
+            var msgId = parseInt(wrap.getAttribute('data-id'), 10);
+            if (!isNaN(msgId)) sendReaction(msgId, emojiBtn.dataset.emoji);
+            closeAllPickers();
+            return;
+        }
+
+        var delBtn = e.target.closest('.bact-delete');
+        if (delBtn) {
+            openDeleteMsgModal(parseInt(delBtn.dataset.msgid, 10));
+            return;
+        }
+
+        var chip = e.target.closest('.reaction-chip');
+        if (chip) {
+            sendReaction(parseInt(chip.dataset.msgid, 10), chip.dataset.emoji);
+            return;
+        }
+    });
+
+    function sendReaction(msgId, emoji) {
+        var url = REACT_URL + msgId + '/react/';
+        fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'emoji=' + encodeURIComponent(emoji),
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.ok) updateReactionChips(msgId, d.reactions);
+            })
+            .catch(function () {});
+    }
+
+    function updateReactionChips(msgId, reactions) {
+        var reactionDiv = document.querySelector('.bubble-reactions[data-msgid="' + msgId + '"]');
+        if (!reactionDiv) return;
+        reactionDiv.innerHTML = '';
+        (reactions || []).forEach(function (r) {
+            var btn = document.createElement('button');
+            btn.className = 'reaction-chip' + (r.mine ? ' mine' : '');
+            btn.dataset.msgid = msgId;
+            btn.dataset.emoji = r.emoji;
+            btn.innerHTML = '<span class="r-emoji">' + r.emoji + '</span><span class="r-count">' + r.count + '</span>';
+            reactionDiv.appendChild(btn);
+        });
+        var wrap = document.querySelector('.bubble-wrap[data-id="' + msgId + '"]');
+        if (wrap) {
+            var mine = (reactions || []).find(function (r) { return r.mine; });
+            wrap.querySelectorAll('.bact-emoji-btn').forEach(function (btn) {
+                btn.classList.toggle('picked', !!(mine && btn.dataset.emoji === mine.emoji));
+            });
+        }
+    }
+
     function doSend() {
         var body = input.value.trim();
         var file = attachInput ? attachInput.files[0] : null;
@@ -155,15 +251,16 @@
                 if (tmpEl && d.id) {
                     tmpEl.setAttribute('data-id', d.id);
                     lastId = Math.max(lastId, d.id);
+                    var reactionDiv = tmpEl.querySelector('.bubble-reactions');
+                    if (reactionDiv) reactionDiv.dataset.msgid = d.id;
                     var bubbleRow = tmpEl.querySelector('.bubble-row');
-                    if (bubbleRow && !tmpEl.querySelector('.bubble-delete-btn')) {
-                        var newBtn = document.createElement('button');
-                        newBtn.className = 'bubble-delete-btn';
-                        newBtn.dataset.msgid = d.id;
-                        newBtn.title = 'Delete message';
-                        newBtn.innerHTML = '<i class="bi bi-trash3"></i>';
-                        newBtn.addEventListener('click', function () { openDeleteMsgModal(parseInt(this.dataset.msgid, 10)); });
-                        bubbleRow.appendChild(newBtn);
+                    if (bubbleRow && !tmpEl.querySelector('.bubble-actions')) {
+                        var tmp = document.createElement('div');
+                        tmp.innerHTML = buildActionsHtml(d.id, true);
+                        bubbleRow.appendChild(tmp.firstChild);
+                    } else {
+                        var existDel = tmpEl.querySelector('.bact-delete');
+                        if (existDel) existDel.dataset.msgid = d.id;
                     }
                 }
             })
@@ -203,22 +300,18 @@
             : '';
 
         var isTmp = typeof m.id === 'string' && m.id.indexOf('tmp_') === 0;
-        var deleteBtn = (m.is_mine && !m.is_deleted && !isTmp)
-            ? '<button class="bubble-delete-btn" data-msgid="' + m.id + '" title="Delete message">'
-              + '<i class="bi bi-trash3"></i></button>'
-            : '';
+        var actionsHtml = (!m.is_deleted && !isTmp) ? buildActionsHtml(m.id, m.is_mine) : '';
+        var reactionsId = isTmp ? 'tmp' : m.id;
 
         wrap.innerHTML = avatar +
             '<div class="bubble-col">' +
                 '<div class="bubble-row">' +
                     '<div class="' + bubbleClass + '">' + bubbleContent + '</div>' +
-                    deleteBtn +
+                    actionsHtml +
                 '</div>' +
+                '<div class="bubble-reactions" data-msgid="' + reactionsId + '"></div>' +
                 '<div class="bubble-time">' + m.time + tick + '</div>' +
             '</div>';
-
-        var btn = wrap.querySelector('.bubble-delete-btn');
-        if (btn) btn.addEventListener('click', function () { openDeleteMsgModal(parseInt(this.dataset.msgid, 10)); });
 
         box.insertBefore(wrap, typingBubble);
 
@@ -233,12 +326,14 @@
         bubble.classList.add('bubble--deleted');
         var notice = byStaff ? 'Message deleted by staff' : 'Message deleted';
         bubble.innerHTML = '<span class="bubble__deleted-notice"><i class="bi bi-slash-circle"></i> ' + notice + '</span>';
-        var delBtn = el.querySelector('.bubble-delete-btn');
-        if (delBtn) delBtn.remove();
+        var actions = el.querySelector('.bubble-actions');
+        if (actions) actions.remove();
+        var reactionDiv = el.querySelector('.bubble-reactions');
+        if (reactionDiv) reactionDiv.innerHTML = '';
     }
 
     function poll() {
-        fetch(POLL_URL + '?after=' + lastId, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        fetch(POLL_URL + '?after=' + lastId + '&react_v=' + reactV, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) { return r.json(); })
             .then(function (d) {
                 d.messages.forEach(function (m) {
@@ -255,6 +350,14 @@
                         applyDeleted(id, true);
                     });
                 }
+
+                if (d.reaction_updates && d.reaction_updates.length) {
+                    d.reaction_updates.forEach(function (ru) {
+                        updateReactionChips(ru.id, ru.reactions);
+                    });
+                }
+
+                if (typeof d.react_v === 'number') reactV = d.react_v;
 
                 if (d.typing) {
                     typingBubble.classList.remove('d-none');
@@ -327,6 +430,12 @@
                     if (d.ok) applyDeleted(msgId, false);
                 })
                 .catch(function () {});
+        });
+    }
+
+    if (typeof INITIAL_REACTIONS !== 'undefined') {
+        Object.keys(INITIAL_REACTIONS).forEach(function (msgId) {
+            updateReactionChips(parseInt(msgId, 10), INITIAL_REACTIONS[msgId]);
         });
     }
 

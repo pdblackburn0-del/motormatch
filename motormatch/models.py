@@ -410,6 +410,26 @@ class Message(models.Model):
 
         return self.body
 
+class MessageReaction(models.Model):
+
+    ALLOWED = ['❤️', '😂', '👍', '😮', '😢', '😡']
+
+    message    = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='reactions')
+
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_reactions')
+
+    emoji      = models.CharField(max_length=10)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+
+        unique_together = ('message', 'user')
+
+    def __str__(self):
+
+        return f"{self.user_id} → {self.message_id}: {self.emoji}"
+
 class AdminNote(models.Model):
 
     """Private notes that staff can attach to users or listings."""

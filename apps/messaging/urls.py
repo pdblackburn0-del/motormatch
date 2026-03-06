@@ -24,4 +24,6 @@ urlpatterns = [
 
     path('inbox/<int:user_pk>/message/<int:msg_pk>/delete/', views.delete_message, name='delete_message'),
 
+    path('inbox/<int:user_pk>/message/<int:msg_pk>/react/', views.toggle_reaction, name='toggle_reaction'),
+
 ]
