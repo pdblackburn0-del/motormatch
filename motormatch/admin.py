@@ -136,6 +136,67 @@ class MotorMatchAdminSite(AdminSite):
             pass
         return super().index(request, extra_context=extra_context)
 
+    def get_app_list(self, request, app_label=None):
+        """
+        Return a custom-grouped sidebar instead of the default alphabetical
+        app-per-section layout.  The auth app's User model is merged into the
+        motormatch section so that /control-panel/auth/ is never linked.
+        """
+        app_list = super().get_app_list(request, app_label=app_label)
+
+        # Flatten every registered model into a lookup dict keyed by object_name
+        model_map = {}
+        for app in app_list:
+            for model in app['models']:
+                model_map[model['object_name']] = model
+
+        # Desired grouping — order of groups and models within each group
+        _GROUPS = [
+            ('Marketplace',   ['Vehicle', 'Bid', 'SavedVehicle']),
+            ('Users',         ['User', 'UserProfile', 'LoginEvent']),
+            ('Communication', ['Notification', 'Message']),
+            ('Moderation',    ['Review']),
+        ]
+
+        grouped_names = {n for _, names in _GROUPS for n in names}
+
+        result = []
+        for group_name, object_names in _GROUPS:
+            models = [model_map[n] for n in object_names if n in model_map]
+            if not models:
+                continue
+            result.append({
+                'name':             group_name,
+                'app_label':        group_name.lower(),
+                'app_url':          '',
+                'has_module_perms': True,
+                'models':           models,
+            })
+
+        # Safety net: append anything not explicitly grouped (e.g. future models)
+        leftovers = [
+            m for app in app_list
+            for m in app['models']
+            if m['object_name'] not in grouped_names
+        ]
+        if leftovers:
+            result.append({
+                'name':             'Other',
+                'app_label':        'other',
+                'app_url':          '',
+                'has_module_perms': True,
+                'models':           leftovers,
+            })
+
+        return result
+
+    def app_index(self, request, app_label, extra_context=None):
+        """Remove the standalone /control-panel/auth/ page — it's now merged."""
+        if app_label == 'auth':
+            from django.http import Http404
+            raise Http404('No such admin section.')
+        return super().app_index(request, app_label, extra_context)
+
 
 admin_site = MotorMatchAdminSite(name='motormatch_admin')
 
