@@ -155,6 +155,8 @@
                 if (tmpEl && d.id) {
                     tmpEl.setAttribute('data-id', d.id);
                     lastId = Math.max(lastId, d.id);
+                    var delBtn = tmpEl.querySelector('.bubble-delete-btn');
+                    if (delBtn) delBtn.dataset.msgid = d.id;
                 }
             })
             .catch(function () {});
