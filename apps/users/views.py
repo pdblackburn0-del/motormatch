@@ -146,3 +146,48 @@ def session_check(request):
             until = profile.suspension_until.strftime('%d %b %Y') if profile.suspension_until else None
             return JsonResponse({'suspended': True, 'until': until, 'reason': profile.ban_reason})
     return JsonResponse({'ok': True})
+
+
+@login_required
+def delete_account(request):
+    from django.contrib import messages
+    from django.contrib.auth import logout
+    from django.shortcuts import redirect
+    from django.views.decorators.http import require_POST
+    from django.utils import timezone
+
+    if request.method != 'POST':
+        return redirect('profile')
+
+    confirm_email = request.POST.get('confirm_email', '').strip().lower()
+    if confirm_email != request.user.email.lower():
+        messages.error(request, 'The email address you entered does not match your account.')
+        return redirect('profile')
+
+    user = request.user
+    profile = getattr(user, 'profile', None)
+
+    user.vehicles.all().update(is_removed=True)
+
+    if profile:
+        profile.first_name   = ''
+        profile.last_name    = ''
+        profile.bio          = ''
+        profile.phone        = ''
+        profile.location     = ''
+        profile.avatar       = None
+        profile.is_deleted   = True
+        profile.deleted_at   = timezone.now()
+        profile.save()
+
+    anon_email = f'deleted_{user.pk}@deleted.motormatch'
+    user.email      = anon_email
+    user.username   = anon_email
+    user.first_name = ''
+    user.last_name  = ''
+    user.is_active  = False
+    user.save()
+
+    logout(request)
+    messages.success(request, 'Your account has been permanently deleted. We\'re sorry to see you go.')
+    return redirect('home')

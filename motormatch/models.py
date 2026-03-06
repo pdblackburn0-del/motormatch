@@ -90,6 +90,10 @@ class UserProfile(models.Model):
 
     ban_reason       = models.CharField(max_length=500, blank=True)
 
+    is_deleted       = models.BooleanField(default=False, db_index=True)
+
+    deleted_at       = models.DateTimeField(null=True, blank=True)
+
     def get_badge_info(self):
 
         """Returns (label, bg_class, hex) or None if no badge."""

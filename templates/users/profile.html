@@ -124,7 +124,54 @@
         </div>
     </div>
 
-    
+    <div class="card border-0 shadow-sm mt-3" style="border-radius:12px; border-left:3px solid #dc2626 !important;">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                <h6 class="fw-bold mb-0 text-danger">Danger Zone</h6>
+            </div>
+            <p class="text-muted small mb-3">Permanently delete your account and all associated data. This action cannot be undone.</p>
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <div>
+                    <p class="fw-medium mb-0 small">Delete Account</p>
+                    <p class="text-muted mb-0" style="font-size:.8rem;">Remove your profile, listings, and all personal data from Motor Match.</p>
+                </div>
+                <button type="button" class="btn btn-danger btn-sm px-3" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                    <i class="bi bi-trash3 me-1"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius:16px;">
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <div style="width:58px;height:58px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                            <i class="bi bi-trash3-fill" style="color:#dc2626;font-size:1.3rem;"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Delete your account?</h5>
+                        <p class="text-muted mb-0" style="font-size:.85rem;">This is permanent. Your profile, listings, messages and all personal data will be wiped. You will not be able to recover your account.</p>
+                    </div>
+                    <form method="post" action="{% url 'delete_account' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Type your email address to confirm</label>
+                            <input type="email" name="confirm_email" class="form-control" placeholder="{{ request.user.email }}" autocomplete="off" required>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-light flex-grow-1 fw-semibold" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger flex-grow-1 fw-semibold">
+                                <i class="bi bi-trash3 me-1"></i>Yes, delete my account
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% with reviews=request.user.reviews_received.all %}
     {% if reviews %}
     <div class="card border-0 shadow-sm mt-3" style="border-radius:12px;">

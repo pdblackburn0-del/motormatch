@@ -16,4 +16,6 @@ urlpatterns = [
 
     path('api/session-check/', views.session_check, name='session_check'),
 
+    path('account/delete/', views.delete_account, name='delete_account'),
+
 ]

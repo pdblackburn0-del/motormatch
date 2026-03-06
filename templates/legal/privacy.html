@@ -21,13 +21,47 @@
             <p>Motor Match is the data controller for personal data processed through this platform. If you have any questions about how we use your data, contact us at <a href="mailto:privacy@motormatch.co.uk" class="text-primary">privacy@motormatch.co.uk</a>.</p>
 
             <h4 class="fw-bold text-dark mt-5 mb-2" style="font-size:1.05rem;">2. What data we collect</h4>
-            <p>We collect the following personal data when you use Motor Match:</p>
+            <p>We collect and store the following personal data when you use Motor Match:</p>
+
+            <p class="fw-semibold text-dark mb-1" style="font-size:.9rem;">Account &amp; profile</p>
             <ul>
-                <li><strong>Account data:</strong> your name, email address, profile photo, and password (stored as a hashed value)</li>
-                <li><strong>Listing data:</strong> vehicle details, photos, price, location, and description you submit</li>
-                <li><strong>Messaging data:</strong> messages and attachments sent between users on the platform</li>
-                <li><strong>Usage data:</strong> IP address, browser type, device information, pages visited, and timestamps — collected automatically via server logs and session management</li>
-                <li><strong>DVLA lookup data:</strong> if you use the registration lookup feature, the registration number you enter is passed to the DVLA API. We do not store this beyond the immediate request.</li>
+                <li><strong>Email address</strong> — used for login, notifications, and account recovery</li>
+                <li><strong>First and last name</strong> — displayed on your public profile and listings</li>
+                <li><strong>Password</strong> — stored as a one-way bcrypt hash; we never store your plain-text password</li>
+                <li><strong>Profile photo</strong> — uploaded and served via Cloudinary (cloud image hosting)</li>
+                <li><strong>Phone number</strong> — optionally provided; displayed on listings if you choose to show it</li>
+                <li><strong>Location</strong> — town or city you optionally enter on your profile</li>
+                <li><strong>Bio</strong> — a short free-text description you optionally write on your profile</li>
+            </ul>
+
+            <p class="fw-semibold text-dark mb-1" style="font-size:.9rem;">Vehicle listings</p>
+            <ul>
+                <li><strong>Listing data:</strong> make, model, year, mileage, fuel type, transmission, body type, colour, price, condition, description, and location</li>
+                <li><strong>Listing photos:</strong> uploaded and stored via Cloudinary</li>
+                <li><strong>DVLA lookup:</strong> if you use the registration plate lookup, the plate is sent to the DVLA API to pre-fill listing fields. We do not store the raw registration number independently of the listing you create.</li>
+            </ul>
+
+            <p class="fw-semibold text-dark mb-1" style="font-size:.9rem;">Conversations &amp; messaging</p>
+            <ul>
+                <li><strong>Messages:</strong> the full text of messages sent between buyers and sellers, stored in our database</li>
+                <li><strong>GIF attachments:</strong> GIF URLs chosen via the Tenor integration, stored with the message record</li>
+                <li><strong>Message reactions:</strong> emoji characters and which user placed them, stored per-message</li>
+                <li><strong>Read state:</strong> whether you have read each message (used to power unread counts)</li>
+            </ul>
+
+            <p class="fw-semibold text-dark mb-1" style="font-size:.9rem;">Activity &amp; preferences</p>
+            <ul>
+                <li><strong>Saved vehicles:</strong> listings you save to your watchlist — stored in our database linked to your account</li>
+                <li><strong>Bids / offers:</strong> offer amounts you place on listings, with timestamps, retained even after a listing closes</li>
+                <li><strong>Recently viewed:</strong> the last several listings you viewed, stored temporarily in your browser session</li>
+                <li><strong>Notifications:</strong> records of platform notifications sent to you (message received, offer placed, listing updated)</li>
+            </ul>
+
+            <p class="fw-semibold text-dark mb-1" style="font-size:.9rem;">Security &amp; technical</p>
+            <ul>
+                <li><strong>Login events &amp; IP addresses:</strong> we record failed and successful login attempts via django-axes to protect against brute-force attacks</li>
+                <li><strong>Session cookie:</strong> a server-side session identifier stored in a browser cookie to keep you logged in</li>
+                <li><strong>CSRF token:</strong> a security token stored in a cookie to prevent cross-site request forgery attacks</li>
             </ul>
 
             <h4 class="fw-bold text-dark mt-5 mb-2" style="font-size:1.05rem;">3. How we use your data</h4>
@@ -55,21 +89,30 @@
             <p>We retain your account data for as long as your account is active. Deleted listings are retained in our database for up to 30 days before permanent deletion, to support dispute resolution. Message history is retained for 12 months. Usage logs are retained for up to 90 days.</p>
 
             <h4 class="fw-bold text-dark mt-5 mb-2" style="font-size:1.05rem;">6. Who we share data with</h4>
-            <p>We do not sell or share your personal data with third parties for marketing purposes. We may share limited data with:</p>
+            <p>We do not sell or share your personal data with third parties for marketing purposes. We use the following third-party services that may process data on our behalf:</p>
             <ul>
-                <li><strong>Infrastructure providers:</strong> our hosting and database providers who process data on our behalf under data processing agreements</li>
-                <li><strong>Law enforcement:</strong> where we are legally required to disclose information</li>
+                <li><strong>Cloudinary</strong> — stores and serves your profile photo and listing images. Images are uploaded to Cloudinary's CDN. See <a href="https://cloudinary.com/privacy" target="_blank" rel="noopener" class="text-primary">Cloudinary's Privacy Policy</a>.</li>
+                <li><strong>Tenor (Google)</strong> — if you use the GIF search in messaging, your search query is sent to Tenor's API. See <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="text-primary">Google's Privacy Policy</a>.</li>
+                <li><strong>DVLA API</strong> — registration plate lookups during listing creation are forwarded to the DVLA's public vehicle enquiry API. No personal data is sent, only the plate number.</li>
+                <li><strong>Infrastructure providers:</strong> our hosting and database providers process data on our behalf under data processing agreements.</li>
+                <li><strong>Law enforcement:</strong> where we are legally required to disclose information.</li>
             </ul>
 
             <h4 class="fw-bold text-dark mt-5 mb-2" style="font-size:1.05rem;">7. Cookies and tracking</h4>
-            <p>We use essential cookies only — these are required for the platform to function (e.g. session management, CSRF protection). We do not use advertising cookies, third-party tracking pixels, or analytics cookies that follow you across other websites.</p>
+            <p>We use the following cookies. We do not use advertising networks, third-party tracking pixels, or cookies that follow you across other websites.</p>
+            <ul>
+                <li><strong>Session cookie (<code>sessionid</code>):</strong> an HTTP-only cookie that identifies your login session. It expires when you sign out or your session times out. This cookie is strictly necessary.</li>
+                <li><strong>CSRF cookie (<code>csrftoken</code>):</strong> a security cookie that prevents cross-site request forgery. Required for all form submissions. This cookie is strictly necessary.</li>
+                <li><strong>Cookie consent (<code>mm_cookie_consent</code>):</strong> stored in your browser's <code>localStorage</code> (not a cookie) to remember whether you have acknowledged this banner. Expires when you clear site data.</li>
+            </ul>
+            <p>Because we use only strictly necessary cookies and no analytics or advertising cookies, we only require your acknowledgement rather than explicit opt-in consent under the UK PECR. You may clear cookies at any time in your browser settings.</p>
 
             <h4 class="fw-bold text-dark mt-5 mb-2" style="font-size:1.05rem;">8. Your rights</h4>
             <p>Under UK GDPR, you have the right to:</p>
             <ul>
                 <li><strong>Access:</strong> request a copy of the personal data we hold about you</li>
                 <li><strong>Rectification:</strong> ask us to correct inaccurate or incomplete data</li>
-                <li><strong>Erasure:</strong> request deletion of your personal data ("right to be forgotten")</li>
+                <li><strong>Erasure:</strong> request deletion of your personal data — you can do this directly via <strong>Settings &rarr; Delete Account</strong>. This immediately anonymises your email, name, phone, bio, location, and avatar, and removes all your active listings. Message history is anonymised in-place.</li>
                 <li><strong>Restriction:</strong> ask us to limit how we process your data</li>
                 <li><strong>Portability:</strong> receive your data in a structured, machine-readable format</li>
                 <li><strong>Objection:</strong> object to processing based on legitimate interests</li>
