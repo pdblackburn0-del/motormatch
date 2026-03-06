@@ -103,7 +103,11 @@
             <div class="bubble-wrap {% if msg.sender == request.user %}mine{% else %}theirs{% endif %}"
                  data-id="{{ msg.pk }}">
                 {% if msg.sender != request.user %}
+                {% if other_profile and other_profile.avatar %}
+                <img src="{{ other_profile.avatar.url }}" class="avatar-sm flex-shrink-0" style="object-fit:cover;" alt="">
+                {% else %}
                 <div class="avatar-sm flex-shrink-0">{{ other_profile.get_initials }}</div>
+                {% endif %}
                 {% endif %}
                 <div class="bubble-col">
                     <div class="bubble {% if msg.sender == request.user %}mine{% else %}theirs{% endif %}">
@@ -134,7 +138,11 @@
 
             <!-- Typing indicator (hidden until poll reveals typing) -->
             <div class="bubble-wrap theirs d-none" id="typingBubble">
+                {% if other_profile and other_profile.avatar %}
+                <img src="{{ other_profile.avatar.url }}" class="avatar-sm flex-shrink-0" style="object-fit:cover;" alt="">
+                {% else %}
                 <div class="avatar-sm flex-shrink-0">{{ other_profile.get_initials }}</div>
+                {% endif %}
                 <div class="bubble-col">
                     <div class="bubble theirs typing-bubble">
                         <span></span><span></span><span></span>
@@ -203,9 +211,10 @@
 {{ other.pk|json_script:"data-other-pk" }}
 {{ my_initials|json_script:"data-my-inits" }}
 <script>
-var OTHER_PK   = JSON.parse(document.getElementById('data-other-pk').textContent);
-var CSRF       = (document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||'';
-var MY_INITS   = JSON.parse(document.getElementById('data-my-inits').textContent);
+var OTHER_PK       = JSON.parse(document.getElementById('data-other-pk').textContent);
+var CSRF           = (document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||'';
+var MY_INITS       = JSON.parse(document.getElementById('data-my-inits').textContent);
+var OTHER_AVATAR_URL = '{% if other_profile and other_profile.avatar %}{{ other_profile.avatar.url }}{% endif %}';
 var SEND_URL   = '/inbox/' + OTHER_PK + '/send/';
 var POLL_URL   = '/inbox/' + OTHER_PK + '/poll/';
 var TYPING_URL = '/inbox/' + OTHER_PK + '/typing/';

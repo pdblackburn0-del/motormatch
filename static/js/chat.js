@@ -193,7 +193,7 @@
         wrap.className = 'bubble-wrap ' + (m.is_mine ? 'mine' : 'theirs');
         wrap.setAttribute('data-id', m.id);
 
-        var avatar  = m.is_mine ? '' : '<div class="avatar-sm flex-shrink-0">' + esc(m.initials) + '</div>';
+        var avatar  = m.is_mine ? '' : (OTHER_AVATAR_URL ? '<img src="' + OTHER_AVATAR_URL + '" class="avatar-sm flex-shrink-0" style="object-fit:cover;" alt="">' : '<div class="avatar-sm flex-shrink-0">' + esc(m.initials) + '</div>');
         var gifHtml = m.gif_url
             ? '<img src="' + m.gif_url + '" class="attach gif-attach" onclick="window.open(this.src)" alt="GIF">'
             : '';
