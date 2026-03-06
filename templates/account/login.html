@@ -15,7 +15,7 @@
 <div class="auth-wrap">
 
     
-    <div class="auth-hero d-none d-md-flex">
+    <div class="auth-hero d-none d-md-flex" style="background: url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200') center/cover no-repeat;">
         <div class="auth-hero__overlay"></div>
         <div class="auth-hero__inner">
             <a href="{% url 'home' %}" class="auth-hero__logo">
@@ -71,11 +71,10 @@
                            placeholder="Enter your password"
                            autocomplete="current-password">
                 </div>
-                <div class="d-flex justify-content-between align-items-center mb-4" style="font-size:.84rem;">
+                <div class="mb-4" style="font-size:.84rem;">
                     <label class="d-flex align-items-center gap-2 text-secondary" style="cursor:pointer;">
                         <input type="checkbox" name="remember" style="width:15px;height:15px;accent-color:#2563eb;"> Remember me
                     </label>
-                    <a href="{% url 'account_reset_password' %}" style="color:#2563eb;font-weight:600;text-decoration:none;">Forgot password?</a>
                 </div>
                 <button type="submit" class="btn-login">Log In</button>
             </form>

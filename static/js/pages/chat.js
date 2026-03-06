@@ -299,9 +299,8 @@
     }
     window.openDeleteMsgModal = openDeleteMsgModal;
 
-    document.addEventListener('DOMContentLoaded', function () {
-        var confirmBtn = document.getElementById('deleteMsgConfirm');
-        if (!confirmBtn) return;
+    var confirmBtn = document.getElementById('deleteMsgConfirm');
+    if (confirmBtn) {
         confirmBtn.addEventListener('click', function () {
             if (!pendingDeleteId) return;
             var modalEl = document.getElementById('deleteMsgModal');
@@ -318,21 +317,21 @@
                 })
                 .catch(function () {});
         });
+    }
 
-        document.querySelectorAll('.bubble-wrap.mine .bubble:not(.bubble--deleted)').forEach(function (bubble) {
-            var wrap = bubble.closest('.bubble-wrap');
-            var msgId = parseInt(wrap.getAttribute('data-id'), 10);
-            if (isNaN(msgId)) return;
-            var bubbleRow = wrap.querySelector('.bubble-row');
-            if (!bubbleRow) return;
-            var btn = document.createElement('button');
-            btn.className = 'bubble-delete-btn';
-            btn.dataset.msgid = msgId;
-            btn.title = 'Delete message';
-            btn.innerHTML = '<i class="bi bi-trash3"></i>';
-            btn.addEventListener('click', function () { openDeleteMsgModal(msgId); });
-            bubbleRow.appendChild(btn);
-        });
+    document.querySelectorAll('.bubble-wrap.mine .bubble:not(.bubble--deleted)').forEach(function (bubble) {
+        var wrap = bubble.closest('.bubble-wrap');
+        var msgId = parseInt(wrap.getAttribute('data-id'), 10);
+        if (isNaN(msgId)) return;
+        var bubbleRow = wrap.querySelector('.bubble-row');
+        if (!bubbleRow) return;
+        var btn = document.createElement('button');
+        btn.className = 'bubble-delete-btn';
+        btn.dataset.msgid = msgId;
+        btn.title = 'Delete message';
+        btn.innerHTML = '<i class="bi bi-trash3"></i>';
+        btn.addEventListener('click', function () { openDeleteMsgModal(msgId); });
+        bubbleRow.appendChild(btn);
     });
 
     var outer = document.querySelector('.chat-outer');
