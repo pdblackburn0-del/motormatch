@@ -3,13 +3,13 @@
 {% block title %}Chat with {{ other_profile.get_display_name }} — Motor Match{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/chat.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/chat.css' %}">
 {% endblock extra_css %}
 
 {% block content %}
 <div class="chat-outer container py-3">
 
-    <!-- Back bar -->
+    
     <div class="d-flex align-items-center gap-2 mb-3">
         <a href="{% url 'inbox' %}" class="btn btn-outline-secondary btn-sm px-3">
             <i class="bi bi-arrow-left me-1"></i>Messages
@@ -18,7 +18,7 @@
             <span class="badge bg-success-subtle text-success border border-success-subtle chat-secured-badge">
                 <i class="bi bi-lock-fill me-1"></i>Secured
             </span>
-            <!-- Theme picker -->
+            
             <div class="dropdown">
                 <button class="btn btn-sm px-2 text-muted chat-action-btn"
                         id="themeToggle" data-bs-toggle="dropdown" aria-expanded="false" title="Change theme">
@@ -44,7 +44,7 @@
 
     <div class="chat-card shadow-sm" style="overflow:hidden;">
 
-        <!-- ── Header ── -->
+        
         <div class="chat-header">
             {% if other_profile and other_profile.avatar %}
             <img src="{{ other_profile.avatar.url }}" class="rounded-circle border flex-shrink-0"
@@ -93,7 +93,7 @@
             </a>
         </div>
 
-        <!-- ── Messages ── -->
+        
         <div class="chat-messages" id="chatMessages">
             {% if thread %}
             {% for msg in thread %}
@@ -143,7 +143,7 @@
             </div>
             {% endif %}
 
-            <!-- Typing indicator (hidden until poll reveals typing) -->
+            
             <div class="bubble-wrap theirs d-none" id="typingBubble">
                 {% if other_profile and other_profile.avatar %}
                 <img src="{{ other_profile.avatar.url }}" class="avatar-sm flex-shrink-0" style="object-fit:cover;" alt="">
@@ -158,13 +158,13 @@
             </div>
         </div>
 
-        <!-- ── Compose ── -->
+        
         <div class="chat-footer">
             <div id="attachPreview">
                 <img id="attachThumb" src="" alt="">
                 <button class="remove-attach" onclick="clearAttachment()" title="Remove">&times;</button>
             </div>
-            <!-- GIF picker panel -->
+            
             <div id="gifPicker" class="gif-picker d-none">
                 <input type="text" id="gifSearch" class="form-control form-control-sm mb-2" placeholder="Search GIFs…" autocomplete="off">
                 <div id="gifGrid" class="gif-grid"></div>
@@ -184,10 +184,9 @@
             </div>
         </div>
 
-    </div><!-- /card -->
-</div><!-- /chat-outer -->
+    </div>
+</div>
 
-<!-- ── Delete Chat Modal ── -->
 <div class="modal fade" id="deleteChatModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
         <div class="modal-content border-0 shadow" style="border-radius:14px;">
@@ -214,7 +213,7 @@
 {% endblock %}
 
 {% block extra_js %}
-{# Globals needed by chat.js — rendered as JSON to avoid linter false positives #}
+
 {{ other.pk|json_script:"data-other-pk" }}
 {{ my_initials|json_script:"data-my-inits" }}
 <script>
@@ -226,7 +225,7 @@ var SEND_URL   = '/inbox/' + OTHER_PK + '/send/';
 var POLL_URL   = '/inbox/' + OTHER_PK + '/poll/';
 var TYPING_URL = '/inbox/' + OTHER_PK + '/typing/';
 </script>
-<script src="{% static 'js/chat.js' %}"></script>
+<script src="{% static 'js/pages/chat.js' %}"></script>
 <script>
 // ── Chat theme switcher ──
 (function () {

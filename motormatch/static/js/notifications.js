@@ -1,14 +1,7 @@
-/* ============================================================
-   Motor Match – global real-time notification polling
-   Loads in base.html for authenticated users only.
-   Polls /notifications/poll/ every 15s, updates navbar
-   bell badge and populates the dropdown in real-time.
-   ============================================================ */
-
 (function () {
     'use strict';
 
-    var POLL_INTERVAL = 15000; // 15 seconds
+    var POLL_INTERVAL = 15000;
 
     function updateBadge(el, count) {
         if (!el) return;
@@ -26,13 +19,11 @@
             .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // ── Render notification list in the dropdown ────────────────
     function renderNotifs(latest) {
         var list  = document.getElementById('notifList');
         var empty = document.getElementById('notifEmpty');
         if (!list) return;
 
-        // Remove old rendered items (keep the empty state element)
         list.querySelectorAll('.notif-item').forEach(function (el) { el.remove(); });
 
         if (!latest || latest.length === 0) {
@@ -65,7 +56,6 @@
         });
     }
 
-    // ── Dismiss single notification ─────────────────────────────
     function dismissOne(id, el) {
         fetch('/notifications/' + id + '/dismiss/', {
             method: 'POST',
@@ -74,7 +64,7 @@
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (d) {
             if (!d) return;
-            // Animate out
+
             el.style.transition = 'opacity .2s, max-height .25s';
             el.style.overflow = 'hidden';
             el.style.opacity = '0';
@@ -87,9 +77,8 @@
         .catch(function () {});
     }
 
-    // ── Clear all notifications ─────────────────────────────────
     document.addEventListener('click', function (e) {
-        // Dismiss one
+
         var btn = e.target.closest('.dismiss-notif');
         if (btn) {
             e.stopPropagation();
@@ -98,7 +87,6 @@
             return;
         }
 
-        // Clear all
         if (e.target.id === 'clearAllNotifs') {
             fetch('/notifications/dismiss-all/', {
                 method: 'POST',
@@ -123,7 +111,6 @@
         empty.style.display = hasItems ? 'none' : '';
     }
 
-    // ── Poll ────────────────────────────────────────────────────
     function pollNotifications() {
         fetch('/notifications/poll/', {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -136,17 +123,13 @@
                 updateBadge(document.getElementById('topBellBadge'), d.unread_notifs);
                 renderNotifs(d.latest);
             })
-            .catch(function () {/* silent */});
+            .catch(function () {});
     }
 
-    // Kick off immediately then repeat
     pollNotifications();
     setInterval(pollNotifications, POLL_INTERVAL);
 })();
 
-/* ============================================================
-   Shared AJAX save / unsave helper – used on home, saved, etc.
-   ============================================================ */
 function getCsrf() {
     var match = document.cookie.split(';').map(function(c){ return c.trim(); })
         .find(function(c){ return c.startsWith('csrftoken='); });
@@ -157,7 +140,6 @@ function toggleSaveCard(btn) {
     var icon = btn.querySelector('i');
     var wasSaved = btn.dataset.saved === '1';
 
-    // Optimistic immediate update
     if (icon) {
         if (wasSaved) {
             icon.classList.remove('bi-heart-fill', 'vc__heart-icon--saved', 'text-danger');
@@ -176,7 +158,7 @@ function toggleSaveCard(btn) {
     })
     .then(function(r){ return r.json(); })
     .then(function(d){
-        // Sync with server truth in case of mismatch
+
         if (d.saved !== !wasSaved) {
             if (icon) {
                 if (d.saved) {
@@ -190,14 +172,14 @@ function toggleSaveCard(btn) {
                 btn.title = d.saved ? 'Unsave' : 'Save';
             }
         }
-        // Remove card from saved page if unsaved
+
         if (!d.saved) {
             var card = btn.closest('.col');
             if (card && document.querySelector('.saved-grid')) card.remove();
         }
     })
     .catch(function(){
-        // Revert optimistic update on failure
+
         if (icon) {
             if (wasSaved) {
                 icon.classList.remove('bi-heart', 'vc__heart-icon', 'text-muted');

@@ -1,8 +1,3 @@
-/* ============================================================
-   MotorMatch — Dashboard styles
-   ============================================================ */
-
-/* ── Layout ──────────────────────────────────────────────── */
 .db-body {
     background: #f7f8fa;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -14,7 +9,6 @@
     min-height: 100vh;
 }
 
-/* ── Sidebar ─────────────────────────────────────────────── */
 .db-sidebar {
     width: 220px;
     flex-shrink: 0;
@@ -97,7 +91,6 @@
     margin: 0;
 }
 
-/* Nav */
 .db-nav {
     padding: .75rem .6rem;
     flex: 1;
@@ -186,7 +179,6 @@
     color: #dc2626;
 }
 
-/* ── Main area ───────────────────────────────────────────── */
 .db-main {
     margin-left: 220px;
     width: calc(100% - 220px);
@@ -195,7 +187,6 @@
     min-height: 100vh;
 }
 
-/* ── Topbar ──────────────────────────────────────────────── */
 .db-topbar {
     height: 56px;
     display: flex;
@@ -286,13 +277,11 @@
     flex-shrink: 0;
 }
 
-/* ── Content ─────────────────────────────────────────────── */
 .db-content {
     padding: 1.75rem 1.5rem;
     flex: 1;
 }
 
-/* ── Stat cards ──────────────────────────────────────────── */
 .db-stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -326,7 +315,6 @@
 
 .db-stat__value--sm { font-size: 1.1rem; }
 
-/* ── Section card ────────────────────────────────────────── */
 .db-card {
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -355,7 +343,6 @@
 
 .db-card__body--flush { padding: 0; }
 
-/* ── Listing rows ────────────────────────────────────────── */
 .db-listing {
     display: flex;
     align-items: center;
@@ -430,7 +417,6 @@
     z-index: 2;
 }
 
-/* Action buttons */
 .db-act {
     font-size: .72rem;
     font-weight: 500;
@@ -450,7 +436,6 @@
 .db-act--danger-dark         { color: #7f1d1d; border-color: #fca5a5; }
 .db-act--danger-dark:hover   { background: #fef2f2; border-color: #7f1d1d; }
 
-/* ── Message rows ────────────────────────────────────────── */
 .db-msg {
     display: flex;
     align-items: flex-start;
@@ -514,7 +499,6 @@
     margin-top: 5px;
 }
 
-/* ── Bid rows ────────────────────────────────────────────── */
 .db-bid {
     display: flex;
     align-items: flex-start;
@@ -556,7 +540,6 @@
 
 .db-bid__meta strong { color: #111827; }
 
-/* Bid / status pills */
 .db-pill {
     display: inline-flex;
     align-items: center;
@@ -572,7 +555,6 @@
 .db-pill--counter  { background: #fef3c7; color: #92400e; }
 .db-pill--awaiting { background: #e0f2fe; color: #075985; }
 
-/* ── Empty state ─────────────────────────────────────────── */
 .db-empty {
     display: flex;
     flex-direction: column;
@@ -602,7 +584,6 @@
     margin-bottom: 1rem;
 }
 
-/* ── Inline link ─────────────────────────────────────────── */
 .db-link {
     font-size: .78rem;
     color: #2563eb;
@@ -611,7 +592,6 @@
 
 .db-link:hover { text-decoration: underline; }
 
-/* ── Small secondary button ──────────────────────────────── */
 .db-btn-sm {
     font-size: .76rem;
     font-weight: 500;
@@ -644,10 +624,8 @@
 
 .db-btn-primary:hover { background: #1d4ed8; color: #fff; }
 
-/* ── Modal tweaks ────────────────────────────────────────── */
 .db-modal { border-radius: 12px; border: none; }
 
-/* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 900px) {
     .db-stats { grid-template-columns: repeat(2, 1fr); }
 }

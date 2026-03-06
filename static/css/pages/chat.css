@@ -1,22 +1,15 @@
-/* ============================================================
-   Motor Match – Chat / Conversation styles
-   Loaded only on the conversation page.
-   ============================================================ */
-
 .chat-outer {
     max-width: 740px;
     margin: 0 auto;
     padding-bottom: 40px;
 }
 
-/* Card wrapper */
 .chat-card {
     border-radius: 16px;
     position: relative;
     overflow: hidden;
 }
 
-/* Header */
 .chat-header {
     background: #fff;
     border-bottom: 2px solid #ede9fe;
@@ -28,7 +21,6 @@
     box-shadow: 0 2px 8px rgba(79,70,229,.06);
 }
 
-/* Message scroll area */
 .chat-messages {
     background: #f5f6fb;
     background-image: radial-gradient(circle at 1px 1px, #e8eaf6 1px, transparent 0);
@@ -45,11 +37,9 @@
     gap: 4px;
 }
 
-/* Bubble wrappers – full width so margin-auto trick works */
 .bubble-wrap           { display: flex; gap: 10px; align-items: flex-end; width: 100%; }
 .bubble-wrap.mine      { flex-direction: row-reverse; }
 
-/* Column – pushed to correct side via margin-auto */
 .bubble-col {
     min-width: 0;
     max-width: min(420px, 72%);
@@ -60,7 +50,6 @@
 .bubble-wrap.theirs .bubble-col { margin-right: auto; }
 .bubble-wrap.mine    .bubble-col { margin-left: auto; align-items: flex-end; }
 
-/* Bubbles */
 .bubble {
     padding: 10px 15px;
     border-radius: 20px;
@@ -88,7 +77,6 @@
     box-shadow: 0 2px 8px rgba(79,70,229,.28);
 }
 
-/* Attachment images inside bubbles */
 .bubble:has(img.attach) {
     width: auto;
     max-width: 100%;
@@ -106,24 +94,20 @@
     border-radius: 12px;
 }
 
-/* Bubble pop-in animation */
 @keyframes bubbleIn {
     from { transform: scale(.95); opacity: 0; }
     to   { transform: scale(1);   opacity: 1; }
 }
 
-/* Grouped messages – tighter spacing + adjusted corners */
 .bubble-wrap + .bubble-wrap.mine   { margin-top: -2px; }
 .bubble-wrap + .bubble-wrap.theirs { margin-top: -2px; }
 
 .bubble-wrap.mine   + .bubble-wrap.mine   .bubble { border-top-right-radius: 8px; }
 .bubble-wrap.theirs + .bubble-wrap.theirs .bubble { border-top-left-radius:  8px; }
 
-/* Hide avatar on consecutive messages from same sender */
 .bubble-wrap.mine   + .bubble-wrap.mine   .avatar-sm,
 .bubble-wrap.theirs + .bubble-wrap.theirs .avatar-sm { visibility: hidden; }
 
-/* Timestamp + tick row */
 .bubble-time {
     font-size: .68rem;
     color: #adb5bd;
@@ -138,7 +122,6 @@
 .tick-icon--read   { color: #a5b4fc; }
 .tick-icon--unread { color: #adb5bd; }
 
-/* Avatar circles */
 .avatar-sm {
     width: 32px;
     height: 32px;
@@ -153,7 +136,6 @@
     color: #fff;
 }
 
-/* Compose footer */
 .chat-footer {
     background: #fff;
     border-top: 2px solid #ede9fe;
@@ -161,7 +143,6 @@
     border-radius: 0 0 16px 16px;
 }
 
-/* Date dividers */
 .date-divider {
     text-align: center;
     font-size: .72rem;
@@ -181,7 +162,6 @@
 .date-divider::before { left: 0; }
 .date-divider::after  { right: 0; }
 
-/* Typing dots */
 .typing-bubble {
     display: flex;
     align-items: center;
@@ -202,7 +182,6 @@
     40%           { opacity: 1; }
 }
 
-/* Attachment preview above compose bar */
 #attachPreview {
     display: none;
     position: relative;
@@ -232,7 +211,6 @@
     line-height: 1;
 }
 
-/* Compose textarea auto-grow handled by JS */
 #msgInput {
     border-radius: 12px;
     resize: none;
@@ -248,7 +226,6 @@
     box-shadow: 0 0 0 2px rgba(79, 70, 229, .2);
 }
 
-/* GIF picker panel */
 .gif-picker {
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -281,7 +258,7 @@
     object-fit: cover;
     display: block;
 }
-/* Attach image button */
+
 .chat-attach-btn {
     display: inline-flex;
     align-items: center;
@@ -327,8 +304,6 @@
     transform: scale(1.06);
 }
 
-
-/* Send button */
 #sendBtn {
     width: 42px;
     height: 42px;
@@ -336,7 +311,6 @@
     flex-shrink: 0;
 }
 
-/* Delete chat button in back bar */
 .chat-delete-btn,
 .chat-action-btn {
     border: 1px solid #e5e7eb;
@@ -355,14 +329,12 @@
     background: #fff5f5;
 }
 
-/* Secured badge in back bar */
 .chat-secured-badge {
     font-size: .68rem;
     padding: 3px 10px;
     border-radius: 999px;
 }
 
-/* Delete chat link */
 .chat-delete-link {
     font-size: .72rem;
     color: #adb5bd;
@@ -372,7 +344,6 @@
 }
 .chat-delete-link:hover { color: #dc2626; }
 
-/* Mobile */
 @media (max-width: 576px) {
     .chat-outer  { padding-left: 0; padding-right: 0; padding-bottom: 0; }
     .bubble-col  { max-width: min(320px, 85%); }
@@ -382,7 +353,6 @@
     .chat-messages { height: calc(100vh - 220px); max-height: none; }
 }
 
-/* ── Theme swatches ── */
 .theme-swatch {
     width: 28px;
     height: 28px;
@@ -395,7 +365,6 @@
 .theme-swatch:hover { transform: scale(1.15); }
 .theme-swatch.active { border-color: #111827; }
 
-/* ── Ocean theme ── */
 .chat-outer.theme-ocean .chat-messages { background: #f0f9ff; background-image: radial-gradient(circle at 1px 1px, #bae6fd 1px, transparent 0); background-size: 24px 24px; }
 .chat-outer.theme-ocean .chat-header  { border-bottom-color: #bae6fd; box-shadow: 0 2px 8px rgba(14,165,233,.08); }
 .chat-outer.theme-ocean .chat-footer  { border-top-color: #bae6fd; }
@@ -405,7 +374,6 @@
 .chat-outer.theme-ocean #gifBtn       { background: #e0f2fe !important; color: #0284c7 !important; }
 .chat-outer.theme-ocean #gifBtn:hover { background: #bae6fd !important; }
 
-/* ── Rose theme ── */
 .chat-outer.theme-rose .chat-messages { background: #fff1f2; background-image: radial-gradient(circle at 1px 1px, #fecdd3 1px, transparent 0); background-size: 24px 24px; }
 .chat-outer.theme-rose .chat-header   { border-bottom-color: #fecdd3; box-shadow: 0 2px 8px rgba(244,63,94,.08); }
 .chat-outer.theme-rose .chat-footer   { border-top-color: #fecdd3; }
@@ -415,7 +383,6 @@
 .chat-outer.theme-rose #gifBtn        { background: #ffe4e6 !important; color: #e11d48 !important; }
 .chat-outer.theme-rose #gifBtn:hover  { background: #fecdd3 !important; }
 
-/* ── Dark theme ── */
 .chat-outer.theme-dark .chat-messages { background: #1e293b; background-image: radial-gradient(circle at 1px 1px, #334155 1px, transparent 0); background-size: 24px 24px; }
 .chat-outer.theme-dark .chat-header   { background: #0f172a; border-bottom-color: #334155; box-shadow: none; }
 .chat-outer.theme-dark .chat-header p { color: #94a3b8 !important; }
@@ -433,7 +400,6 @@
 .chat-outer.theme-dark .chat-vehicle-chip { border-color: #334155 !important; }
 .chat-outer.theme-dark .chat-vehicle-chip .text-dark { color: #f1f5f9 !important; }
 
-/* ── Deleted message bubble ── */
 .bubble--deleted {
     background: #f3f4f6 !important;
     color: #9ca3af !important;

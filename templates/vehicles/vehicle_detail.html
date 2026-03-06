@@ -142,7 +142,7 @@
                         </div>
                     </div>
 
-                    <!-- Seller -->
+                    
                     {% if car.owner %}
                     <div class="d-flex align-items-center gap-2 mb-3">
                         <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0 overflow-hidden" style="width:38px;height:38px;">
@@ -175,7 +175,7 @@
                     </div>
                     {% endif %}
 
-                    <!-- Message Seller -->
+                    
                     {% if request.user.is_authenticated and car.owner and car.owner != request.user %}
                     <button class="btn btn-primary w-100 mb-2 fw-semibold" data-bs-toggle="collapse" data-bs-target="#messageForm">
                         <i class="bi bi-chat-dots me-1"></i> Message Seller
@@ -192,7 +192,7 @@
                         </form>
                     </div>
 
-                    <!-- Place Bid -->
+                    
                     <button class="btn btn-success w-100 mb-2 fw-semibold" data-bs-toggle="collapse" data-bs-target="#bidForm">
                         <i class="bi bi-tag me-1"></i> Place a Bid
                     </button>
@@ -231,7 +231,7 @@
 
     </div>
 
-    <!-- Current Bids -->
+    
     {% if car_bids %}
     <div class="row mt-4">
         <div class="col-12 mb-3">
@@ -298,7 +298,7 @@
     </div>
     {% endif %}
 
-    <!-- Reviews Section — reviews are about the SELLER, not the vehicle -->
+    
     <div class="row mt-5">
         <div class="col-12 mb-3">
             <h4 class="fw-bold">
@@ -317,7 +317,7 @@
             {% for review in seller_reviews %}
             <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body d-flex align-items-start gap-3">
-                    <!-- Reviewer avatar -->
+                    
                     <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0 fw-bold"
                          style="width:42px;height:42px;font-size:.85rem;">
                         {% with rp=review.reviewer.profile %}{{ rp.get_initials }}{% endwith %}
@@ -329,7 +329,7 @@
                             </p>
                             <p class="text-muted mb-0" style="font-size:.75rem;">{{ review.created_at|date:'d M Y' }}</p>
                         </div>
-                        <!-- CSS star rating -->
+                        
                         <div class="star-rating mb-1" data-stars="{{ review.rating }}"></div>
                         {% if review.comment %}
                         <p class="text-muted mb-0" style="font-size:.88rem;">{{ review.comment }}</p>
@@ -345,7 +345,7 @@
         </div>
         {% endif %}
 
-        <!-- Add Review Form -->
+        
         {% if request.user.is_authenticated and car.owner and car.owner != request.user %}
         <div class="col-lg-8 mt-2">
             <div class="card border-0 shadow-sm p-4">
@@ -358,7 +358,7 @@
                 {% endif %}
                 <form method="post" action="{% url 'add_review' car.pk %}">
                     {% csrf_token %}
-                    <!-- Interactive star picker -->
+                    
                     <div class="mb-3">
                         <label class="form-label small fw-semibold d-block">Your Rating</label>
                         <div class="star-picker d-flex gap-1" id="starPicker">
@@ -468,4 +468,3 @@ function toggleSave(btn) {
 </div>
 
 {% endblock %}
-

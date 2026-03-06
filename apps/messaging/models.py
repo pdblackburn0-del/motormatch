@@ -1,4 +1,3 @@
-# Re-exports from the canonical motormatch app.
-from motormatch.models import Message  # noqa: F401
+from motormatch.models import Message
 
 __all__ = ['Message']

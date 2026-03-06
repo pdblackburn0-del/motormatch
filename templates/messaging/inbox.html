@@ -19,7 +19,7 @@
     <div class="card border-0 shadow-sm" style="border-radius:14px;">
         {% for conv in conversations %}
         <div class="conv-row d-flex align-items-center gap-3 px-4 py-3 border-bottom">
-            <!-- Avatar + message preview (clickable) -->
+            
             <a href="{% url 'conversation' conv.user.pk %}"
                class="d-flex align-items-center gap-3 flex-grow-1 overflow-hidden text-decoration-none text-dark">
                 {% if conv.user.profile.avatar %}
@@ -52,7 +52,7 @@
                 </div>
             </a>
 
-            <!-- 3-dot dropdown -->
+            
             <div class="dropdown flex-shrink-0 ms-1">
                 <button class="btn btn-link text-muted p-1 lh-1 conv-menu-btn"
                         data-bs-toggle="dropdown" aria-expanded="false" title="Options">
@@ -88,7 +88,6 @@
 
 </div>
 
-<!-- Delete conversation modal -->
 <div class="modal fade" id="inboxDeleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
         <div class="modal-content border-0 shadow" style="border-radius:14px;">

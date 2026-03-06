@@ -6,7 +6,6 @@
 
 {% block content %}
 
-{# ── Quick Actions bar ─────────────────────────────────────────── #}
 <div class="mm-quick-actions">
     <a class="mm-quick-btn mm-quick-btn--primary" href="{% url 'motormatch_admin:motormatch_vehicle_add' %}">
         <i class="bi bi-plus-circle-fill"></i> Add Vehicle
@@ -43,7 +42,6 @@
     {% endif %}
 </div>
 
-{# ── Primary stats ─────────────────────────────────────────────── #}
 <div class="mm-stats-primary">
 
     <div class="mm-stat-card mm-stat-card--blue">
@@ -104,7 +102,6 @@
 
 </div>
 
-{# ── Secondary stats ───────────────────────────────────────────── #}
 <div class="mm-stats-secondary">
 
     <div class="mm-stat-tile">
@@ -173,12 +170,10 @@
 
 </div>
 
-{# ── Section label ─────────────────────────────────────────────── #}
 <div class="mm-section-label">
     <i class="bi bi-bar-chart-fill"></i> Analytics &mdash; Last 30 Days
 </div>
 
-{# ── Charts ───────────────────────────────────────────────────────── #}
 <div class="mm-charts-grid">
 
     <div class="mm-chart-card">
@@ -203,7 +198,6 @@
 
 </div>
 
-{# Inject Chart.js data & render #}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <script>
 (function () {
@@ -273,19 +267,17 @@
 }());
 </script>
 
-{# ── Section label ─────────────────────────────────────────────── #}
 <div class="mm-section-label">
     <i class="bi bi-activity"></i> Recent Activity
 </div>
 
-{# ── Moderation Queue (prominent, shown before activity) ──────── #}
 <div class="mm-section-label">
     <i class="bi bi-shield-exclamation"></i> Moderation Queue
 </div>
 
 <div class="mm-activity-grid">
 
-    {# Pending Listings #}
+    
     <div class="mm-recent-card {% if stat_pending_listings %}mm-recent-card--warning{% endif %}">
         <div class="mm-recent-card__header">
             <span class="mm-recent-card__title">
@@ -328,7 +320,7 @@
         {% endfor %}
     </div>
 
-    {# Suspended Users #}
+    
     <div class="mm-recent-card {% if stat_suspended_users %}mm-recent-card--danger{% endif %}">
         <div class="mm-recent-card__header">
             <span class="mm-recent-card__title">
@@ -360,7 +352,7 @@
         {% endfor %}
     </div>
 
-    {# Low Rating Reviews #}
+    
     <div class="mm-recent-card {% if stat_low_reviews %}mm-recent-card--warning{% endif %}">
         <div class="mm-recent-card__header">
             <span class="mm-recent-card__title">
@@ -394,7 +386,7 @@
         {% endfor %}
     </div>
 
-    {# Marketplace Health #}
+    
     <div class="mm-recent-card">
         <div class="mm-recent-card__header">
             <span class="mm-recent-card__title"><i class="bi bi-graph-up-arrow"></i> Marketplace Health</span>
@@ -437,12 +429,10 @@
 
 </div>
 
-{# ── Section label ─────────────────────────────────────────────── #}
 <div class="mm-section-label">
     <i class="bi bi-activity"></i> Recent Activity
 </div>
 
-{# ── Activity panels ───────────────────────────────────────────── #}
 <div class="mm-activity-grid">
 
     <div class="mm-recent-card">
@@ -556,15 +546,13 @@
 
 </div>
 
-{# ── Section label ─────────────────────────────────────────────── #}
 <div class="mm-section-label">
     <i class="bi bi-grid-fill"></i> Manage Sections
 </div>
 
-{# ── Bottom two-panel row: Moderation + Admin log ───────────────── #}
 <div class="mm-moderation-grid">
 
-    {# Flagged messages panel #}
+    
     <div class="mm-recent-card mm-recent-card--danger" id="mm-moderation-panel">
         <div class="mm-recent-card__header">
             <span class="mm-recent-card__title">
@@ -635,7 +623,7 @@
         </div>
     </div>
 
-    {# Admin Activity log #}
+    
     <div class="mm-recent-card">
         <div class="mm-recent-card__header">
             <span class="mm-recent-card__title"><i class="bi bi-journal-text"></i> Admin Activity Log</span>
@@ -671,7 +659,6 @@
 
 </div>
 
-{# ── Section cards grid (replaces table-based All Sections) ──────── #}
 {% with section_meta="|Users|person-fill|blue|User accounts & permissions|auth_user|,|User Profiles|person-badge-fill|indigo|Badges, avatars & seller info|motormatch_userprofile|,|Vehicles|car-front-fill|green|Listings, photos & details|motormatch_vehicle|,|Saved Vehicles|bookmark-fill|teal|Watchlisted cars|motormatch_savedvehicle|,|Bids|tag-fill|amber|Offers & bid management|motormatch_bid|,|Reviews|star-fill|yellow|Ratings & feedback|motormatch_review|,|Notifications|bell-fill|purple|User alerts & messages|motormatch_notification|,|Login Events|shield-check-fill|slate|Login history & security|motormatch_loginevent|" %}
 <div class="mm-section-cards">
     {% for app in app_list %}
@@ -724,7 +711,6 @@
 </div>
 {% endwith %}
 
-{# Initialise progress bars after Django template renders the data-pct attribute #}
 <script>
 (function () {
     document.querySelectorAll('.mm-progress-fill[data-pct]').forEach(function (el) {
@@ -734,7 +720,6 @@
 }());
 </script>
 
-{# ── Real-time message moderation: WebSocket + quick-action AJAX ── #}
 <script>
 (function () {
     // ── WebSocket live updates ──────────────────────────────────────
@@ -819,10 +804,53 @@
 
     connect();
 
-    // ── Quick-action AJAX handler ───────────────────────────────────
-    window.mmModerate = function (messageId, action, btn) {
-        if (!confirm('Action: ' + action.replace('_', ' ') + ' — are you sure?')) return;
+    function mmShowConfirm(message, actionLabel, onConfirm) {
+        var modal   = document.getElementById('mm-confirm-modal');
+        var text    = document.getElementById('mm-confirm-body');
+        var okBtn   = document.getElementById('mm-confirm-ok');
+        var noBtn   = document.getElementById('mm-confirm-no');
+        var badge   = document.getElementById('mm-confirm-badge');
 
+        text.textContent  = message;
+        badge.textContent = actionLabel.toUpperCase();
+        badge.className   = 'badge px-2 py-1 fs-6';
+
+        if (actionLabel === 'ban') {
+            badge.style.cssText = 'background:#fee2e2;color:#dc2626;border-radius:6px;font-size:.75rem!important;';
+        } else if (actionLabel.indexOf('suspend') === 0) {
+            badge.style.cssText = 'background:#fef3c7;color:#d97706;border-radius:6px;font-size:.75rem!important;';
+        } else {
+            badge.style.cssText = 'background:#f1f5f9;color:#475569;border-radius:6px;font-size:.75rem!important;';
+        }
+
+        modal.style.display = 'flex';
+        modal.style.opacity = '0';
+        requestAnimationFrame(function () { modal.style.opacity = '1'; });
+
+        function close() {
+            modal.style.opacity = '0';
+            setTimeout(function () { modal.style.display = 'none'; }, 180);
+            okBtn.removeEventListener('click', doConfirm);
+            noBtn.removeEventListener('click', doCancel);
+            modal.removeEventListener('click', onOverlay);
+        }
+        function doConfirm() { close(); onConfirm(); }
+        function doCancel()  { close(); }
+        function onOverlay(e) { if (e.target === modal) doCancel(); }
+
+        okBtn.addEventListener('click', doConfirm);
+        noBtn.addEventListener('click', doCancel);
+        modal.addEventListener('click', onOverlay);
+    }
+
+    window.mmModerate = function (messageId, action, btn) {
+        var label = action.replace(/_/g, ' ');
+        mmShowConfirm('This action cannot be undone. Continue?', action, function () {
+            _doModerate(messageId, action, btn);
+        });
+    };
+
+    function _doModerate(messageId, action, btn) {
         var allBtns = btn.closest('.mm-recent-item').querySelectorAll('.mm-mod-btn');
         allBtns.forEach(function (b) { b.disabled = true; });
 
@@ -875,11 +903,35 @@
         });
     };
 
-    // Flash animation for new items
     var style = document.createElement('style');
     style.textContent = '@keyframes mm-flash { 0%{background:#fef3c7} 100%{background:transparent} }';
     document.head.appendChild(style);
 }());
 </script>
+
+<div id="mm-confirm-modal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(15,23,42,.55);transition:opacity .18s ease;backdrop-filter:blur(3px);">
+    <div style="background:#fff;border-radius:16px;padding:28px 28px 22px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <div style="width:36px;height:36px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="bi bi-exclamation-triangle-fill" style="color:#dc2626;font-size:.95rem;"></i>
+            </div>
+            <div>
+                <div style="font-weight:700;font-size:.95rem;color:#0f172a;">Confirm action</div>
+                <span id="mm-confirm-badge"></span>
+            </div>
+        </div>
+        <p id="mm-confirm-body" style="color:#475569;font-size:.875rem;margin:0 0 20px;line-height:1.5;"></p>
+        <div class="d-flex gap-2 justify-content-end">
+            <button id="mm-confirm-no" type="button"
+                    style="padding:8px 18px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#475569;font-size:.875rem;font-weight:600;cursor:pointer;">
+                Cancel
+            </button>
+            <button id="mm-confirm-ok" type="button"
+                    style="padding:8px 20px;border-radius:8px;border:none;background:#dc2626;color:#fff;font-size:.875rem;font-weight:600;cursor:pointer;">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

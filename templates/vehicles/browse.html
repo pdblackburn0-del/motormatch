@@ -235,7 +235,6 @@
 
 {% block content %}
 
-<!-- ── Hero banner ── -->
 <section class="browse-hero">
     <div class="container">
         <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3">
@@ -263,7 +262,7 @@
 
 <div class="container">
 
-    <!-- ── Active filter chips ── -->
+    
     {% if q or fuel or transmission or year_from or year_to or badge %}
     <div class="active-chips">
         <span class="chip-label">Filters:</span>
@@ -279,7 +278,7 @@
 
     <div class="browse-layout">
 
-        <!-- ── Filter sidebar ── -->
+        
         <aside class="filter-panel">
             <button class="mobile-filter-btn" type="button" onclick="document.querySelector('.filter-panel__card').classList.toggle('open')">
                 <i class="bi bi-sliders"></i>
@@ -342,7 +341,7 @@
             </div>
         </aside>
 
-        <!-- ── Results ── -->
+        
         <div class="flex-grow-1 min-w-0">
 
             <div class="results-header">

@@ -1,11 +1,6 @@
-/* ============================================================
-   MotorMatch — Dashboard JS
-   ============================================================ */
-
 (function () {
     'use strict';
 
-    /* ── Toast auto-dismiss ─────────────────────────────── */
     function initToasts() {
         var duration = 3500;
         document.querySelectorAll('.mm-toast').forEach(function (toast) {
@@ -17,7 +12,6 @@
         });
     }
 
-    /* ── Remove listing modal ───────────────────────────── */
     function initRemoveModal() {
         var modal = document.getElementById('removeModal');
         if (!modal) return;
@@ -31,7 +25,6 @@
         });
     }
 
-    /* ── Destroy listing modal ──────────────────────────── */
     function initDestroyModal() {
         var modal = document.getElementById('destroyModal');
         if (!modal) return;
@@ -45,7 +38,6 @@
         });
     }
 
-    /* ── Topbar search (client-side filter for listings) ── */
     function initSearch() {
         var input = document.getElementById('dbSearch');
         if (!input) return;
@@ -59,7 +51,6 @@
         });
     }
 
-    /* ── Init ───────────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', function () {
         initToasts();
         initRemoveModal();

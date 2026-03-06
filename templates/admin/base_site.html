@@ -5,7 +5,7 @@
 
 {% block extrahead %}
 {{ block.super }}
-{# Force light mode before ANY stylesheet loads #}
+
 <meta name="color-scheme" content="light">
 <link rel="icon" type="image/png" href="https://res.cloudinary.com/dwe00uiuy/image/upload/w_32,h_32,c_fit/v1772713194/Screenshot_2026-03-05_at_12.18.45_pcytig.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,7 +30,7 @@
 
 {% block extrastyle %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin/admin.css' %}">
 {% endblock %}
 
 {% block branding %}

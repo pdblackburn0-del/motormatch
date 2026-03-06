@@ -12,14 +12,14 @@
     </div>
 
     <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
-        <!-- Header strip -->
+        
         <div style="background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%); height: 100px;"></div>
 
         <div class="card-body px-4 pb-4 pt-0">
-            <!-- Avatar with camera overlay -->
+            
             <div class="d-flex align-items-end justify-content-between" style="margin-top: -48px;">
                 <div class="position-relative" style="display:inline-block;">
-                    <!-- Avatar circle -->
+                    
                     <div id="avatarWrapper">
                         {% if profile.avatar %}
                         <img id="avatarPreview" src="{{ profile.avatar.url }}" alt="Avatar"
@@ -35,7 +35,7 @@
                              style="width:90px; height:90px; object-fit:cover; display:none;">
                         {% endif %}
                     </div>
-                    <!-- Camera icon button -->
+                    
                     <button type="button" id="avatarEditBtn"
                             class="btn btn-sm btn-dark rounded-circle position-absolute d-flex align-items-center justify-content-center border-2 border-white"
                             style="width:28px;height:28px;bottom:2px;right:2px;padding:0;"
@@ -73,7 +73,7 @@
                         <label class="form-label small fw-medium">Bio <span class="text-muted fw-normal">(Optional)</span></label>
                         {{ form.bio }}
                     </div>
-                    <!-- Hidden file input for avatar, triggered by camera button -->
+                    
                     <div class="d-none">
                         {{ form.avatar }}
                     </div>
@@ -123,7 +123,7 @@
         </div>
     </div>
 
-    <!-- Reviews received -->
+    
     {% with reviews=request.user.reviews_received.all %}
     {% if reviews %}
     <div class="card border-0 shadow-sm mt-3" style="border-radius:12px;">

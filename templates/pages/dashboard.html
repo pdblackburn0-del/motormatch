@@ -9,13 +9,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/dashboard.css' %}">
 </head>
 <body class="db-body">
 
 <div class="db-wrap">
 
-    <!-- ═══════════ SIDEBAR ═══════════ -->
+    
     <aside class="db-sidebar">
 
         <a href="{% url 'home' %}" class="db-sidebar__logo">
@@ -74,10 +74,10 @@
         </div>
     </aside>
 
-    <!-- ═══════════ MAIN ═══════════ -->
+    
     <div class="db-main">
 
-        <!-- Topbar -->
+        
         <header class="db-topbar">
             <div class="db-topbar__search">
                 <i class="bi bi-search" style="color:#9ca3af;font-size:.85rem;flex-shrink:0;"></i>
@@ -100,10 +100,10 @@
             </div>
         </header>
 
-        <!-- Content -->
+        
         <div class="db-content">
 
-            <!-- Toasts -->
+            
             {% if messages %}
             <div class="mm-toast-container" aria-live="polite">
                 {% for message in messages %}
@@ -124,7 +124,7 @@
             </div>
             {% endif %}
 
-            <!-- Page header -->
+            
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h1 style="font-size:1.3rem;font-weight:700;margin:0;">{{ profile.get_display_name }}</h1>
@@ -135,7 +135,7 @@
                 </a>
             </div>
 
-            <!-- Stats -->
+            
             <div class="db-stats">
                 <div class="db-stat">
                     <p class="db-stat__label">Listings</p>
@@ -155,7 +155,7 @@
                 </div>
             </div>
 
-            <!-- Listings + Messages row -->
+            
             {% if recently_viewed %}
             <div class="mb-3">
                 <div class="db-card">
@@ -193,7 +193,7 @@
 
             <div class="row g-3 mb-3" id="listings-section" style="scroll-margin-top:70px;">
 
-                <!-- My Listings -->
+                
                 <div class="col-lg-8">
                     <div class="db-card">
                         <div class="db-card__head">
@@ -245,7 +245,7 @@
                     </div>
                 </div>
 
-                <!-- Recent Messages -->
+                
                 <div class="col-lg-4">
                     <div class="db-card" style="height:100%;">
                         <div class="db-card__head">
@@ -285,7 +285,7 @@
 
             </div>
 
-            <!-- My Bids -->
+            
             <div class="db-card mb-3" id="bids-section" style="scroll-margin-top:70px;">
                 <div class="db-card__head">
                     <p class="db-card__title">My Bids</p>
@@ -345,7 +345,7 @@
                 {% endif %}
             </div>
 
-            <!-- Bids on my listings -->
+            
             {% with my_cars=request.user.vehicles.all %}
             {% for car in my_cars %}
             {% if car.bids.exists %}
@@ -417,11 +417,10 @@
             {% endfor %}
             {% endwith %}
 
-        </div><!-- /db-content -->
-    </div><!-- /db-main -->
-</div><!-- /db-wrap -->
+        </div>
+    </div>
+</div>
 
-<!-- Remove modal -->
 <div class="modal fade" id="removeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width:380px;">
         <div class="modal-content db-modal shadow">
@@ -443,7 +442,6 @@
     </div>
 </div>
 
-<!-- Delete modal -->
 <div class="modal fade" id="destroyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width:380px;">
         <div class="modal-content db-modal shadow">
@@ -466,6 +464,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{% static 'js/dashboard.js' %}"></script>
+<script src="{% static 'js/pages/dashboard.js' %}"></script>
 </body>
 </html>

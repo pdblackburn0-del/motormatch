@@ -1,15 +1,7 @@
-/* =================================================================
-   Motor Match Admin CSS — v4
-   Strategy: override every Django 4.2 CSS variable both at :root
-   and inside @media (prefers-color-scheme: dark) so dark-mode OS
-   settings never bleed through. Then build the full custom theme.
-   ================================================================= */
-
-/* ── 1. Force light colour-scheme & kill ALL Django dark variables ── */
 :root {
     color-scheme: light;
 
-    /* Django 4.2 base variables — reset to light values */
+    
     --primary:                  #2563eb;
     --secondary:                #1d4ed8;
     --accent:                   #f97316;
@@ -62,13 +54,12 @@
     --font-family:              'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --nav-sidebar-width:        220px;
 
-    /* Our own tokens */
+    
     --mm-radius:    8px;
     --mm-shadow:    0 1px 4px rgba(0,0,0,.06);
     --mm-shadow-lg: 0 4px 16px rgba(0,0,0,.1);
 }
 
-/* Override dark-mode media query — same values, ensures OS dark mode is ignored */
 @media (prefers-color-scheme: dark) {
     :root {
         color-scheme: light;
@@ -116,7 +107,6 @@
     }
 }
 
-/* ── 2. Base ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
 html { color-scheme: light; }
@@ -135,7 +125,6 @@ a:visited     { color: #2563eb !important; }
 a:hover       { color: #1d4ed8 !important; }
 a:active      { color: #1d4ed8 !important; }
 
-/* ── 3. Header ───────────────────────────────────────────────── */
 #header {
     background: #111827 !important;
     color: #fff !important;
@@ -202,7 +191,6 @@ a:active      { color: #1d4ed8 !important; }
 
 #user-tools strong { color: #e5e7eb !important; font-weight: 600 !important; }
 
-/* ── 4. Nav sidebar ──────────────────────────────────────────── */
 #nav-sidebar {
     background: #ffffff !important;
     border-right: 1px solid #e5e7eb !important;
@@ -217,7 +205,6 @@ a:active      { color: #1d4ed8 !important; }
     align-self: flex-start !important;
 }
 
-/* Every element inside sidebar must be light — exclude link/selected/caption overrides below */
 #nav-sidebar,
 #nav-sidebar .module,
 #nav-sidebar table,
@@ -275,7 +262,6 @@ a:active      { color: #1d4ed8 !important; }
     color: #2563eb !important;
 }
 
-/* Active/focus should feel the same as hover — no jarring colour flash */
 #nav-sidebar a:active,
 #nav-sidebar a:focus {
     background: #eff6ff !important;
@@ -321,7 +307,6 @@ a:active      { color: #1d4ed8 !important; }
     width: 24px !important;
 }
 
-/* ── 5. Layout ───────────────────────────────────────────────── */
 .main {
     display: flex !important;
     align-items: flex-start !important;
@@ -336,7 +321,6 @@ a:active      { color: #1d4ed8 !important; }
     background: transparent !important;
 }
 
-/* ── 6. Breadcrumbs ──────────────────────────────────────────── */
 div.breadcrumbs {
     background: transparent !important;
     color: #6b7280 !important;
@@ -349,7 +333,6 @@ div.breadcrumbs {
 div.breadcrumbs a { color: #2563eb !important; }
 div.breadcrumbs a:hover { color: #1d4ed8 !important; }
 
-/* ── 7. Page headings ────────────────────────────────────────── */
 #content h1 {
     font-size: 22px !important;
     font-weight: 800 !important;
@@ -361,7 +344,6 @@ div.breadcrumbs a:hover { color: #1d4ed8 !important; }
     letter-spacing: -.3px !important;
 }
 
-/* ── 8. Modules / cards ──────────────────────────────────────── */
 .module {
     background: #ffffff !important;
     border: 1px solid #e5e7eb !important;
@@ -389,7 +371,6 @@ div.breadcrumbs a:hover { color: #1d4ed8 !important; }
 
 .module table { border: none !important; width: 100% !important; background: #fff !important; }
 
-/* All Sections rows — force white background */
 .module table tr,
 .module table td,
 .module table th {
@@ -401,7 +382,6 @@ div.breadcrumbs a:hover { color: #1d4ed8 !important; }
 .module table tr:last-child td { border-bottom: none !important; }
 .module table tr:hover td      { background: #f8fafc !important; }
 
-/* row1 / row2 alternation Django applies — flatten */
 .module table tr.row1 td,
 .module table tr.row2 td {
     background: #ffffff !important;
@@ -412,7 +392,6 @@ div.breadcrumbs a:hover { color: #1d4ed8 !important; }
     background: #f8fafc !important;
 }
 
-/* ── 9. Changelist ───────────────────────────────────────────── */
 #changelist { background: transparent !important; }
 
 #changelist-form {
@@ -423,7 +402,6 @@ div.breadcrumbs a:hover { color: #1d4ed8 !important; }
     overflow: hidden !important;
 }
 
-/* Search toolbar */
 #toolbar {
     background: #ffffff !important;
     border-bottom: 1px solid #e5e7eb !important;
@@ -469,7 +447,6 @@ div.breadcrumbs a:hover { color: #1d4ed8 !important; }
 
 #toolbar input[type=submit]:hover { background: #1d4ed8 !important; }
 
-/* Result table */
 #result_list {
     width: 100% !important;
     border-collapse: collapse !important;
@@ -522,7 +499,6 @@ div.breadcrumbs a:hover { color: #1d4ed8 !important; }
 
 #result_list input[type=checkbox] { accent-color: #2563eb !important; }
 
-/* Paginator */
 .paginator {
     padding: 12px 16px !important;
     font-size: 12.5px !important;
@@ -554,7 +530,6 @@ div.breadcrumbs a:hover { color: #1d4ed8 !important; }
     font-weight: 600 !important;
 }
 
-/* Actions toolbar */
 .actions {
     background: #f8fafc !important;
     border-bottom: 1px solid #e5e7eb !important;
@@ -595,7 +570,6 @@ div.breadcrumbs a:hover { color: #1d4ed8 !important; }
 .actions .button:hover,
 .actions input[type=submit]:hover { background: #1f2937 !important; }
 
-/* Date hierarchy */
 ul.toplinks {
     background: #ffffff !important;
     border: 1px solid #e5e7eb !important;
@@ -622,7 +596,6 @@ ul.toplinks a:link {
 
 ul.toplinks a:hover { background: #eff6ff !important; }
 
-/* ── 10. Object tools ─────────────────────────────────────────── */
 .object-tools {
     float: right !important;
     margin: 0 0 16px !important;
@@ -652,7 +625,6 @@ ul.toplinks a:hover { background: #eff6ff !important; }
 .object-tools a.viewsitelink:hover { background: #1f2937 !important; }
 .object-tools a.historylink { background: #6b7280 !important; }
 
-/* ── 11. Filter sidebar ───────────────────────────────────────── */
 #changelist-filter {
     background: #ffffff !important;
     border-left: 1px solid #e5e7eb !important;
@@ -706,7 +678,6 @@ ul.toplinks a:hover { background: #eff6ff !important; }
 #changelist-filter ul a:hover { background: #eff6ff !important; color: #2563eb !important; }
 #changelist-filter .selected a { color: #2563eb !important; font-weight: 600 !important; background: #dbeafe !important; }
 
-/* ── 12. Change form ──────────────────────────────────────────── */
 fieldset,
 .change-form fieldset {
     background: #ffffff !important;
@@ -811,7 +782,6 @@ select[multiple] { height: auto !important; min-height: 110px !important; }
     display: block !important;
 }
 
-/* ── 13. Submit row ───────────────────────────────────────────── */
 .submit-row {
     background: #ffffff !important;
     border: 1px solid #e5e7eb !important;
@@ -863,7 +833,6 @@ a.deletelink {
 
 .submit-row p { margin: 0 !important; font-size: 12.5px !important; color: #6b7280 !important; }
 
-/* ── 14. Messages (Django flash messages) ─────────────────────── */
 ul.messagelist {
     list-style: none !important;
     padding: 0 !important;
@@ -898,7 +867,6 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
 .errorlist { list-style: none !important; padding: 0 !important; margin: 4px 0 0 !important; }
 .errorlist li { font-size: 12.5px !important; color: #dc2626 !important; font-weight: 500 !important; }
 
-/* ── 15. Inline admin ─────────────────────────────────────────── */
 .inline-group {
     background: #ffffff !important;
     border: 1px solid #e5e7eb !important;
@@ -926,7 +894,6 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
     border-top: 1px solid #f3f4f6 !important;
 }
 
-/* ── 16. Quick Actions bar ───────────────────────────────────── */
 .mm-quick-actions {
     display: flex;
     flex-wrap: wrap;
@@ -961,7 +928,6 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
 .mm-quick-btn--rose    { background: #e11d48; color: #fff !important; }
 .mm-quick-btn--warning { background: #d97706; color: #fff !important; }
 
-/* ── 17. Primary Stats ───────────────────────────────────────── */
 .mm-stats-primary {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1042,7 +1008,6 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
     letter-spacing: .4px;
 }
 
-/* ── 18. Secondary Stats tiles ───────────────────────────────── */
 .mm-stats-secondary {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
@@ -1089,7 +1054,6 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
     white-space: nowrap;
 }
 
-/* ── 19. Section label ───────────────────────────────────────── */
 .mm-section-label {
     font-size: 11px;
     font-weight: 700;
@@ -1103,7 +1067,6 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
 }
 .mm-section-label i { font-size: 12px; }
 
-/* ── 20. Activity grid ───────────────────────────────────────── */
 .mm-activity-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1177,7 +1140,6 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
 .mm-star--amber { color: #f59e0b; }
 .mm-star--empty { color: #d1d5db; }
 
-/* ── 21. Status badges ───────────────────────────────────────── */
 .mm-badge {
     display: inline-block;
     padding: 2px 9px;
@@ -1191,7 +1153,6 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
 .mm-badge--red    { background: #fee2e2; color: #dc2626; }
 .mm-badge--blue   { background: #dbeafe; color: #2563eb; }
 
-/* ── 22. Section cards grid ──────────────────────────────────── */
 .mm-section-cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -1273,7 +1234,6 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
     border: 1px solid transparent;
 }
 
-/* ── 23. Chart cards ─────────────────────────────────────────── */
 .mm-charts-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1309,7 +1269,6 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
     padding: 16px 18px 12px;
 }
 
-/* ── 24. Moderation grid ─────────────────────────────────────── */
 .mm-moderation-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1339,7 +1298,6 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
     font-weight: 500;
 }
 
-/* ── 25. Alert badge ─────────────────────────────────────────── */
 .mm-alert-badge {
     display: inline-flex;
     align-items: center;
@@ -1368,12 +1326,10 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
     50%       { box-shadow: 0 0 0 6px rgba(220,38,38,0); }
 }
 
-/* ── 26. Log avatars (addition/deletion/change) ──────────────── */
 .mm-avatar--green  { background: #dcfce7; color: #16a34a; }
 .mm-avatar--red    { background: #fee2e2; color: #dc2626; }
 .mm-avatar--slate  { background: #f1f5f9; color: #475569; }
 
-/* ── 27. Misc ─────────────────────────────────────────────────── */
 .add-row a { color: #2563eb !important; font-size: 13px !important; font-weight: 500 !important; }
 .related-lookup { color: #2563eb !important; margin-left: 6px !important; }
 .clear_all { color: #dc2626 !important; font-size: 12px !important; }
@@ -1399,7 +1355,6 @@ a.related-widget-wrapper-link { color: #2563eb !important; }
 td.empty { color: #6b7280 !important; }
 .prepopulated_field .help { color: #6b7280 !important; }
 
-/* ── 28. Responsive ───────────────────────────────────────────── */
 @media (max-width: 1400px) {
     .mm-stats-secondary { grid-template-columns: repeat(4, 1fr); }
 }
@@ -1428,7 +1383,6 @@ td.empty { color: #6b7280 !important; }
     .mm-moderation-grid  { grid-template-columns: 1fr; }
 }
 
-/* ── Moderation quick-action buttons ────────────────────────────── */
 .mm-mod-btn {
     display: inline-flex;
     align-items: center;
@@ -1452,7 +1406,6 @@ td.empty { color: #6b7280 !important; }
 .mm-mod-btn--slate { background: #f1f5f9; color: #475569; }
 .mm-mod-btn--slate:hover { background: #e2e8f0; }
 
-/* ── Confirmation page (delete/bulk-delete) ──────────────────────── */
 .mm-confirm-card {
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -1519,7 +1472,6 @@ td.empty { color: #6b7280 !important; }
     margin-top: 8px;
 }
 
-/* ── Generic MM buttons (used in confirmation pages) ─────────────── */
 .mm-btn {
     display: inline-flex;
     align-items: center;
@@ -1551,6 +1503,3 @@ td.empty { color: #6b7280 !important; }
     color: #fff !important;
 }
 .mm-btn--primary:hover { background: #1d4ed8; color: #fff !important; }
-
-/* Bootstrap icon included in Bootstrap Icons CDN (admin loads it via base_site) */
-

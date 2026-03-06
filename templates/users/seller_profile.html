@@ -5,12 +5,43 @@
 {% block content %}
 <div class="container py-5">
 
+    {% if not seller.is_active or seller_profile.is_suspended %}
+    <div class="alert d-flex align-items-center gap-3 mb-4 border-0 shadow-sm rounded-3 p-3"
+         style="background:{% if not seller.is_active %}#fef2f2{% else %}#fffbeb{% endif %};">
+        <i class="bi bi-{% if not seller.is_active %}ban{% else %}clock{% endif %} fs-4"
+           style="color:{% if not seller.is_active %}#dc2626{% else %}#d97706{% endif %};flex-shrink:0;"></i>
+        <div>
+            <span class="fw-bold" style="color:{% if not seller.is_active %}#b91c1c{% else %}#92400e{% endif %};">
+                {% if not seller.is_active %}Account Banned{% else %}Account Suspended{% endif %}
+            </span>
+            {% if seller_profile.ban_reason %}
+            <span class="ms-2 text-muted" style="font-size:.875rem;">— {{ seller_profile.ban_reason }}</span>
+            {% endif %}
+            {% if seller_profile.is_suspended and seller_profile.suspension_until %}
+            <span class="ms-2 text-muted" style="font-size:.875rem;">
+                until {{ seller_profile.suspension_until|date:"j M Y" }}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row g-4">
 
-        <!-- Seller Info -->
+        
         <div class="col-lg-3">
             <div class="card border-0 shadow-sm text-center p-4" style="border-radius:14px;">
-                {% if seller_profile and seller_profile.avatar %}
+                {% if not seller.is_active %}
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 flex-shrink-0"
+                     style="width:90px;height:90px;background:#fee2e2;">
+                    <i class="bi bi-ban" style="font-size:2.2rem;color:#dc2626;"></i>
+                </div>
+                {% elif seller_profile and seller_profile.is_suspended %}
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 flex-shrink-0"
+                     style="width:90px;height:90px;background:#fef3c7;">
+                    <i class="bi bi-clock-fill" style="font-size:2rem;color:#d97706;"></i>
+                </div>
+                {% elif seller_profile and seller_profile.avatar %}
                     <img src="{{ seller_profile.avatar.url }}" alt="avatar"
                          class="rounded-circle mx-auto mb-3 border border-2 border-light shadow"
                          style="width:90px;height:90px;object-fit:cover;">
@@ -23,6 +54,13 @@
                     {% endwith %}
                 {% endif %}
 
+                {% if not seller.is_active %}
+                <h5 class="fw-bold mb-0 text-muted">Banned User</h5>
+                <span class="badge bg-danger mt-1">PERMANENTLY BANNED</span>
+                {% elif seller_profile and seller_profile.is_suspended %}
+                <h5 class="fw-bold mb-0">{{ seller.get_full_name|default:seller.username }}</h5>
+                <span class="badge mt-1" style="background:#fef3c7;color:#d97706;border:1px solid #fde68a;">SUSPENDED</span>
+                {% else %}
                 <h5 class="fw-bold mb-0">{{ seller.get_full_name|default:seller.username }}</h5>
                 {% if seller_profile %}
                     {% with bi=seller_profile.get_badge_info %}
@@ -33,13 +71,14 @@
                     {% endif %}
                     {% endwith %}
                 {% endif %}
+                {% endif %}
                 {% if seller_profile and seller_profile.location %}
-                    <p class="text-muted small mb-2">
+                    <p class="text-muted small mb-2 mt-1">
                         <i class="bi bi-geo-alt me-1"></i>{{ seller_profile.location }}
                     </p>
                 {% endif %}
 
-                {% if avg %}
+                {% if avg and seller.is_active and not seller_profile.is_suspended %}
                     <div class="d-flex justify-content-center align-items-center gap-1 mb-3">
                         {% for i in "12345" %}
                             {% if forloop.counter <= avg %}
@@ -50,6 +89,8 @@
                         {% endfor %}
                         <span class="text-muted small ms-1">({{ reviews.count }})</span>
                     </div>
+                {% elif not seller.is_active %}
+                    <p class="text-muted small mb-3 mt-2">Profile unavailable</p>
                 {% else %}
                     <p class="text-muted small mb-3">No reviews yet</p>
                 {% endif %}
@@ -66,11 +107,12 @@
                     </div>
                 </div>
 
-                {% if request.user.is_authenticated and request.user != seller %}
+                {% if request.user.is_authenticated and request.user != seller and seller.is_active %}
                     <a href="{% url 'conversation' seller.pk %}" class="btn btn-primary w-100 mt-3">
                         <i class="bi bi-chat-dots me-1"></i>Message Seller
                     </a>
                 {% endif %}
+                {% if seller.is_active %}
                 <button id="copyLinkBtn" onclick="copyProfileLink()" class="btn btn-outline-secondary btn-sm w-100 mt-2">
                     <i class="bi bi-link-45deg me-1"></i>Copy Profile Link
                 </button>
@@ -87,10 +129,11 @@
                     });
                 }
                 </script>
+                {% endif %}
             </div>
         </div>
 
-        <!-- Listings -->
+        
         <div class="col-lg-9">
 
             <h5 class="fw-bold mb-3">
@@ -133,7 +176,7 @@
                 </div>
             {% endif %}
 
-            <!-- Reviews -->
+            
             <h5 class="fw-bold mb-3">
                 <i class="bi bi-star me-2 text-warning"></i>
                 Reviews
@@ -186,7 +229,7 @@
                 </div>
             {% endif %}
 
-        </div><!-- /col -->
+        </div>
     </div>
 </div>
 {% endblock %}

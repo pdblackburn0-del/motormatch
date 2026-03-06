@@ -1,4 +1,3 @@
-# Re-exports from the canonical motormatch app.
-from motormatch.models import Notification  # noqa: F401
+from motormatch.models import Notification
 
 __all__ = ['Notification']

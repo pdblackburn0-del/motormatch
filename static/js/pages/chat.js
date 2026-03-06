@@ -1,13 +1,3 @@
-/* ============================================================
-   Motor Match – Chat page JS
-   Handles: AJAX send, polling (messages + typing + read
-   receipts), attachment preview, auto-grow textarea,
-   GIF picker (Tenor API proxy).
-
-   Depends on globals set inline in conversation.html:
-     OTHER_PK, CSRF, MY_INITS, SEND_URL, POLL_URL, TYPING_URL
-   ============================================================ */
-
 (function () {
     'use strict';
 
@@ -17,7 +7,6 @@
     var pendingGif     = null;
     var gifSearchTimer = null;
 
-    // ── DOM refs ───────────────────────────────────────────────
     var box          = document.getElementById('chatMessages');
     var input        = document.getElementById('msgInput');
     var sendBtn      = document.getElementById('sendBtn');
@@ -29,38 +18,33 @@
     var gifSearch    = document.getElementById('gifSearch');
     var gifGrid      = document.getElementById('gifGrid');
 
-    if (!box || !input) return; // Not on chat page
+    if (!box || !input) return;
 
-    // Seed lastId from server-rendered messages
     document.querySelectorAll('.bubble-wrap[data-id]').forEach(function (el) {
         var id = parseInt(el.getAttribute('data-id'), 10);
         if (id > lastId) lastId = id;
     });
 
-    // ── Scroll ─────────────────────────────────────────────────
     function scrollBottom(smooth) {
         box.scrollTo({ top: box.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
     }
     scrollBottom(false);
 
-    // ── Auto-grow textarea ─────────────────────────────────────
     input.addEventListener('input', function () {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 160) + 'px';
-        // Typing signal (debounced 300ms)
+
         clearTimeout(typingTimer);
         typingTimer = setTimeout(function () {
             fetch(TYPING_URL, { method: 'POST', headers: { 'X-CSRFToken': CSRF } });
         }, 300);
     });
 
-    // ── Enter = send, Shift+Enter = newline ────────────────────
     input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSend(); }
     });
     sendBtn.addEventListener('click', doSend);
 
-    // ── Attachment preview ─────────────────────────────────────
     if (attachInput) {
         attachInput.addEventListener('change', function () {
             if (!this.files[0]) return;
@@ -80,7 +64,6 @@
         pendingGif = null;
     };
 
-    // ── GIF picker ─────────────────────────────────────────────
     if (gifBtn && gifPicker) {
         gifBtn.addEventListener('click', function () {
             var isOpen = !gifPicker.classList.contains('d-none');
@@ -136,7 +119,6 @@
             });
     }
 
-    // ── Send ───────────────────────────────────────────────────
     function doSend() {
         var body = input.value.trim();
         var file = attachInput ? attachInput.files[0] : null;
@@ -150,7 +132,6 @@
         var gifForBubble = pendingGif;
         pendingGif = null;
 
-        // Optimistic bubble immediately
         var tmpId = 'tmp_' + Date.now();
         appendBubble({
             id: tmpId,
@@ -179,12 +160,10 @@
             .catch(function () {});
     }
 
-    // ── HTML escaping ──────────────────────────────────────────
     function esc(s) {
         return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    // ── Append bubble to DOM ───────────────────────────────────
     function appendBubble(m) {
         var es = document.getElementById('emptyState');
         if (es) es.remove();
@@ -222,7 +201,6 @@
         if (typeof m.id === 'number' && m.id > lastId) lastId = m.id;
     }
 
-    // ── Polling ────────────────────────────────────────────────
     function applyDeleted(id, byStaff) {
         var el = document.querySelector('.bubble-wrap[data-id="' + id + '"]');
         if (!el) return;
@@ -246,7 +224,6 @@
                     }
                 });
 
-                // Apply deletions to already-rendered bubbles
                 if (d.deleted_ids && d.deleted_ids.length) {
                     d.deleted_ids.forEach(function (id) {
                         applyDeleted(id, true);
@@ -264,7 +241,6 @@
                     var os2 = document.getElementById('onlineStatus'); if (os2) os2.style.display = '';
                 }
 
-                // Update online presence indicator live
                 if (d.other_online) {
                     var onlineEl = document.getElementById('onlineStatus');
                     if (onlineEl) {

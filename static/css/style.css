@@ -1,10 +1,3 @@
-/* ============================================================
-   Motor Match – Global Stylesheet
-   All page-level styles live here. Bootstrap 5.3.3 is the
-   base layer; these rules extend and customise it.
-   ============================================================ */
-
-/* --- Brand tokens ------------------------------------------ */
 :root {
     --mm-primary:    #2563eb;
     --mm-primary-dk: #1d4ed8;
@@ -21,7 +14,6 @@
     --mm-warning:    #d97706;
 }
 
-/* --- Base -------------------------------------------------- */
 html { height: 100%; margin: 0; }
 body {
     min-height: 100vh;
@@ -39,7 +31,6 @@ body.dashboard-body {
     background-color: var(--mm-bg-alt);
 }
 
-/* Headings and general text should never be pure gray */
 h1, h2, h3, h4, h5, h6 {
     color: var(--mm-dark);
 }
@@ -52,7 +43,6 @@ p, span, a, li {
     color: var(--mm-text-muted) !important;
 }
 
-/* --- Navbar ------------------------------------------------ */
 .navbar {
     background-color: #111827 !important;
     border-bottom: 1px solid #1f2937;
@@ -68,7 +58,7 @@ p, span, a, li {
     height: 48px;
     width: auto;
 }
-/* Override Bootstrap's .nav-link inside the navbar only */
+
 .navbar .navbar-nav .nav-link,
 .navbar .nav-link {
     color: #d1d5db !important;
@@ -90,7 +80,6 @@ p, span, a, li {
     color: #111827;
 }
 
-/* Icon buttons (bell, chat) */
 .navbar .nav-icon-btn {
     display: inline-flex;
     align-items: center;
@@ -107,7 +96,6 @@ p, span, a, li {
     opacity: 1;
 }
 
-/* My Account button */
 .navbar .nav-account-btn {
     color: #fff !important;
     background: transparent !important;
@@ -122,7 +110,6 @@ p, span, a, li {
     border-color: rgba(255,255,255,.7) !important;
 }
 
-/* Log Out button */
 .navbar .nav-logout-btn {
     background: transparent !important;
     color: #fff !important;
@@ -143,7 +130,6 @@ p, span, a, li {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-/* --- Footer ------------------------------------------------ */
 footer {
     color: var(--mm-text-muted);
 }
@@ -159,12 +145,10 @@ footer a:hover {
     background: #fff;
 }
 
-/* --- Badge colours (vehicle condition labels) -------------- */
 .badge-green   { background-color: var(--mm-success); color: #fff; }
 .badge-red     { background-color: var(--mm-danger);  color: #fff; }
 .badge-default { background-color: #374151;            color: #fff; }
 
-/* --- Cards ------------------------------------------------- */
 .card {
     border-color: var(--mm-border);
 }
@@ -173,7 +157,6 @@ footer a:hover {
     transition: box-shadow .2s ease;
 }
 
-/* --- Dashboard sidebar / topbar ---------------------------- */
 .sidebar {
     width: 220px;
     min-height: 100vh;
@@ -181,7 +164,6 @@ footer a:hover {
     border-right: 1px solid var(--mm-border);
 }
 
-/* IMPORTANT: sidebar links must NOT inherit the navbar .nav-link rules */
 .sidebar .nav-link {
     color: var(--mm-text) !important;
     font-size: .875rem;
@@ -202,7 +184,7 @@ footer a:hover {
 .sidebar .nav-link .badge {
     font-size: .65rem;
 }
-/* My Profile link at bottom */
+
 .sidebar .nav-link.text-muted {
     color: var(--mm-text-muted) !important;
     font-weight: 400;
@@ -224,7 +206,6 @@ footer a:hover {
     color: var(--mm-text);
 }
 
-/* --- Dashboard stat cards ---------------------------------- */
 .stat-card {
     border-radius: 12px;
     background: var(--mm-white);
@@ -242,7 +223,6 @@ footer a:hover {
     color: var(--mm-dark) !important;
 }
 
-/* --- Login hero panel -------------------------------------- */
 .hero-side {
     background: url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900') center/cover no-repeat;
     position: relative;
@@ -258,7 +238,6 @@ footer a:hover {
     z-index: 1;
 }
 
-/* --- Register dark panel ----------------------------------- */
 .dark-side {
     background: #0f1723;
 }
@@ -273,7 +252,6 @@ footer a:hover {
     font-size: .78rem;
 }
 
-/* --- Shared form styles ------------------------------------ */
 .form-control,
 .form-select {
     background: var(--mm-bg);
@@ -292,7 +270,6 @@ footer a:hover {
     font-weight: 500;
 }
 
-/* --- Body-type browse cards -------------------------------- */
 .body-type-card {
     transition: border-color .15s, box-shadow .15s;
     cursor: pointer;
@@ -302,7 +279,6 @@ footer a:hover {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, .08);
 }
 
-/* --- Buttons ----------------------------------------------- */
 .btn-primary {
     background-color: var(--mm-primary);
     border-color: var(--mm-primary);
@@ -312,7 +288,6 @@ footer a:hover {
     border-color: var(--mm-primary-dk);
 }
 
-/* --- Vehicle detail / listing cards ----------------------- */
 .vehicle-card-link {
     display: block;
     text-decoration: none;
@@ -322,14 +297,12 @@ footer a:hover {
     box-shadow: 0 6px 24px rgba(0,0,0,.1) !important;
 }
 
-/* --- Upgrade card (kept for reference) --------------------- */
 .upgrade-card {
     background: linear-gradient(135deg, #1e3a8a, #2563eb);
     border-radius: 12px;
     color: white;
 }
 
-/* --- Base -------------------------------------------------- */
 html, body {
     height: 100%;
     margin: 0;
@@ -339,12 +312,10 @@ body {
     background-color: var(--mm-bg);
 }
 
-/* Dashboard uses a slightly cooler grey background */
 body.dashboard-body {
     background-color: var(--mm-bg-alt);
 }
 
-/* --- Navbar ------------------------------------------------ */
 .navbar {
     background-color: #13141c !important;
     border-bottom: 1px solid #2a2b35;
@@ -375,7 +346,6 @@ body.dashboard-body {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-/* --- Footer ------------------------------------------------ */
 footer a:hover {
     color: var(--mm-primary) !important;
 }
@@ -384,12 +354,10 @@ footer a:hover {
     background: #fff;
 }
 
-/* --- Badge colours (vehicle condition labels) -------------- */
 .badge-green   { background-color: #16a34a; }
 .badge-red     { background-color: #dc2626; }
 .badge-default { background-color: #6c757d; }
 
-/* --- Dashboard sidebar / topbar ---------------------------- */
 .sidebar {
     width: 220px;
     min-height: 100vh;
@@ -416,7 +384,6 @@ footer a:hover {
     height: 58px;
 }
 
-/* --- Dashboard cards --------------------------------------- */
 .stat-card {
     border-radius: 12px;
     background: #fff;
@@ -428,7 +395,6 @@ footer a:hover {
     color: white;
 }
 
-/* --- Login hero panel -------------------------------------- */
 .hero-side {
     background: url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900') center/cover no-repeat;
     position: relative;
@@ -444,7 +410,6 @@ footer a:hover {
     z-index: 1;
 }
 
-/* --- Register dark panel ----------------------------------- */
 .dark-side {
     background: #0f1723;
 }
@@ -459,7 +424,6 @@ footer a:hover {
     font-size: .78rem;
 }
 
-/* --- Shared form styles ------------------------------------ */
 .form-control {
     background: var(--mm-bg);
     border: 1px solid #e2e8f0;
@@ -469,7 +433,6 @@ footer a:hover {
     box-shadow: 0 0 0 3px rgba(13, 110, 253, .12);
 }
 
-/* --- Custom toasts ----------------------------------------- */
 .mm-toast-container {
     position: fixed;
     top: 1.25rem;
@@ -500,14 +463,12 @@ footer a:hover {
     animation: mmToastIn .28s cubic-bezier(.22,.68,0,1.15) forwards;
 }
 
-/* Variant top borders */
 .mm-toast--success { border-top-color: #2563eb; }
 .mm-toast--error,
 .mm-toast--danger  { border-top-color: #ef4444; }
 .mm-toast--warning { border-top-color: #f97316; }
 .mm-toast--info    { border-top-color: #64748b; }
 
-/* Icon circles */
 .mm-toast__icon {
     flex-shrink: 0;
     width: 32px; height: 32px;
@@ -541,7 +502,6 @@ footer a:hover {
 }
 .mm-toast__close:hover { color: #0f172a; }
 
-/* Auto-dismiss progress bar */
 .mm-toast__progress {
     position: absolute;
     bottom: 0; left: 0;
@@ -577,17 +537,14 @@ footer a:hover {
     to   { width: 0%; }
 }
 
-/* ── Offer badges ─────────────────────────────────────────── */
 .offer-badge { font-size: .68rem; }
 .offer-badge--new       { background: #dbeafe; color: #1d4ed8; }
 .offer-badge--countered { background: #fed7aa; color: #c2410c; }
 .offer-badge--other     { background: #fee2e2; color: #b91c1c; }
 
-/* ── Bid avatar circles ───────────────────────────────────── */
 .bid-avatar       { width: 36px; height: 36px; font-size: .78rem; }
 .bid-avatar--top  { background: #16a34a; }
 .bid-avatar--other { background: #4f46e5; }
 
-/* ── Dynamic colour helpers (CSS custom property --c set inline) ── */
 .offer-avatar { width: 34px; height: 34px; font-size: .75rem; }
 .dyn-badge    { font-size: .72rem; color: #fff; }

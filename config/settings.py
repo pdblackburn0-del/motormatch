@@ -11,151 +11,220 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+
 import os
+
 import warnings
 
 import dj_database_url
+
 from django.core.exceptions import ImproperlyConfigured
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 if os.path.isfile("env.py"):
+
     import env
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = "DEVELOPMENT" in os.environ
 
 _secret_key = os.environ.get("SECRET_KEY", "")
+
 if not _secret_key:
+
     if not DEBUG:
+
         raise ImproperlyConfigured(
+
             "The SECRET_KEY environment variable must be set in production."
+
         )
+
     warnings.warn(
+
         "SECRET_KEY is not set; using an insecure dev-only default. "
+
         "Do not use this in production.",
+
         stacklevel=2,
+
     )
+
     _secret_key = "django-insecure-dev-key-only-for-local-development"
+
 SECRET_KEY = _secret_key
 
 ALLOWED_HOSTS = [".herokuapp.com", "localhost", "127.0.0.1"]
 
-
-# Application definition
-
 INSTALLED_APPS = [
-    # Daphne must be first to override the default runserver with ASGI
+
     'daphne',
+
     'django.contrib.admin',
+
     'django.contrib.auth',
+
     'django.contrib.contenttypes',
+
     'django.contrib.sessions',
+
     'django.contrib.messages',
+
     'django.contrib.staticfiles',
+
     'django.contrib.sites',
+
     'channels',
+
     'allauth',
+
     'allauth.account',
+
     'allauth.socialaccount',
+
     'cloudinary',
+
     'cloudinary_storage',
-    'axes',                    # brute-force login protection
-    # Legacy app — keep registered so existing migrations stay valid
+
+    'axes',
+
     'motormatch',
-    # New structured apps
+
     'apps.users',
+
     'apps.vehicles',
+
     'apps.messaging',
+
     'apps.notifications',
+
 ]
 
 MIDDLEWARE = [
+
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # serve static files in production
-    'axes.middleware.AxesMiddleware',              # must be after SecurityMiddleware
+
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+
+    'axes.middleware.AxesMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
+
     'django.middleware.common.CommonMiddleware',
+
     'django.middleware.csrf.CsrfViewMiddleware',
+
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+
     'django.contrib.messages.middleware.MessageMiddleware',
+
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
     'allauth.account.middleware.AccountMiddleware',
+
     'apps.users.middleware.OnlinePresenceMiddleware',
+
     'apps.users.middleware.BanSuspendMiddleware',
+
 ]
 
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
+
     {
+
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+
         'DIRS': [
+
             BASE_DIR / 'templates',
+
             BASE_DIR / 'motormatch' / 'templates',
+
         ],
+
         'APP_DIRS': True,
+
         'OPTIONS': {
+
             'context_processors': [
+
                 'django.template.context_processors.debug',
+
                 'django.template.context_processors.request',
+
                 'django.contrib.auth.context_processors.auth',
+
                 'django.contrib.messages.context_processors.messages',
+
             ],
+
         },
+
     },
+
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 if os.environ.get("DATABASE_URL"):
+
     DATABASES = {
+
         "default": dj_database_url.parse(
+
             os.environ.get("DATABASE_URL"),
-            conn_max_age=600,       # keep DB connections alive for 10 min
+
+            conn_max_age=600,
+
             ssl_require=True,
+
         )
+
     }
+
 else:
+
     DATABASES = {
+
         'default': {
+
             'ENGINE': 'django.db.backends.sqlite3',
+
             'NAME': BASE_DIR / 'db.sqlite3',
+
         }
+
     }
-
-
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
+
     {
+
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+
     },
+
     {
+
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+
     },
+
     {
+
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+
     },
+
     {
+
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+
     },
+
 ]
-
-
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
@@ -165,107 +234,158 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
 STATIC_URL = 'static/'
+
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage' if not DEBUG else 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
 STATICFILES_DIRS = [
+
     BASE_DIR / 'static',
+
     BASE_DIR / 'motormatch' / 'static',
+
 ]
 
-# ── Redis / Cache ─────────────────────────────────────────────────────────────
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1')
+
 CACHES = {
+
     'default': {
+
         'BACKEND': 'django_redis.cache.RedisCache',
+
         'LOCATION': REDIS_URL,
+
         'OPTIONS': {
+
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'IGNORE_EXCEPTIONS': True,  # Graceful fallback if Redis is unavailable
+
+            'IGNORE_EXCEPTIONS': True,
+
         },
+
         'TIMEOUT': 300,
+
     }
+
 }
 
-# ── Django Channels / WebSocket ───────────────────────────────────────────────
 ASGI_APPLICATION = 'config.asgi.application'
+
 CHANNEL_LAYERS = {
+
     'default': {
+
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+
         'CONFIG': {
+
             'hosts': [os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/2')],
+
         },
+
     },
+
 }
 
-# Media files (user uploads) — served via Cloudinary
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
-    'API_KEY':    os.environ.get('CLOUDINARY_API_KEY', ''),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
-}
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+
+    'API_KEY':    os.environ.get('CLOUDINARY_API_KEY', ''),
+
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTHENTICATION_BACKENDS = [
-    'axes.backends.AxesStandaloneBackend',         # must be first for axes to work
+
+    'axes.backends.AxesStandaloneBackend',
+
     'django.contrib.auth.backends.ModelBackend',
+
     'allauth.account.auth_backends.AuthenticationBackend',
+
 ]
 
-# ── django-axes: brute-force protection ───────────────────────────────────────
-AXES_FAILURE_LIMIT       = 5          # lock after 5 failed attempts
-AXES_COOLOFF_TIME        = 1          # hours before lockout expires (int = hours)
-AXES_LOCKOUT_PARAMETERS  = ['username', 'ip_address']   # lock by username+ip
-AXES_RESET_ON_SUCCESS    = True       # reset failure count on successful login
-AXES_ENABLE_ADMIN        = True       # show Access Attempts in admin
-AXES_VERBOSE             = False      # suppress noisy logging
+AXES_FAILURE_LIMIT       = 5
+
+AXES_COOLOFF_TIME        = 1
+
+AXES_LOCKOUT_PARAMETERS  = ['username', 'ip_address']
+
+AXES_RESET_ON_SUCCESS    = True
+
+AXES_ENABLE_ADMIN        = True
+
+AXES_VERBOSE             = False
 
 SITE_ID = 1
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
+
 ACCOUNT_EMAIL_REQUIRED = True
+
 ACCOUNT_USERNAME_REQUIRED = False
+
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
+
 ACCOUNT_LOGIN_ON_SIGNUP = True
+
 ACCOUNT_FORMS = {'signup': 'apps.users.forms.CustomSignupForm'}
+
 ACCOUNT_ADAPTER = 'motormatch.adapters.AccountAdapter'
-ACCOUNT_SESSION_REMEMBER = None   # None = honour the 'Remember me' checkbox
-SESSION_COOKIE_AGE = 30 * 24 * 60 * 60  # 30 days when remembered
+
+ACCOUNT_SESSION_REMEMBER = None
+
+SESSION_COOKIE_AGE = 30 * 24 * 60 * 60
+
 LOGIN_URL = '/accounts/login/'
+
 LOGIN_REDIRECT_URL = '/'
+
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 
 CSRF_TRUSTED_ORIGINS = [
+
     "https://*.codeinstitute-ide.net",
+
     "https://*.herokuapp.com",
+
 ]
 
-# ── Production security headers ───────────────────────────────────────────────
 if not DEBUG:
+
     SECURE_SSL_REDIRECT            = True
-    SECURE_HSTS_SECONDS            = 31536000  # 1 year
+
+    SECURE_HSTS_SECONDS            = 31536000
+
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
     SECURE_HSTS_PRELOAD            = True
+
     SECURE_CONTENT_TYPE_NOSNIFF    = True
+
     SECURE_REFERRER_POLICY         = 'strict-origin-when-cross-origin'
+
     SESSION_COOKIE_SECURE          = True
+
     CSRF_COOKIE_SECURE             = True
+
     X_FRAME_OPTIONS                = 'DENY'
 
-# ── Third-party API keys ────────────────────────────────────────────────────────
-# Tenor GIF API — set TENOR_API_KEY in env.py / environment to override the demo key
 TENOR_API_KEY = os.environ.get('TENOR_API_KEY', 'LIVDSRZULELA')
-# DVLA VRM lookup — optional real API key (leave blank to use built-in mock data)
+
 DVLA_API_KEY  = os.environ.get('DVLA_API_KEY', '')
