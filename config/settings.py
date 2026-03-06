@@ -207,6 +207,8 @@ ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
 ACCOUNT_LOGIN_ON_SIGNUP = True
 ACCOUNT_FORMS = {'signup': 'apps.users.forms.CustomSignupForm'}
+ACCOUNT_SESSION_REMEMBER = None   # None = honour the 'Remember me' checkbox
+SESSION_COOKIE_AGE = 30 * 24 * 60 * 60  # 30 days when remembered
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'

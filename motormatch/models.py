@@ -1,4 +1,5 @@
 from django.contrib.auth.signals import user_logged_in
+from django.core.cache import cache
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
@@ -242,15 +243,23 @@ class Bid(models.Model):
 
 
 def _fetch_geo(ip):
+    """Lookup geo data for an IP. Results are cached in Redis for 30 days."""
+    cache_key = f'geo_{ip}'
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
     try:
         import requests as _req
         r = _req.get(f'http://ip-api.com/json/{ip}?fields=status,city,regionName,country,countryCode,isp,lat,lon', timeout=2)
         if r.ok:
             d = r.json()
             if d.get('status') == 'success':
+                cache.set(cache_key, d, timeout=86400 * 30)
                 return d
     except Exception:
         pass
+    # Cache the empty result briefly to avoid hammering the API on repeated failures
+    cache.set(cache_key, {}, timeout=3600)
     return {}
 
 
