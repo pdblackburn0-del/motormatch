@@ -1,0 +1,51 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Upload Keyword File | Motor Match Admin{% endblock %}
+{% block content_title %}<h1>Upload Banned Keyword File</h1>{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;">
+    <div class="mm-recent-card" style="padding:0;overflow:hidden;margin-bottom:24px;">
+        <div class="mm-recent-card__header">
+            <span class="mm-recent-card__title"><i class="bi bi-file-text-fill"></i> File Format Guide</span>
+        </div>
+        <div style="padding:16px;font-size:13px;color:#374151;line-height:1.7;">
+            <p>Upload a plain <code>.txt</code> file — one word or phrase per line.</p>
+            <ul style="margin:8px 0 0 18px;">
+                <li>Lines starting with <code>#</code> are comments and are ignored.</li>
+                <li>A line like <code>badword</code> uses the severity you select below.</li>
+                <li>Prefix with <code>DELETE:</code> to force <em>auto-delete</em> severity, e.g. <code>DELETE:slur_word</code></li>
+                <li>Duplicate words are skipped — existing entries are not overwritten.</li>
+            </ul>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div style="display:flex;flex-direction:column;gap:16px;">
+            {% for field in form %}
+            <div>
+                <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:4px;">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                <p style="font-size:12px;color:#6b7280;margin-top:4px;">{{ field.help_text }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <div style="display:flex;gap:12px;margin-top:8px;">
+                <button type="submit"
+                        style="background:#2563eb;color:#fff;border:none;padding:9px 22px;border-radius:7px;font-weight:600;font-size:13px;cursor:pointer;">
+                    <i class="bi bi-upload"></i> Upload Keywords
+                </button>
+                <a href="../"
+                   style="background:#f1f5f9;color:#374151;border:none;padding:9px 22px;border-radius:7px;font-weight:600;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;">
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -51,6 +51,8 @@ ALLOWED_HOSTS = [".herokuapp.com", "localhost", "127.0.0.1"]
 # Application definition
 
 INSTALLED_APPS = [
+    # Daphne must be first to override the default runserver with ASGI
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -58,6 +60,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'channels',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -185,6 +188,17 @@ CACHES = {
         },
         'TIMEOUT': 300,
     }
+}
+
+# ── Django Channels / WebSocket ───────────────────────────────────────────────
+ASGI_APPLICATION = 'config.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/2')],
+        },
+    },
 }
 
 # Media files (user uploads) — served via Cloudinary

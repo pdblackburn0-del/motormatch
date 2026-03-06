@@ -3,5 +3,10 @@
         "editor.formatOnSave": false,
         "editor.defaultFormatter": null
     },
+    // Django templates embed {{ }} / {% %} in <script> and style="" contexts.
+    // VS Code's embedded JS/CSS validators don't understand this syntax, so
+    // we disable them here — the code is correct at runtime.
+    "html.validate.scripts": false,
+    "html.validate.styles": false,
     "python-envs.defaultEnvManager": "ms-python.python:venv"
 }

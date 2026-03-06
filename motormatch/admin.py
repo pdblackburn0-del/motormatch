@@ -9,9 +9,12 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.db.models import Avg, Count, Q
 from django.db.models.functions import TruncDate
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 try:
     from cloudinary.forms import CloudinaryFileField
@@ -20,8 +23,8 @@ except ImportError:
     _CLOUDINARY_AVAILABLE = False
 
 from motormatch.models import (
-    AdminNote, Bid, LoginEvent, Message, Notification, Review, SavedVehicle,
-    UserProfile, Vehicle,
+    AdminNote, BannedKeyword, Bid, LoginEvent, Message, Notification, Review,
+    SavedVehicle, UserProfile, Vehicle,
 )
 
 User = get_user_model()
@@ -135,7 +138,7 @@ class MotorMatchAdminSite(AdminSite):
             # ── Flagged messages ───────────────────────────────────
             extra_context['flagged_messages'] = (
                 Message.objects
-                .filter(is_flagged=True)
+                .filter(Q(is_flagged=True) | Q(is_deleted=True))
                 .select_related('sender', 'recipient')
                 .order_by('-created_at')[:8]
             )
@@ -182,7 +185,7 @@ class MotorMatchAdminSite(AdminSite):
             ('Marketplace',   ['Vehicle', 'Bid', 'SavedVehicle']),
             ('Users',         ['User', 'UserProfile', 'LoginEvent']),
             ('Communication', ['Notification', 'Message']),
-            ('Moderation',    ['Review', 'AdminNote']),
+            ('Moderation',    ['Review', 'AdminNote', 'BannedKeyword', 'Message']),
         ]
 
         grouped_names = {n for _, names in _GROUPS for n in names}
@@ -223,6 +226,70 @@ class MotorMatchAdminSite(AdminSite):
             from django.http import Http404
             raise Http404('No such admin section.')
         return super().app_index(request, app_label, extra_context)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path('quick-moderate/', self.admin_view(self.quick_moderate_ajax),
+                 name='quick_moderate'),
+        ]
+        return custom + urls
+
+    def quick_moderate_ajax(self, request):
+        """
+        AJAX endpoint for the dashboard moderation panel quick-action buttons.
+        POST params: message_id (int), action (str: ban | suspend_30d | dismiss | delete_msg)
+        """
+        if request.method != 'POST':
+            return JsonResponse({'error': 'POST required'}, status=405)
+        if not request.user.is_staff:
+            return HttpResponseForbidden()
+
+        action     = request.POST.get('action')
+        message_id = request.POST.get('message_id')
+
+        try:
+            msg = Message.objects.select_related('sender').get(pk=message_id)
+        except Message.DoesNotExist:
+            return JsonResponse({'error': 'Message not found'}, status=404)
+
+        sender = msg.sender
+
+        if action == 'dismiss':
+            msg.is_flagged  = False
+            msg.flag_reason = ''
+            msg.save(update_fields=['is_flagged', 'flag_reason'])
+            return JsonResponse({'ok': True, 'action': 'dismiss'})
+
+        if action == 'delete_msg':
+            msg.is_flagged       = True
+            msg.is_deleted       = True
+            msg.deleted_by_staff = True
+            msg.deleted_at       = timezone.now()
+            msg.save(update_fields=['is_flagged', 'is_deleted', 'deleted_by_staff', 'deleted_at'])
+            return JsonResponse({'ok': True, 'action': 'delete_msg'})
+
+        # suspend_30d or ban both require the sender to have a UserProfile
+        profile, _ = UserProfile.objects.get_or_create(user=sender)
+
+        if action == 'suspend_30d':
+            profile.is_suspended     = True
+            profile.suspension_until = timezone.now() + timedelta(days=30)
+            profile.ban_reason       = 'Suspended via message moderation'
+            profile.save(update_fields=['is_suspended', 'suspension_until', 'ban_reason'])
+            return JsonResponse({'ok': True, 'action': 'suspend_30d',
+                                 'user': sender.email})
+
+        if action == 'ban':
+            profile.is_suspended     = True
+            profile.suspension_until = None   # permanent
+            profile.ban_reason       = 'Permanently banned via message moderation'
+            profile.save(update_fields=['is_suspended', 'suspension_until', 'ban_reason'])
+            sender.is_active = False
+            sender.save(update_fields=['is_active'])
+            return JsonResponse({'ok': True, 'action': 'ban', 'user': sender.email})
+
+        return JsonResponse({'error': f'Unknown action: {action}'}, status=400)
 
 
 admin_site = MotorMatchAdminSite(name='motormatch_admin')
@@ -883,46 +950,44 @@ class LoginEventAdmin(admin.ModelAdmin):
 
 @admin.register(Message, site=admin_site)
 class MessageModerationAdmin(admin.ModelAdmin):
-    """Read-only moderation view — only flagged messages are shown by default."""
+    """Read-only moderation view — flagged and auto-deleted messages."""
 
-    list_display   = ('_from', '_to', '_preview', '_flag_reason', '_flagged', 'created_at')
-    list_filter    = ('is_flagged', 'created_at')
+    list_display   = ('_from', '_to', '_preview', '_flag_reason', '_status_col', 'created_at')
+    list_filter    = ('is_flagged', 'is_deleted', 'deleted_by_staff', 'created_at')
     search_fields  = ('sender__email', 'recipient__email', 'body', 'subject')
     readonly_fields = (
-        '_from', '_to', '_vehicle_link',
-        '_body_full', 'flag_reason', 'is_flagged', 'created_at',
+        '_from', '_to', '_vehicle_link', '_body_full',
+        'flag_reason', 'is_flagged', 'is_deleted', 'deleted_by_staff', 'deleted_at', 'created_at',
     )
-    actions        = ['flag_messages', 'clear_flag']
+    actions        = ['flag_messages', 'clear_flag', 'delete_messages_staff', 'restore_messages']
     ordering       = ('-created_at',)
 
-    # Hide add / delete — moderation only
     def has_add_permission(self, request):          return False
     def has_delete_permission(self, request, obj=None): return request.user.is_superuser
 
     def get_queryset(self, request):
-        # Default to showing only flagged; superusers can see all via filter
         qs = super().get_queryset(request)
         if not request.user.is_superuser:
-            return qs.filter(is_flagged=True)
+            return qs.filter(Q(is_flagged=True) | Q(is_deleted=True))
         return qs
 
-    # ── Display helpers ───────────────────────────────────────────
     @admin.display(description='From')
     def _from(self, obj):
         e = obj.sender.email
         parts = e.split('@')
-        masked = parts[0][:2] + '***@' + parts[1] if len(parts) == 2 else e[:4] + '***'
-        return masked
+        return parts[0][:2] + '***@' + parts[1] if len(parts) == 2 else e[:4] + '***'
 
     @admin.display(description='To')
     def _to(self, obj):
         e = obj.recipient.email
         parts = e.split('@')
-        masked = parts[0][:2] + '***@' + parts[1] if len(parts) == 2 else e[:4] + '***'
-        return masked
+        return parts[0][:2] + '***@' + parts[1] if len(parts) == 2 else e[:4] + '***'
 
     @admin.display(description='Message preview')
     def _preview(self, obj):
+        if obj.is_deleted:
+            label = '✖ deleted by staff' if obj.deleted_by_staff else '✖ deleted'
+            return format_html('<span style="color:#9ca3af;font-style:italic;">{}</span>', label)
         text = obj.body or obj.subject or '—'
         preview = text[:80] + '…' if len(text) > 80 else text
         color = '#dc2626' if obj.is_flagged else '#374151'
@@ -931,19 +996,29 @@ class MessageModerationAdmin(admin.ModelAdmin):
     @admin.display(description='Flag reason')
     def _flag_reason(self, obj):
         if obj.flag_reason:
+            bg = '#fce7f3' if 'deleted' in obj.flag_reason.lower() else '#fee2e2'
             return format_html(
-                '<span style="background:#fee2e2;color:#dc2626;padding:2px 8px;'
+                '<span style="background:{};color:#dc2626;padding:2px 8px;'
                 'border-radius:99px;font-size:11px;font-weight:600;">{}</span>',
-                obj.flag_reason[:60],
+                bg, obj.flag_reason[:60],
             )
         return format_html('<span style="color:#9ca3af;">—</span>')
 
-    @admin.display(description='Flagged', boolean=True)
-    def _flagged(self, obj):
-        return obj.is_flagged
+    @admin.display(description='Status')
+    def _status_col(self, obj):
+        if obj.is_deleted and obj.deleted_by_staff:
+            return format_html('<span style="background:#fce7f3;color:#9d174d;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">Auto-deleted</span>')
+        if obj.is_deleted:
+            return format_html('<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">Deleted</span>')
+        if obj.is_flagged:
+            return format_html('<span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">Flagged</span>')
+        return format_html('<span style="color:#9ca3af;">—</span>')
 
     @admin.display(description='Full message')
     def _body_full(self, obj):
+        if obj.is_deleted:
+            return format_html('<em style="color:#9ca3af;">Message deleted{}</em>',
+                               ' by staff' if obj.deleted_by_staff else '')
         return format_html(
             '<div style="padding:12px;background:#fafafa;border:1px solid #e5e7eb;'
             'border-radius:6px;white-space:pre-wrap;font-size:13px;">{}</div>',
@@ -967,6 +1042,20 @@ class MessageModerationAdmin(admin.ModelAdmin):
     def clear_flag(self, request, queryset):
         updated = queryset.update(is_flagged=False, flag_reason='')
         self.message_user(request, f'{updated} message(s) cleared.')
+
+    @admin.action(description='🗑️ Delete selected messages (staff)')
+    def delete_messages_staff(self, request, queryset):
+        updated = queryset.update(
+            is_deleted=True, deleted_by_staff=True,
+            deleted_at=timezone.now(), is_flagged=True,
+            flag_reason='Deleted by staff',
+        )
+        self.message_user(request, f'{updated} message(s) deleted by staff.')
+
+    @admin.action(description='♻️ Restore deleted messages')
+    def restore_messages(self, request, queryset):
+        updated = queryset.update(is_deleted=False, deleted_by_staff=False, deleted_at=None)
+        self.message_user(request, f'{updated} message(s) restored.')
 
     class Media:
         pass
@@ -999,15 +1088,112 @@ class AdminNoteAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
 
+# ── Banned Keyword Admin ───────────────────────────────────────────────────────
+
+class KeywordUploadForm(forms.Form):
+    """Simple form for uploading a plain-text keyword file (one per line)."""
+    keyword_file = forms.FileField(
+        label='Keyword file (.txt, one word/phrase per line)',
+        help_text='Lines starting with # are ignored. '
+                  'Prefix a line with DELETE: to force auto-delete severity, '
+                  'e.g.  DELETE:slur_word',
+    )
+    severity = forms.ChoiceField(
+        choices=[('flag', 'Flag for review'), ('delete', 'Auto-delete message')],
+        initial='flag',
+    )
+    category = forms.ChoiceField(choices=BannedKeyword.CATEGORY_CHOICES, initial='other')
+
+
+class BannedKeywordAdmin(admin.ModelAdmin):
+    list_display   = ('word', 'severity', 'category', 'is_active', 'added_by', 'created_at')
+    list_filter    = ('severity', 'category', 'is_active')
+    search_fields  = ('word',)
+    list_editable  = ('is_active',)
+    actions        = ['deactivate_keywords', 'activate_keywords']
+    readonly_fields = ('added_by', 'created_at')
+
+    def save_model(self, request, obj, form, change):
+        if not obj.added_by_id:
+            obj.added_by = request.user
+        super().save_model(request, obj, form, change)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path('upload-keywords/', self.admin_site.admin_view(self.upload_keywords_view),
+                 name='motormatch_bannedkeyword_upload'),
+        ]
+        return custom + urls
+
+    def upload_keywords_view(self, request):
+        from django.contrib import messages as msg_fw
+        from django.shortcuts import render, redirect
+        if request.method == 'POST':
+            form = KeywordUploadForm(request.POST, request.FILES)
+            if form.is_valid():
+                f        = form.cleaned_data['keyword_file']
+                severity = form.cleaned_data['severity']
+                category = form.cleaned_data['category']
+                lines    = f.read().decode('utf-8', errors='replace').splitlines()
+                added, skipped = 0, 0
+                for line in lines:
+                    line = line.strip()
+                    if not line or line.startswith('#'):
+                        continue
+                    sev = severity
+                    if line.upper().startswith('DELETE:'):
+                        sev  = BannedKeyword.SEVERITY_DELETE
+                        line = line[7:].strip()
+                    word = line.lower()[:200]
+                    _, created = BannedKeyword.objects.get_or_create(
+                        word=word,
+                        defaults={'severity': sev, 'category': category,
+                                  'is_active': True, 'added_by': request.user},
+                    )
+                    if created:
+                        added += 1
+                    else:
+                        skipped += 1
+                msg_fw.success(request,
+                    f'Uploaded: {added} new keyword(s) added, {skipped} already existed.')
+                return redirect('../')
+        else:
+            form = KeywordUploadForm()
+        context = dict(
+            self.admin_site.each_context(request),
+            form=form,
+            title='Upload Keyword File',
+            opts=self.model._meta,
+        )
+        return render(request, 'admin/motormatch/bannedkeyword/upload.html', context)
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['upload_url'] = 'upload-keywords/'
+        return super().changelist_view(request, extra_context=extra_context)
+
+    @admin.action(description='🚫 Deactivate selected keywords')
+    def deactivate_keywords(self, request, queryset):
+        queryset.update(is_active=False)
+        self.message_user(request, f'{queryset.count()} keyword(s) deactivated.')
+
+    @admin.action(description='✅ Activate selected keywords')
+    def activate_keywords(self, request, queryset):
+        queryset.update(is_active=True)
+        self.message_user(request, f'{queryset.count()} keyword(s) activated.')
+
+
 # ── Register all models with the custom site ───────────────────────────────────
 
-admin_site.register(User,         UserAdmin)
-admin_site.register(UserProfile,  UserProfileAdmin)
-admin_site.register(Vehicle,      VehicleAdmin)
-admin_site.register(SavedVehicle, SavedVehicleAdmin)
-admin_site.register(Bid,          BidAdmin)
-admin_site.register(Notification, NotificationAdmin)
-admin_site.register(Review,       ReviewAdmin)
-admin_site.register(LoginEvent,   LoginEventAdmin)
-admin_site.register(AdminNote,    AdminNoteAdmin)
+admin_site.register(User,          UserAdmin)
+admin_site.register(UserProfile,   UserProfileAdmin)
+admin_site.register(Vehicle,       VehicleAdmin)
+admin_site.register(SavedVehicle,  SavedVehicleAdmin)
+admin_site.register(Bid,           BidAdmin)
+admin_site.register(Notification,  NotificationAdmin)
+admin_site.register(Review,        ReviewAdmin)
+admin_site.register(LoginEvent,    LoginEventAdmin)
+admin_site.register(AdminNote,     AdminNoteAdmin)
+admin_site.register(BannedKeyword, BannedKeywordAdmin)
 

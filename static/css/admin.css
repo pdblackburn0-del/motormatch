@@ -1173,6 +1173,9 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
 .mm-avatar--amber { background: #fef3c7; color: #d97706; }
 
 .mm-stars { display: flex; align-items: center; gap: 1px; }
+.mm-star--red   { color: #dc2626; }
+.mm-star--amber { color: #f59e0b; }
+.mm-star--empty { color: #d1d5db; }
 
 /* ── 21. Status badges ───────────────────────────────────────── */
 .mm-badge {
@@ -1424,3 +1427,27 @@ td.empty { color: #6b7280 !important; }
     .mm-charts-grid      { grid-template-columns: 1fr; }
     .mm-moderation-grid  { grid-template-columns: 1fr; }
 }
+
+/* ── Moderation quick-action buttons ────────────────────────────── */
+.mm-mod-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    border: none;
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity .15s;
+}
+.mm-mod-btn:disabled { opacity: .45; cursor: not-allowed; }
+.mm-mod-btn--amber { background: #fef3c7; color: #d97706; }
+.mm-mod-btn--amber:hover { background: #fde68a; }
+.mm-mod-btn--red   { background: #fee2e2; color: #dc2626; }
+.mm-mod-btn--red:hover   { background: #fecaca; }
+.mm-mod-btn--green { background: #dcfce7; color: #16a34a; }
+.mm-mod-btn--green:hover { background: #bbf7d0; }
+.mm-mod-btn--slate { background: #f1f5f9; color: #475569; }
+.mm-mod-btn--slate:hover { background: #e2e8f0; }

@@ -378,8 +378,8 @@
             <div style="flex:1;min-width:0;">
                 <div class="mm-recent-item__label">
                     {% for i in "12345" %}
-                    <i class="bi bi-star{% if forloop.counter <= review.rating %}-fill{% endif %}"
-                       style="font-size:10px;color:{% if forloop.counter <= review.rating %}#dc2626{% else %}#d1d5db{% endif %};"></i>
+                    <i class="bi bi-star{% if forloop.counter <= review.rating %}-fill mm-star--red{% else %} mm-star--empty{% endif %}"
+                       style="font-size:10px;"></i>
                     {% endfor %}
                     &nbsp;{{ review.reviewer.email|slice:":20" }}
                 </div>
@@ -408,7 +408,7 @@
                     </div>
                     <div style="display:flex;align-items:center;gap:10px;">
                         <div style="flex:1;background:#f1f5f9;border-radius:99px;height:8px;overflow:hidden;">
-                            <div style="width:{{ stat_bid_success_rate|default:'0' }}%;background:#16a34a;height:100%;border-radius:99px;transition:width .5s;"></div>
+                            <div class="mm-progress-fill" data-pct="{{ stat_bid_success_rate|default:'0' }}" style="width:0;background:#16a34a;height:100%;border-radius:99px;transition:width .5s;"></div>
                         </div>
                         <span style="font-size:13px;font-weight:700;color:#111827;min-width:36px;text-align:right;">{{ stat_bid_success_rate|default:"0" }}%</span>
                     </div>
@@ -542,8 +542,8 @@
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
                 <div class="mm-stars">
                     {% for i in "12345" %}
-                    <i class="bi bi-star{% if forloop.counter <= review.rating %}-fill{% endif %}"
-                       style="font-size:11px;color:{% if forloop.counter <= review.rating %}#f59e0b{% else %}#d1d5db{% endif %};"></i>
+                    <i class="bi bi-star{% if forloop.counter <= review.rating %}-fill mm-star--amber{% else %} mm-star--empty{% endif %}"
+                       style="font-size:11px;"></i>
                     {% endfor %}
                 </div>
                 <div class="mm-recent-item__sub" style="white-space:nowrap;">{{ review.created_at|date:"d M" }}</div>
@@ -565,44 +565,74 @@
 <div class="mm-moderation-grid">
 
     {# Flagged messages panel #}
-    <div class="mm-recent-card mm-recent-card--danger">
+    <div class="mm-recent-card mm-recent-card--danger" id="mm-moderation-panel">
         <div class="mm-recent-card__header">
             <span class="mm-recent-card__title">
                 <i class="bi bi-exclamation-triangle-fill" style="color:#dc2626;"></i>
                 Message Moderation
                 {% if stat_flagged_msgs %}
-                <span class="mm-alert-badge" style="margin-left:6px;">{{ stat_flagged_msgs }}</span>
+                <span class="mm-alert-badge" id="mm-flag-count" style="margin-left:6px;">{{ stat_flagged_msgs }}</span>
+                {% else %}
+                <span class="mm-alert-badge" id="mm-flag-count" style="margin-left:6px;display:none;">0</span>
                 {% endif %}
+                <span id="mm-ws-indicator" title="Real-time connection"
+                      style="margin-left:6px;width:8px;height:8px;border-radius:50%;background:#d1d5db;display:inline-block;vertical-align:middle;"></span>
             </span>
             <a class="mm-recent-card__link" href="{% url 'motormatch_admin:motormatch_message_changelist' %}">View all &rarr;</a>
         </div>
+        <div id="mm-flagged-list">
         {% for msg in flagged_messages %}
-        <div class="mm-recent-item">
-            <div class="mm-avatar mm-avatar--red" title="Flagged">
-                <i class="bi bi-flag-fill" style="font-size:11px;"></i>
+        <div class="mm-recent-item" id="mm-msg-{{ msg.pk }}">
+            <div class="mm-avatar {% if msg.is_deleted %}mm-avatar--slate{% else %}mm-avatar--red{% endif %}" title="{% if msg.is_deleted %}Auto-deleted{% else %}Flagged{% endif %}">
+                <i class="bi {% if msg.is_deleted %}bi-slash-circle-fill{% else %}bi-flag-fill{% endif %}" style="font-size:11px;"></i>
             </div>
             <div style="flex:1;min-width:0;">
                 <div class="mm-recent-item__label">
-                    {% with e=msg.sender.email %}
-                    {{ e|slice:":2" }}***@{{ e|slice:"e.find('@')+1:" }}
-                    {% endwith %}
+                    {% with e=msg.sender.email %}{{ e|slice:":2" }}***@{{ e|slice:"3:" }}{% endwith %}
                     <i class="bi bi-arrow-right" style="font-size:10px;color:#9ca3af;margin:0 2px;"></i>
-                    {% with e=msg.recipient.email %}
-                    {{ e|slice:":2" }}***
-                    {% endwith %}
+                    {% with e=msg.recipient.email %}{{ e|slice:":2" }}***{% endwith %}
                 </div>
                 <div class="mm-recent-item__sub" style="color:#dc2626;">
                     {{ msg.flag_reason|default:"Manually flagged"|truncatechars:55 }}
                 </div>
+                {% if not msg.is_deleted %}
                 <div class="mm-recent-item__sub">{{ msg.body|truncatechars:60 }}</div>
+                {% else %}
+                <div class="mm-recent-item__sub" style="color:#9ca3af;font-style:italic;">Message deleted by staff</div>
+                {% endif %}
             </div>
-            <div class="mm-recent-item__sub" style="white-space:nowrap;">{{ msg.created_at|date:"d M" }}</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div class="mm-recent-item__sub" style="white-space:nowrap;">{{ msg.created_at|date:"d M" }}</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
+                    {% if not msg.is_deleted %}
+                    <button onclick="mmModerate({{ msg.pk }},'delete_msg',this)"
+                            class="mm-mod-btn mm-mod-btn--slate" title="Delete message">
+                        <i class="bi bi-trash3-fill"></i>
+                    </button>
+                    {% endif %}
+                    <button onclick="mmModerate({{ msg.pk }},'suspend_30d',this)"
+                            class="mm-mod-btn mm-mod-btn--amber" title="Suspend sender 30 days"
+                            data-user="{{ msg.sender.email }}">
+                        <i class="bi bi-clock-fill"></i> 30d
+                    </button>
+                    <button onclick="mmModerate({{ msg.pk }},'ban',this)"
+                            class="mm-mod-btn mm-mod-btn--red" title="Permanently ban sender"
+                            data-user="{{ msg.sender.email }}">
+                        <i class="bi bi-person-x-fill"></i>
+                    </button>
+                    <button onclick="mmModerate({{ msg.pk }},'dismiss',this)"
+                            class="mm-mod-btn mm-mod-btn--green" title="Dismiss flag">
+                        <i class="bi bi-check-lg"></i>
+                    </button>
+                </div>
+            </div>
         </div>
         {% empty %}
-        <div class="mm-empty-state" style="color:#16a34a;">
+        <div class="mm-empty-state" id="mm-empty-state" style="color:#16a34a;">
             <i class="bi bi-check-circle-fill"></i> No flagged messages. All clear.
         </div>
         {% endfor %}
+        </div>
     </div>
 
     {# Admin Activity log #}
@@ -693,5 +723,163 @@
     {% endfor %}
 </div>
 {% endwith %}
+
+{# Initialise progress bars after Django template renders the data-pct attribute #}
+<script>
+(function () {
+    document.querySelectorAll('.mm-progress-fill[data-pct]').forEach(function (el) {
+        var pct = parseFloat(el.getAttribute('data-pct') || '0');
+        el.style.width = pct + '%';
+    });
+}());
+</script>
+
+{# ── Real-time message moderation: WebSocket + quick-action AJAX ── #}
+<script>
+(function () {
+    // ── WebSocket live updates ──────────────────────────────────────
+    var wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    var wsUrl      = wsProtocol + '//' + location.host + '/ws/admin/moderation/';
+    var indicator  = document.getElementById('mm-ws-indicator');
+    var ws, reconnectTimer;
+
+    function connect() {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = function () {
+            if (indicator) indicator.style.background = '#16a34a';
+        };
+
+        ws.onclose = function () {
+            if (indicator) indicator.style.background = '#f59e0b';
+            reconnectTimer = setTimeout(connect, 5000);
+        };
+
+        ws.onerror = function () {
+            if (indicator) indicator.style.background = '#dc2626';
+        };
+
+        ws.onmessage = function (e) {
+            var data = JSON.parse(e.data);
+            if (data.event === 'new_flag') {
+                prependFlaggedMessage(data);
+                bumpFlagCount();
+            }
+        };
+    }
+
+    function prependFlaggedMessage(d) {
+        var list     = document.getElementById('mm-flagged-list');
+        var empty    = document.getElementById('mm-empty-state');
+        if (!list) return;
+        if (empty) { empty.style.display = 'none'; }
+
+        var icon    = d.auto_deleted ? 'bi-slash-circle-fill' : 'bi-flag-fill';
+        var avCls   = d.auto_deleted ? 'mm-avatar--slate' : 'mm-avatar--red';
+        var reason  = d.flag_reason || 'Auto-flagged';
+        var body    = d.auto_deleted ? '<em style="color:#9ca3af;font-style:italic;">Message deleted by staff</em>'
+                                     : escHtml(d.body);
+        var senderLbl = (d.sender || '').slice(0, 2) + '***';
+        var recipLbl  = (d.recipient || '').slice(0, 2) + '***';
+
+        var html = '<div class="mm-recent-item mm-recent-item--new" id="mm-msg-' + d.message_id + '" '
+            + 'style="animation:mm-flash .8s ease-out;">'
+            + '<div class="mm-avatar ' + avCls + '">'
+            + '<i class="bi ' + icon + '" style="font-size:11px;"></i></div>'
+            + '<div style="flex:1;min-width:0;">'
+            + '<div class="mm-recent-item__label">' + senderLbl
+            + ' <i class="bi bi-arrow-right" style="font-size:10px;color:#9ca3af;margin:0 2px;"></i> '
+            + recipLbl + '</div>'
+            + '<div class="mm-recent-item__sub" style="color:#dc2626;">' + escHtml(reason) + '</div>'
+            + '<div class="mm-recent-item__sub">' + body + '</div>'
+            + '</div>'
+            + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
+            + '<div class="mm-recent-item__sub">Just now</div>'
+            + '<div style="display:flex;gap:4px;">'
+            + (d.auto_deleted ? '' : '<button onclick="mmModerate(' + d.message_id + ',\'delete_msg\',this)" class="mm-mod-btn mm-mod-btn--slate" title="Delete message"><i class="bi bi-trash3-fill"></i></button>')
+            + '<button onclick="mmModerate(' + d.message_id + ',\'suspend_30d\',this)" class="mm-mod-btn mm-mod-btn--amber" title="Suspend 30d"><i class="bi bi-clock-fill"></i> 30d</button>'
+            + '<button onclick="mmModerate(' + d.message_id + ',\'ban\',this)" class="mm-mod-btn mm-mod-btn--red" title="Ban"><i class="bi bi-person-x-fill"></i></button>'
+            + '<button onclick="mmModerate(' + d.message_id + ',\'dismiss\',this)" class="mm-mod-btn mm-mod-btn--green" title="Dismiss"><i class="bi bi-check-lg"></i></button>'
+            + '</div></div>'
+            + '</div>';
+
+        list.insertAdjacentHTML('afterbegin', html);
+    }
+
+    function bumpFlagCount() {
+        var el = document.getElementById('mm-flag-count');
+        if (!el) return;
+        el.style.display = '';
+        el.textContent   = (parseInt(el.textContent, 10) || 0) + 1;
+    }
+
+    function escHtml(str) {
+        return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    connect();
+
+    // ── Quick-action AJAX handler ───────────────────────────────────
+    window.mmModerate = function (messageId, action, btn) {
+        if (!confirm('Action: ' + action.replace('_', ' ') + ' — are you sure?')) return;
+
+        var allBtns = btn.closest('.mm-recent-item').querySelectorAll('.mm-mod-btn');
+        allBtns.forEach(function (b) { b.disabled = true; });
+
+        var csrfToken = document.cookie.match(/csrftoken=([^;]+)/);
+        var token     = csrfToken ? csrfToken[1] : '';
+
+        fetch('{% url "motormatch_admin:quick_moderate" %}', {
+            method:  'POST',
+            headers: { 'X-CSRFToken': token, 'Content-Type': 'application/x-www-form-urlencoded' },
+            body:    'message_id=' + messageId + '&action=' + action,
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.ok) {
+                var row = document.getElementById('mm-msg-' + messageId);
+                if (action === 'dismiss') {
+                    // Fade out and remove; bump count down
+                    if (row) { row.style.opacity = '0'; setTimeout(function () { row.remove(); }, 400); }
+                    var el = document.getElementById('mm-flag-count');
+                    if (el) { var n = (parseInt(el.textContent, 10) || 1) - 1; el.textContent = n; if (n <= 0) el.style.display = 'none'; }
+                } else if (action === 'delete_msg') {
+                    // Update the row to show deleted state
+                    if (row) {
+                        var avatar = row.querySelector('.mm-avatar');
+                        if (avatar) { avatar.className = 'mm-avatar mm-avatar--slate'; avatar.innerHTML = '<i class="bi bi-slash-circle-fill" style="font-size:11px;"></i>'; }
+                        var bodyDiv = row.querySelectorAll('.mm-recent-item__sub')[1];
+                        if (bodyDiv) { bodyDiv.innerHTML = '<em style="color:#9ca3af;font-style:italic;">Message deleted by staff</em>'; }
+                        var delBtn = row.querySelector('[onclick*="delete_msg"]');
+                        if (delBtn) delBtn.remove();
+                    }
+                } else {
+                    // ban or suspend — show confirmation on the row
+                    if (row) {
+                        var badge = document.createElement('span');
+                        badge.style.cssText = 'font-size:10px;background:#fee2e2;color:#dc2626;padding:2px 7px;border-radius:99px;font-weight:700;';
+                        badge.textContent = action === 'ban' ? 'BANNED' : 'SUSPENDED';
+                        var lbl = row.querySelector('.mm-recent-item__label');
+                        if (lbl) lbl.appendChild(badge);
+                        allBtns.forEach(function (b) { if (!b.classList.contains('mm-mod-btn--green')) b.remove(); });
+                    }
+                }
+            } else {
+                alert('Error: ' + (data.error || 'unknown'));
+                allBtns.forEach(function (b) { b.disabled = false; });
+            }
+        })
+        .catch(function () {
+            alert('Network error. Please try again.');
+            allBtns.forEach(function (b) { b.disabled = false; });
+        });
+    };
+
+    // Flash animation for new items
+    var style = document.createElement('style');
+    style.textContent = '@keyframes mm-flash { 0%{background:#fef3c7} 100%{background:transparent} }';
+    document.head.appendChild(style);
+}());
+</script>
 
 {% endblock %}

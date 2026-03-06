@@ -432,3 +432,26 @@
 .chat-outer.theme-dark .gif-picker input { background: #334155; color: #f1f5f9; border-color: #475569; }
 .chat-outer.theme-dark .chat-vehicle-chip { border-color: #334155 !important; }
 .chat-outer.theme-dark .chat-vehicle-chip .text-dark { color: #f1f5f9 !important; }
+
+/* ── Deleted message bubble ── */
+.bubble--deleted {
+    background: #f3f4f6 !important;
+    color: #9ca3af !important;
+    border: 1px dashed #d1d5db !important;
+    font-style: italic;
+    box-shadow: none !important;
+}
+.bubble--deleted.mine {
+    background: #f3f4f6 !important;
+}
+.bubble__deleted-notice {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #9ca3af;
+}
+.bubble__deleted-notice i {
+    font-size: 14px;
+    color: #d1d5db;
+}

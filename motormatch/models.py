@@ -4,6 +4,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from cloudinary.models import CloudinaryField
 
 User = get_user_model()
@@ -232,16 +233,26 @@ class Message(models.Model):
     body        = models.TextField(blank=True)
     attachment  = CloudinaryField('attachment', folder='message_attachments', blank=True, null=True)
     gif_url     = models.CharField(max_length=500, blank=True)  # Tenor GIF direct URL
-    is_read     = models.BooleanField(default=False)
-    is_flagged  = models.BooleanField(default=False, db_index=True)
-    flag_reason = models.CharField(max_length=500, blank=True)
-    created_at  = models.DateTimeField(auto_now_add=True)
+    is_read          = models.BooleanField(default=False)
+    is_flagged       = models.BooleanField(default=False, db_index=True)
+    flag_reason      = models.CharField(max_length=500, blank=True)
+    is_deleted       = models.BooleanField(default=False, db_index=True)
+    deleted_by_staff = models.BooleanField(default=False)
+    deleted_at       = models.DateTimeField(null=True, blank=True)
+    created_at       = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.sender.email} → {self.recipient.email}: {self.subject}"
+
+    @property
+    def display_body(self):
+        """Return body text for display, respecting deletion by staff."""
+        if self.is_deleted:
+            return None
+        return self.body
 
 
 class AdminNote(models.Model):
@@ -263,18 +274,112 @@ class AdminNote(models.Model):
         return f'Note by {self.author} on {target}'
 
 
+class BannedKeyword(models.Model):
+    """
+    Database-driven keyword list for message moderation.
+    'flag'   → message is flagged for admin review.
+    'delete' → message is auto-deleted (e.g. slurs/hate speech); shows
+               'Message deleted by staff' to both parties.
+    Upload a .txt file (one word/phrase per line) via the admin Upload action.
+    """
+    SEVERITY_FLAG   = 'flag'
+    SEVERITY_DELETE = 'delete'
+    SEVERITY_CHOICES = [
+        ('flag',   'Flag for review'),
+        ('delete', 'Auto-delete (hate speech / slurs)'),
+    ]
+    CATEGORY_CHOICES = [
+        ('hate',     'Hate Speech'),
+        ('fraud',    'Fraud / Scam'),
+        ('spam',     'Spam'),
+        ('violence', 'Violence'),
+        ('adult',    'Adult Content'),
+        ('other',    'Other'),
+    ]
+    word      = models.CharField(max_length=200, unique=True, db_index=True)
+    severity  = models.CharField(max_length=10, choices=SEVERITY_CHOICES, default=SEVERITY_FLAG)
+    category  = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other', blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    added_by  = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                  related_name='banned_keywords_added')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['word']
+
+    def __str__(self):
+        return f"{self.word} ({self.severity})"
+
+
 @receiver(post_save, sender=Message)
 def auto_flag_message(sender, instance, created, **kwargs):
-    """Automatically flag messages containing offensive keywords."""
+    """Automatically flag or delete messages containing banned keywords."""
     if not created:
         return
     text = f"{instance.subject} {instance.body}".lower()
-    triggered = [kw for kw in _FLAG_KEYWORDS if kw in text]
-    if triggered:
-        Message.objects.filter(pk=instance.pk).update(
+
+    # Load keywords from DB; fall back to hardcoded list if table not ready
+    try:
+        db_keywords = list(BannedKeyword.objects.filter(is_active=True).values('word', 'severity'))
+    except Exception:
+        db_keywords = [{'word': kw, 'severity': 'flag'} for kw in _FLAG_KEYWORDS]
+
+    # Merge with hardcoded fallback so the list still works before any keywords are uploaded
+    hardcoded_set = {kw.lower() for kw in _FLAG_KEYWORDS}
+    db_words_set  = {kw['word'].lower() for kw in db_keywords}
+    for kw in _FLAG_KEYWORDS:
+        if kw.lower() not in db_words_set:
+            db_keywords.append({'word': kw, 'severity': 'flag'})
+
+    triggered_delete = []
+    triggered_flag   = []
+    for kw_obj in db_keywords:
+        if kw_obj['word'].lower() in text:
+            if kw_obj['severity'] == BannedKeyword.SEVERITY_DELETE:
+                triggered_delete.append(kw_obj['word'])
+            else:
+                triggered_flag.append(kw_obj['word'])
+
+    update_kwargs = {}
+    if triggered_delete:
+        update_kwargs.update(
             is_flagged=True,
-            flag_reason=f"Auto-flagged: {', '.join(triggered[:5])}",
+            is_deleted=True,
+            deleted_by_staff=True,
+            deleted_at=timezone.now(),
+            flag_reason=f"Auto-deleted: {', '.join(triggered_delete[:3])}",
         )
+    elif triggered_flag:
+        update_kwargs.update(
+            is_flagged=True,
+            flag_reason=f"Auto-flagged: {', '.join(triggered_flag[:5])}",
+        )
+
+    if update_kwargs:
+        Message.objects.filter(pk=instance.pk).update(**update_kwargs)
+
+        # Broadcast to admin WebSocket group for real-time dashboard updates
+        try:
+            from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
+            channel_layer = get_channel_layer()
+            if channel_layer:
+                is_auto_deleted = bool(triggered_delete)
+                async_to_sync(channel_layer.group_send)(
+                    'admin_moderation',
+                    {
+                        'type':         'new_flag',
+                        'message_id':   instance.pk,
+                        'sender':       instance.sender.email,
+                        'recipient':    instance.recipient.email,
+                        'flag_reason':  update_kwargs.get('flag_reason', ''),
+                        'body':         (instance.body or '')[:80],
+                        'created_at':   instance.created_at.strftime('%d %b'),
+                        'auto_deleted': is_auto_deleted,
+                    }
+                )
+        except Exception:
+            pass  # WebSocket broadcast is best-effort; never block message saving
 
 
 class Bid(models.Model):
