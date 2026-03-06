@@ -412,8 +412,6 @@ class Message(models.Model):
 
 class MessageReaction(models.Model):
 
-    ALLOWED = ['❤️', '😂', '👍', '😮', '😢', '😡']
-
     message    = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='reactions')
 
     user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_reactions')

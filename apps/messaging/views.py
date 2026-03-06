@@ -605,7 +605,7 @@ def toggle_reaction(request, user_pk, msg_pk):
     if msg.is_deleted:
         return JsonResponse({'error': 'Cannot react to deleted message'}, status=400)
     emoji = request.POST.get('emoji', '').strip()
-    if emoji not in MessageReaction.ALLOWED:
+    if not emoji or len(emoji) > 12:
         return JsonResponse({'error': 'Invalid emoji'}, status=400)
     existing = MessageReaction.objects.filter(message=msg, user=request.user).first()
     if existing:

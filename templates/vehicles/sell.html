@@ -1,115 +1,202 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Sell Your Car - Motor Match{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/sell.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="container py-5" style="max-width:900px;">
-    <div class="card border-0 shadow-sm" style="border-radius:14px; overflow:hidden;">
-        <div class="card-body p-4 p-md-5">
-
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="fw-semibold small">Step 2 of 3</span>
-                <span class="text-muted small">Car Details</span>
-            </div>
-            <div class="progress mb-4" style="height:6px; border-radius:3px;">
-                <div class="progress-bar" style="width:66%; background:#0d6efd;"></div>
-            </div>
-
-            <form method="post" enctype="multipart/form-data" action="{% url 'sell' %}">
-            {% csrf_token %}
-            <div class="row g-5">
-
-                <div class="col-md-6">
-                    <h2 class="fw-bold mb-1">Tell us about your car</h2>
-                    <p class="text-muted mb-4 small">Fill in the details below to list your vehicle on the marketplace.</p>
-                    <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label small fw-medium">Registration Number <span class="text-muted fw-normal">(Optional)</span></label>
-                                <div class="input-group">
-                                    <input type="text" id="dvlaReg" class="form-control" placeholder="E.G., AB12 CDE" style="text-transform:uppercase;" autocomplete="off">
-                                    <button type="button" id="dvlaLookupBtn" class="btn btn-warning fw-semibold px-3">
-                                        <i class="bi bi-search me-1"></i>Lookup
-                                    </button>
-                                    <span class="input-group-text p-1">
-                                        <span class="badge text-dark fw-bold px-2 py-1" style="background:#f0c040; font-size:.75rem; border-radius:3px;">GB</span>
-                                    </span>
-                                </div>
-                                <div id="dvlaMsg" class="small mt-1 d-none"></div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-medium">Make</label>
-                                {{ form.make }}
-                                {% if form.make.errors %}<div class="text-danger small">{{ form.make.errors }}</div>{% endif %}
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-medium">Model</label>
-                                {{ form.model }}
-                                {% if form.model.errors %}<div class="text-danger small">{{ form.model.errors }}</div>{% endif %}
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-medium">Year</label>
-                                {{ form.year }}
-                                {% if form.year.errors %}<div class="text-danger small">{{ form.year.errors }}</div>{% endif %}
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-medium">Mileage</label>
-                                {{ form.mileage }}
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-medium">Fuel Type</label>
-                                {{ form.fuel }}
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-medium">Transmission</label>
-                                {{ form.transmission }}
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-medium">Variant / Trim <span class="text-muted fw-normal">(Optional)</span></label>
-                                {{ form.variant }}
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-medium">Asking Price</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">£</span>
-                                    {{ form.price }}
-                                </div>
-                                {% if form.price.errors %}<div class="text-danger small">{{ form.price.errors }}</div>{% endif %}
-                            </div>
-                        </div>
-
-                </div>
-
-                <div class="col-md-6">
-                    <h6 class="fw-semibold mb-1">Upload Photo</h6>
-                    <p class="text-muted small mb-3">Add a main photo. Listings with photos sell 3× faster.</p>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-medium">Upload from device</label>
-                        {{ form.image_file }}
+<div class="sell-hero">
+    <div class="container sell-hero-inner" style="max-width:980px;">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <div class="sell-steps mb-3">
+                    <div class="sell-step done">
+                        <div class="sell-step-num"><i class="bi bi-check"></i></div>
+                        Account
                     </div>
-                    <div class="mb-4">
-                        <label class="form-label small fw-medium text-muted">Or paste an image URL</label>
-                        {{ form.image_url }}
+                    <div class="sell-step-divider"></div>
+                    <div class="sell-step active">
+                        <div class="sell-step-num">2</div>
+                        Car Details
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-medium">{{ form.location.label }}</label>
-                        {{ form.location }}
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label small fw-medium">{{ form.description.label }}</label>
-                        {{ form.description }}
-                        <div class="form-text text-muted">Include service history, modifications, reason for sale, etc.</div>
-                    </div>
-
-                    <div class="d-flex gap-3 mt-4">
-                        <a href="{% url 'home' %}" class="btn btn-outline-secondary px-4">Cancel</a>
-                        <button type="submit" class="btn btn-primary px-5 flex-grow-1 fw-semibold">List My Car</button>
+                    <div class="sell-step-divider"></div>
+                    <div class="sell-step">
+                        <div class="sell-step-num">3</div>
+                        Publish
                     </div>
                 </div>
-            </form>
+                <h1>List your car for&nbsp;sale</h1>
+                <p>Reach thousands of local buyers. Free to list, no hidden fees.</p>
+            </div>
         </div>
+        <div class="sell-trust-stats">
+            <div class="sell-stat">
+                <div class="sell-stat-icon"><i class="bi bi-tag-fill"></i></div>
+                <div class="sell-stat-text">
+                    <strong>Free to list</strong>
+                    <span>No listing fees ever</span>
+                </div>
+            </div>
+            <div class="sell-stat">
+                <div class="sell-stat-icon"><i class="bi bi-people-fill"></i></div>
+                <div class="sell-stat-text">
+                    <strong>1,200+ active buyers</strong>
+                    <span>Browsing right now</span>
+                </div>
+            </div>
+            <div class="sell-stat">
+                <div class="sell-stat-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+                <div class="sell-stat-text">
+                    <strong>Live in 2 minutes</strong>
+                    <span>Instant visibility</span>
+                </div>
+            </div>
+            <div class="sell-stat">
+                <div class="sell-stat-icon"><i class="bi bi-calendar2-check-fill"></i></div>
+                <div class="sell-stat-text">
+                    <strong>Avg. 3 weeks to sell</strong>
+                    <span>Based on recent listings</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="sell-body">
+    <div class="container" style="max-width:980px;">
+        <form method="post" enctype="multipart/form-data" action="{% url 'sell' %}" id="sellForm">
+        {% csrf_token %}
+        <div class="row g-4">
+
+            <div class="col-lg-7">
+                <div class="sell-section">
+                    <div class="sell-section-title"><i class="bi bi-search"></i> DVLA Lookup</div>
+                    <div class="dvla-group">
+                        <div class="dvla-label"><i class="bi bi-card-text"></i> Enter your registration plate to auto-fill details</div>
+                        <div class="input-group">
+                            <input type="text" id="dvlaReg" class="form-control" placeholder="E.G. AB12 CDE" autocomplete="off">
+                            <button type="button" id="dvlaLookupBtn" class="btn btn-warning fw-bold px-3">
+                                <i class="bi bi-search me-1"></i>Lookup
+                            </button>
+                            <span class="input-group-text p-1">
+                                <span class="badge text-dark fw-bold px-2 py-1" style="background:#f0c040; font-size:.72rem; border-radius:3px; letter-spacing:.04em;">GB</span>
+                            </span>
+                        </div>
+                        <div id="dvlaMsg" class="small mt-2 d-none"></div>
+                    </div>
+                </div>
+
+                <div class="sell-section">
+                    <div class="sell-section-title"><i class="bi bi-car-front-fill"></i> Vehicle Details</div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label">Make</label>
+                            {{ form.make }}
+                            {% if form.make.errors %}<div class="text-danger small mt-1">{{ form.make.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Model</label>
+                            {{ form.model }}
+                            {% if form.model.errors %}<div class="text-danger small mt-1">{{ form.model.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">Year</label>
+                            {{ form.year }}
+                            {% if form.year.errors %}<div class="text-danger small mt-1">{{ form.year.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">Mileage</label>
+                            {{ form.mileage }}
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">Fuel Type</label>
+                            {{ form.fuel }}
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Transmission</label>
+                            {{ form.transmission }}
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Variant / Trim <span class="opt">(Optional)</span></label>
+                            {{ form.variant }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sell-section">
+                    <div class="sell-section-title"><i class="bi bi-currency-pound"></i> Pricing</div>
+                    <label class="form-label">Asking Price</label>
+                    <div class="input-group" style="max-width:200px;">
+                        <span class="input-group-text">&pound;</span>
+                        {{ form.price }}
+                    </div>
+                    <p class="price-note mt-2">Set a competitive price &mdash; listings within market range get 2&times; more enquiries.</p>
+                    {% if form.price.errors %}<div class="text-danger small mt-1">{{ form.price.errors }}</div>{% endif %}
+                </div>
+
+                <div class="sell-section">
+                    <div class="sell-section-title"><i class="bi bi-pin-map-fill"></i> Location</div>
+                    <label class="form-label">{{ form.location.label }}</label>
+                    {{ form.location }}
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="sell-section">
+                    <div class="sell-section-title"><i class="bi bi-camera-fill"></i> Photos</div>
+                    <div class="photo-preview" id="photoPreviewBox">
+                        <img id="photoPreviewImg" src="" alt="">
+                        <button type="button" class="photo-preview-clear" id="photoClearBtn" title="Remove photo">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                    <div class="photo-dropzone" id="photoDropzone">
+                        {{ form.image_file }}
+                        <i class="bi bi-cloud-arrow-up photo-dropzone-icon"></i>
+                        <div class="photo-dropzone-text">
+                            <strong>Click to upload</strong> or drag &amp; drop<br>
+                            <span style="font-size:.75rem; color:#9ca3af;">JPG, PNG, WEBP up to 10MB</span>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button type="button" class="url-toggle-btn" id="urlToggleBtn">
+                            <i class="bi bi-link-45deg"></i> Use image URL instead
+                        </button>
+                        <div id="urlInputWrap" style="display:none; margin-top:8px;">
+                            {{ form.image_url }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sell-section">
+                    <div class="sell-section-title"><i class="bi bi-card-text"></i> Description</div>
+                    <label class="form-label">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    <div class="form-text text-muted" style="font-size:.72rem;">Include service history, modifications, reason for sale, any faults.</div>
+                </div>
+
+                <div class="sell-cta-block">
+                    <button type="submit" class="btn-sell-submit">
+                        <i class="bi bi-rocket-takeoff-fill me-2"></i>Publish My Listing
+                    </button>
+                    <div class="trust-badges">
+                        <span class="trust-badge"><i class="bi bi-shield-fill-check"></i> Secure &amp; free</span>
+                        <span class="trust-badge"><i class="bi bi-eye-fill"></i> Visible immediately</span>
+                        <span class="trust-badge"><i class="bi bi-pencil-fill"></i> Edit anytime</span>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'home' %}" class="text-muted small" style="text-decoration:none;">
+                            <i class="bi bi-arrow-left me-1"></i>Cancel &amp; go home
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        </form>
     </div>
 </div>
 {% endblock %}
@@ -117,48 +204,5 @@
 {% block extra_js %}
 {% url 'dvla_lookup' as dvla_url %}
 {{ dvla_url|json_script:"data-dvla-url" }}
-<script>
-var DVLA_URL = JSON.parse(document.getElementById('data-dvla-url').textContent);
-document.getElementById('dvlaLookupBtn').addEventListener('click', function () {
-    const reg = document.getElementById('dvlaReg').value.replace(/\s/g, '').toUpperCase();
-    const msgEl = document.getElementById('dvlaMsg');
-    if (!reg) { return; }
-    msgEl.className = 'small mt-1 text-muted';
-    msgEl.textContent = 'Looking up...';
-    msgEl.classList.remove('d-none');
-    fetch(DVLA_URL + '?reg=' + encodeURIComponent(reg))
-        .then(r => r.json())
-        .then(data => {
-            if (data.error) {
-                msgEl.className = 'small mt-1 text-danger';
-                msgEl.textContent = data.error;
-                return;
-            }
-            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-            set('id_make', data.make);
-            set('id_model', data.model);
-            set('id_year', data.year);
-            set('id_mileage', data.mileage.replace(/[^0-9]/g, ''));
-            ['id_fuel', 'id_transmission'].forEach(id => {
-                const sel = document.getElementById(id);
-                if (!sel) return;
-                const key = id === 'id_fuel' ? data.fuel : data.transmission;
-                for (let opt of sel.options) {
-                    if (opt.text.toLowerCase() === key.toLowerCase() || opt.value.toLowerCase() === key.toLowerCase()) {
-                        sel.value = opt.value; break;
-                    }
-                }
-            });
-            msgEl.className = 'small mt-1 text-success';
-            msgEl.textContent = `\u2713 Found: ${data.year} ${data.make} ${data.model} \u2014 ${data.colour}, ${data.fuel}`;
-        })
-        .catch(() => {
-            msgEl.className = 'small mt-1 text-danger';
-            msgEl.textContent = 'Lookup failed. Please fill in details manually.';
-        });
-});
-document.getElementById('dvlaReg').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('dvlaLookupBtn').click(); }
-});
-</script>
+<script src="{% static 'js/pages/sell.js' %}"></script>
 {% endblock %}

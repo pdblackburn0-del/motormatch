@@ -120,50 +120,148 @@
             });
     }
 
+    var EMOJI_CATS = [
+        { icon: '\uD83D\uDE42', label: 'smileys', emojis: ['\uD83D\uDE00','\uD83D\uDE03','\uD83D\uDE04','\uD83D\uDE01','\uD83D\uDE06','\uD83E\uDD29','\uD83D\uDE05','\uD83D\uDE02','\uD83E\uDD23','\uD83E\uDD72','\uD83D\uDE0A','\uD83D\uDE07','\uD83D\uDE42','\uD83D\uDE43','\uD83D\uDE09','\uD83D\uDE0C','\uD83D\uDE0D','\uD83E\uDD70','\uD83D\uDE18','\uD83D\uDE17','\uD83D\uDE1A','\uD83D\uDE0B','\uD83D\uDE1B','\uD83D\uDE1D','\uD83D\uDE1C','\uD83E\uDD2A','\uD83E\uDD28','\uD83E\uDDD0','\uD83E\uDD13','\uD83D\uDE0E','\uD83E\uDD73','\uD83E\uDD29','\uD83D\uDE0F','\uD83D\uDE12','\uD83D\uDE1E','\uD83D\uDE14','\uD83D\uDE1F','\uD83D\uDE15','\uD83D\uDE41','\u2639\uFE0F','\uD83D\uDE23','\uD83D\uDE16','\uD83D\uDE2B','\uD83D\uDE29','\uD83E\uDD7A','\uD83D\uDE22','\uD83D\uDE2D','\uD83D\uDE24','\uD83D\uDE20','\uD83D\uDE21','\uD83E\uDD2C','\uD83E\uDD2F','\uD83D\uDE33','\uD83E\uDD75','\uD83E\uDD76','\uD83D\uDE31','\uD83D\uDE28','\uD83D\uDE30','\uD83D\uDE25','\uD83D\uDE13','\uD83E\uDD17','\uD83E\uDD14','\uD83E\uDD2D','\uD83E\uDD2B','\uD83E\uDD25','\uD83D\uDE36','\uD83E\uDEE0','\uD83D\uDE10','\uD83D\uDE11','\uD83D\uDE2C','\uD83E\uDD10','\uD83E\uDD74','\uD83D\uDE35','\uD83E\uDD24','\uD83D\uDE2A','\uD83D\uDE34','\uD83E\uDD71','\uD83E\uDD22','\uD83E\uDD2E','\uD83E\uDD27','\uD83D\uDE37','\uD83E\uDD12','\uD83E\uDD15','\uD83E\uDD11','\uD83E\uDD20'] },
+        { icon: '\uD83D\uDC4B', label: 'people', emojis: ['\uD83D\uDC4B','\uD83E\uDD1A','\uD83D\uDD90\uFE0F','\u270B','\uD83E\uDD96','\uD83D\uDC4C','\u270C\uFE0F','\uD83E\uDD1E','\uD83E\uDD1F','\uD83E\uDD18','\uD83E\uDD19','\uD83D\uDC48','\uD83D\uDC49','\uD83D\uDC46','\uD83D\uDD95','\uD83D\uDC47','\u261D\uFE0F','\u270A','\uD83D\uDC4A','\uD83E\uDD1B','\uD83E\uDD1C','\uD83D\uDC4F','\uD83D\uDE4C','\uD83E\uDEB6','\uD83E\uDD32','\uD83E\uDD1D','\uD83D\uDE4F','\u270D\uFE0F','\uD83D\uDCAA','\uD83D\uDC4D','\uD83D\uDC4E','\u270B','\uD83D\uDC40','\uD83D\uDC44','\uD83D\uDC43','\uD83D\uDC42','\uD83D\uDC83','\uD83D\uDD7A','\uD83E\uDDD1','\uD83D\uDC68','\uD83D\uDC69','\uD83D\uDC76','\uD83D\uDC74','\uD83D\uDC75','\uD83D\uDC71','\uD83D\uDC7C','\uD83E\uDD35','\uD83D\uDC78','\uD83E\uDD34'] },
+        { icon: '\u2764\uFE0F', label: 'hearts', emojis: ['\u2764\uFE0F','\uD83E\uDDE1','\uD83D\uDC9B','\uD83D\uDC9A','\uD83D\uDC99','\uD83D\uDC9C','\uD83E\uDD0D','\uD83E\uDD0E','\uD83D\uDDA4','\u2764\uFE0F\u200D\uD83D\uDD25','\uD83D\uDC95','\uD83D\uDC9E','\uD83D\uDC93','\uD83D\uDC97','\uD83D\uDC96','\uD83D\uDC98','\uD83D\uDC9D','\uD83D\uDC9F','\uD83D\uDC94','\uD83D\uDC8B','\uD83D\uDC8C','\uD83D\uDCAF','\u2728','\u2B50','\uD83C\uDF1F','\uD83D\uDCAB','\u26A1','\uD83D\uDD25','\uD83C\uDF08','\uD83C\uDF89','\uD83C\uDF8A','\uD83C\uDF88','\uD83C\uDF81','\uD83E\uDD73','\uD83C\uDFC6','\uD83C\uDFAF','\uD83C\uDF40','\uD83C\uDF38','\uD83C\uDF3A','\uD83C\uDF3B','\uD83C\uDF39','\uD83C\uDF37','\uD83C\uDF3C','\uD83D\uDC90','\uD83C\uDF1D','\uD83C\uDF1E','\uD83C\uDF19'] },
+        { icon: '\uD83D\uDC36', label: 'animals', emojis: ['\uD83D\uDC36','\uD83D\uDC31','\uD83D\uDC2D','\uD83D\uDC39','\uD83D\uDC30','\uD83E\uDD8A','\uD83D\uDC3B','\uD83D\uDC3C','\uD83D\uDC28','\uD83D\uDC2F','\uD83E\uDD81','\uD83D\uDC2E','\uD83D\uDC37','\uD83D\uDC38','\uD83D\uDC35','\uD83D\uDE48','\uD83D\uDE49','\uD83D\uDE4A','\uD83D\uDC14','\uD83D\uDC27','\uD83D\uDC26','\uD83E\uDD86','\uD83E\uDD85','\uD83E\uDD89','\uD83E\uDD87','\uD83D\uDC3A','\uD83D\uDC34','\uD83E\uDD84','\uD83D\uDC1D','\uD83E\uDD8B','\uD83D\uDC0C','\uD83D\uDC1E','\uD83D\uDC1C','\uD83D\uDC22','\uD83E\uDD8E','\uD83D\uDC0D','\uD83E\uDD95','\uD83D\uDC0A','\uD83E\uDD92','\uD83D\uDC18','\uD83E\uDD9C','\uD83E\uDD8D','\uD83D\uDC2C','\uD83D\uDC33','\uD83D\uDC1F','\uD83D\uDC20','\uD83D\uDC19','\uD83D\uDC99'] },
+        { icon: '\uD83C\uDF55', label: 'food', emojis: ['\uD83C\uDF4E','\uD83C\uDF4A','\uD83C\uDF4B','\uD83C\uDF47','\uD83C\uDF53','\uD83C\uDF52','\uD83C\uDF51','\uD83E\uDED0','\uD83C\uDF4D','\uD83E\uDD6D','\uD83C\uDF4C','\uD83E\uDD5D','\uD83C\uDF45','\uD83E\uDD65','\uD83E\uDD51','\uD83C\uDF46','\uD83E\uDD66','\uD83E\uDD6C','\uD83C\uDF3D','\uD83E\uDD55','\uD83E\uDDC4','\uD83E\uDD54','\uD83C\uDF5E','\uD83E\uDD50','\uD83C\uDF55','\uD83D\uDC2D','\uD83C\uDF73','\uD83E\uDDC7','\uD83E\uDD53','\uD83E\uDD69','\uD83C\uDF57','\uD83C\uDF56','\uD83C\uDF2D','\uD83C\uDF54','\uD83C\uDF5F','\uD83E\uDD6A','\uD83E\uDD57','\uD83C\uDF5C','\uD83C\uDF63','\uD83C\uDF71','\uD83E\uDD9E','\uD83E\uDD90','\uD83C\uDF70','\uD83C\uDF61','\uD83E\uDD9F','\uD83C\uDF7F','\u2615','\uD83C\uDF75','\uD83E\uDDB8','\uD83C\uDF7A','\uD83E\uDD42','\uD83C\uDF77','\uD83C\uDF89','\uD83C\uDF82','\uD83E\uDDC1','\uD83C\uDF69','\uD83C\uDF6A','\uD83C\uDF6B','\uD83C\uDF6C','\uD83C\uDF6D'] },
+        { icon: '\uD83C\uDFAE', label: 'misc', emojis: ['\uD83C\uDFAE','\uD83C\uDFB2','\uD83E\uDD84','\uD83C\uDFB3','\uD83C\uDFA8','\uD83C\uDFAC','\uD83C\uDFA4','\uD83C\uDFA7','\uD83C\uDFB5','\uD83C\uDFB6','\uD83C\uDFB8','\uD83E\uDD41','\uD83C\uDFBA','\uD83C\uDFBB','\uD83C\uDFB7','\u26BD','\uD83C\uDFC0','\uD83C\uDFC8','\u26BE','\uD83C\uDFBE','\uD83C\uDFD0','\uD83C\uDFC9','\uD83C\uDFB1','\uD83C\uDFD3','\uD83C\uDFF8','\uD83E\uDD4A','\uD83C\uDFBF','\uD83C\uDFC6','\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49','\uD83D\uDE97','\u2708\uFE0F','\uD83D\uDE80','\uD83D\uDEF8','\uD83C\uDF0D','\uD83C\uDF0A','\uD83C\uDFDD\uFE0F','\uD83C\uDFD6\uFE0F','\uD83C\uDFD4\uFE0F','\uD83C\uDF0B','\uD83C\uDFDB\uFE0F','\uD83C\uDFF0','\u26EA','\uD83D\uDDFA\uFE0F','\uD83C\uDDEC\uD83C\uDDE7','\uD83D\uDCF1','\uD83D\uDCBB','\u231A','\uD83D\uDCE6','\uD83D\uDCA1','\uD83D\uDCB0','\uD83C\uDF81'] },
+    ];
+
+    var RECENT_KEY = 'mm_recent_emoji';
+    var MAX_RECENT = 32;
+
+    function getRecent() {
+        try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); }
+        catch (e) { return []; }
+    }
+
+    function addRecent(emoji) {
+        var recent = getRecent().filter(function (e) { return e !== emoji; });
+        recent.unshift(emoji);
+        if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
+        try { localStorage.setItem(RECENT_KEY, JSON.stringify(recent)); } catch (e) {}
+    }
+
+    var emojiPanel = null;
+    var emojiPendingMsgId = null;
+    var emojiActiveCat = 0;
+
+    function buildEmojiPanel() {
+        var panel = document.createElement('div');
+        panel.id = 'emoji-picker-panel';
+        panel.className = 'emoji-picker-panel';
+        var catHtml = EMOJI_CATS.map(function (c, i) {
+            return '<button class="epk-cat-btn' + (i === 0 ? ' active' : '') + '" data-cat="' + i + '" title="' + c.label + '">' + c.icon + '</button>';
+        }).join('');
+        panel.innerHTML =
+            '<div class="epk-search-wrap"><input class="epk-search" type="text" placeholder="Search\u2026" autocomplete="off" spellcheck="false"></div>'
+            + '<div class="epk-cats">' + catHtml + '<button class="epk-cat-btn" data-cat="recent" title="recent">\uD83D\uDD50</button></div>'
+            + '<div class="epk-grid" id="epk-grid"></div>';
+        document.body.appendChild(panel);
+        panel.querySelector('.epk-search').addEventListener('input', function () {
+            renderEmojiGrid(this.value.trim());
+        });
+        panel.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var catBtn = e.target.closest('.epk-cat-btn');
+            if (catBtn) {
+                panel.querySelectorAll('.epk-cat-btn').forEach(function (b) { b.classList.remove('active'); });
+                catBtn.classList.add('active');
+                var cat = catBtn.dataset.cat;
+                emojiActiveCat = cat === 'recent' ? 'recent' : parseInt(cat, 10);
+                panel.querySelector('.epk-search').value = '';
+                renderEmojiGrid('');
+                return;
+            }
+            var emojiBtn = e.target.closest('.epk-emoji');
+            if (emojiBtn) {
+                var emoji = emojiBtn.dataset.emoji;
+                if (emojiPendingMsgId !== null) {
+                    addRecent(emoji);
+                    sendReaction(emojiPendingMsgId, emoji);
+                }
+                closeEmojiPanel();
+            }
+        });
+        document.addEventListener('click', function (e) {
+            if (emojiPanel && emojiPanel.classList.contains('open') && !emojiPanel.contains(e.target) && !e.target.closest('.bact-react')) {
+                closeEmojiPanel();
+            }
+        });
+        return panel;
+    }
+
+    function renderEmojiGrid(query) {
+        var grid = document.getElementById('epk-grid');
+        if (!grid) return;
+        var emojis;
+        if (query) {
+            var all = [];
+            EMOJI_CATS.forEach(function (c) { c.emojis.forEach(function (e) { if (all.indexOf(e) === -1) all.push(e); }); });
+            var q = query.toLowerCase();
+            emojis = all.filter(function (e) { return e.toLowerCase().indexOf(q) !== -1; });
+            if (!emojis.length) emojis = all;
+        } else if (emojiActiveCat === 'recent') {
+            emojis = getRecent();
+        } else {
+            emojis = EMOJI_CATS[emojiActiveCat].emojis;
+        }
+        grid.innerHTML = emojis.length
+            ? emojis.map(function (e) { return '<button class="epk-emoji" data-emoji="' + e + '">' + e + '</button>'; }).join('')
+            : '<span class="epk-empty">No emoji found</span>';
+    }
+
+    function openEmojiPanel(triggerEl, msgId) {
+        if (!emojiPanel) emojiPanel = buildEmojiPanel();
+        emojiPendingMsgId = msgId;
+        emojiActiveCat = 0;
+        emojiPanel.querySelector('.epk-search').value = '';
+        emojiPanel.querySelectorAll('.epk-cat-btn').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.cat === '0');
+        });
+        renderEmojiGrid('');
+        emojiPanel.classList.add('open');
+        var rect = triggerEl.getBoundingClientRect();
+        var pw = 260;
+        var ph = 280;
+        var left = rect.left + window.scrollX;
+        var top  = rect.top + window.scrollY - ph - 8;
+        if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+        if (top < window.scrollY + 8) top = rect.bottom + window.scrollY + 8;
+        emojiPanel.style.left = left + 'px';
+        emojiPanel.style.top  = top + 'px';
+    }
+
+    function closeEmojiPanel() {
+        if (emojiPanel) {
+            emojiPanel.classList.remove('open');
+            emojiPendingMsgId = null;
+        }
+    }
+
     function buildActionsHtml(msgId, isMine) {
         var del = isMine
             ? '<button class="bact-btn bact-delete" data-msgid="' + msgId + '" title="Delete"><i class="bi bi-trash3"></i></button>'
             : '';
         return '<div class="bubble-actions">'
-            + '<div class="bact-picker">'
-            + '<button class="bact-emoji-btn" data-emoji="\u2764\uFE0F">\u2764\uFE0F</button>'
-            + '<button class="bact-emoji-btn" data-emoji="\uD83D\uDE02">\uD83D\uDE02</button>'
-            + '<button class="bact-emoji-btn" data-emoji="\uD83D\uDC4D">\uD83D\uDC4D</button>'
-            + '<button class="bact-emoji-btn" data-emoji="\uD83D\uDE2E">\uD83D\uDE2E</button>'
-            + '<button class="bact-emoji-btn" data-emoji="\uD83D\uDE22">\uD83D\uDE22</button>'
-            + '<button class="bact-emoji-btn" data-emoji="\uD83D\uDE21">\uD83D\uDE21</button>'
-            + '</div>'
             + '<button class="bact-btn bact-react" title="React"><i class="bi bi-emoji-smile"></i></button>'
             + del
             + '</div>';
     }
 
-    function closeAllPickers() {
-        document.querySelectorAll('.bact-picker.open').forEach(function (p) {
-            p.classList.remove('open');
-        });
-    }
-
-    document.addEventListener('click', closeAllPickers);
-
     box.addEventListener('click', function (e) {
         var reactBtn = e.target.closest('.bact-react');
         if (reactBtn) {
             e.stopPropagation();
-            var picker = reactBtn.closest('.bubble-actions').querySelector('.bact-picker');
-            var wasOpen = picker.classList.contains('open');
-            closeAllPickers();
-            if (!wasOpen) picker.classList.add('open');
-            return;
-        }
-
-        var emojiBtn = e.target.closest('.bact-emoji-btn');
-        if (emojiBtn) {
-            e.stopPropagation();
-            var wrap = emojiBtn.closest('.bubble-wrap');
+            var wrap = reactBtn.closest('.bubble-wrap');
             var msgId = parseInt(wrap.getAttribute('data-id'), 10);
-            if (!isNaN(msgId)) sendReaction(msgId, emojiBtn.dataset.emoji);
-            closeAllPickers();
+            if (emojiPanel && emojiPanel.classList.contains('open') && emojiPendingMsgId === msgId) {
+                closeEmojiPanel();
+            } else {
+                openEmojiPanel(reactBtn, msgId);
+            }
             return;
         }
 
@@ -206,13 +304,6 @@
             btn.innerHTML = '<span class="r-emoji">' + r.emoji + '</span><span class="r-count">' + r.count + '</span>';
             reactionDiv.appendChild(btn);
         });
-        var wrap = document.querySelector('.bubble-wrap[data-id="' + msgId + '"]');
-        if (wrap) {
-            var mine = (reactions || []).find(function (r) { return r.mine; });
-            wrap.querySelectorAll('.bact-emoji-btn').forEach(function (btn) {
-                btn.classList.toggle('picked', !!(mine && btn.dataset.emoji === mine.emoji));
-            });
-        }
     }
 
     function doSend() {
