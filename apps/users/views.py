@@ -1,6 +1,10 @@
 from django.contrib.auth.decorators import login_required
 
+from django.http import JsonResponse
+
 from django.shortcuts import render
+
+from django.utils import timezone
 
 from apps.vehicles.models import Bid, SavedVehicle, Vehicle
 
@@ -123,3 +127,22 @@ def confirm_login_event(request, pk):
 def enquiry_sent(request):
 
     return render(request, 'pages/enquiry_sent.html')
+
+
+def session_check(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'ok': True})
+    if not request.user.is_active:
+        profile = getattr(request.user, 'profile', None)
+        reason = profile.ban_reason if profile else ''
+        return JsonResponse({'banned': True, 'reason': reason})
+    profile = getattr(request.user, 'profile', None)
+    if profile and profile.is_suspended:
+        if profile.suspension_until and profile.suspension_until <= timezone.now():
+            profile.is_suspended = False
+            profile.suspension_until = None
+            profile.save(update_fields=['is_suspended', 'suspension_until'])
+        else:
+            until = profile.suspension_until.strftime('%d %b %Y') if profile.suspension_until else None
+            return JsonResponse({'suspended': True, 'until': until, 'reason': profile.ban_reason})
+    return JsonResponse({'ok': True})

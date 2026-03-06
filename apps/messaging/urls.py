@@ -22,4 +22,6 @@ urlpatterns = [
 
     path('api/tenor/', views.tenor_search, name='tenor_search'),
 
+    path('inbox/<int:user_pk>/message/<int:msg_pk>/delete/', views.delete_message, name='delete_message'),
+
 ]

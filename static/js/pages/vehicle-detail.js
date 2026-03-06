@@ -1,7 +1,6 @@
 (function () {
     'use strict';
 
-    // Star picker: highlight up to hovered/selected star
     var container = document.getElementById('starPicker');
     if (container) {
         var labels = Array.from(container.querySelectorAll('.star-label'));

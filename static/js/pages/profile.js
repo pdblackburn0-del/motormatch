@@ -1,6 +1,5 @@
 'use strict';
 
-// Live preview of avatar when a new file is selected
 var avatarInput = document.getElementById('id_avatar');
 if (avatarInput) {
     avatarInput.addEventListener('change', function (e) {

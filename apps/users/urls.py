@@ -14,4 +14,6 @@ urlpatterns = [
 
     path('security/login/<int:pk>/confirm/', views.confirm_login_event, name='confirm_login_event'),
 
+    path('api/session-check/', views.session_check, name='session_check'),
+
 ]

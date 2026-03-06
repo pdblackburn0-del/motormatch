@@ -549,7 +549,6 @@ footer a:hover {
 .offer-avatar { width: 34px; height: 34px; font-size: .75rem; }
 .dyn-badge    { font-size: .72rem; color: #fff; }
 
-/* ── Shared star rating display ── */
 .star-rating::before {
     content: '★★★★★';
     letter-spacing: 2px;

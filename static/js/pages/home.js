@@ -11,7 +11,6 @@
         });
     }
 
-    // Featured deals carousel scroll
     var track = document.getElementById('featured-scroll');
     var btnL  = document.getElementById('scroll-left');
     var btnR  = document.getElementById('scroll-right');

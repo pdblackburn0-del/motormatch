@@ -1,4 +1,3 @@
-/* interactive star picker */
 .star-picker .star-label i { color: #d1d5db; transition: color .15s; }
 .star-picker .star-label:hover i,
 .star-picker .star-label:hover ~ .star-label i { color: #d1d5db !important; }
