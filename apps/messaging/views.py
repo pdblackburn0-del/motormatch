@@ -363,15 +363,21 @@ def poll_messages(request, user_pk):
 
         is_mine = m.sender_id == request.user.pk
 
+        sender_profile = getattr(m.sender, 'profile', None)
+
+        sender_inactive = not m.sender.is_active or getattr(sender_profile, 'is_deleted', False)
+
+        effective_deleted = m.is_deleted or sender_inactive
+
         return {
 
             'id':             m.pk,
 
-            'body':           m.body,
+            'body':           m.body if not effective_deleted else '',
 
-            'attachment_url': m.attachment.url if m.attachment else None,
+            'attachment_url': (m.attachment.url if m.attachment else None) if not effective_deleted else None,
 
-            'gif_url':        m.gif_url,
+            'gif_url':        m.gif_url if not effective_deleted else '',
 
             'time':           m.created_at.strftime('%H:%M'),
 
@@ -382,6 +388,10 @@ def poll_messages(request, user_pk):
             'initials':       my_initials if is_mine else other_init,
 
             'is_read':        m.is_read,
+
+            'is_deleted':     effective_deleted,
+
+            'deleted_by_staff': m.deleted_by_staff if m.is_deleted else False,
 
         }
 

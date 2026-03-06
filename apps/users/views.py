@@ -168,6 +168,7 @@ def delete_account(request):
     profile = getattr(user, 'profile', None)
 
     user.vehicles.all().update(is_removed=True)
+    Message.objects.filter(sender=user, is_deleted=False).update(is_deleted=True, body='', gif_url='')
 
     if profile:
         profile.first_name   = ''
