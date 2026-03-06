@@ -131,7 +131,9 @@ body {
 }
 
 a             { color: #2563eb !important; text-decoration: none; }
+a:visited     { color: #2563eb !important; }
 a:hover       { color: #1d4ed8 !important; }
+a:active      { color: #1d4ed8 !important; }
 
 /* ── 3. Header ───────────────────────────────────────────────── */
 #header {
@@ -215,13 +217,15 @@ a:hover       { color: #1d4ed8 !important; }
     align-self: flex-start !important;
 }
 
-/* Every element inside sidebar must be light */
+/* Every element inside sidebar must be light — exclude link/selected/caption overrides below */
 #nav-sidebar,
-#nav-sidebar *,
 #nav-sidebar .module,
-#nav-sidebar .module * {
+#nav-sidebar table,
+#nav-sidebar tbody,
+#nav-sidebar tr,
+#nav-sidebar td,
+#nav-sidebar th {
     background: transparent !important;
-    color: inherit !important;
     border-color: transparent !important;
 }
 
@@ -248,7 +252,9 @@ a:hover       { color: #1d4ed8 !important; }
 
 #nav-sidebar a,
 #nav-sidebar a:link,
-#nav-sidebar a:visited {
+#nav-sidebar a:visited,
+#nav-sidebar a:active,
+#nav-sidebar a:focus {
     display: block !important;
     font-size: 13px !important;
     font-weight: 500 !important;
@@ -261,6 +267,7 @@ a:hover       { color: #1d4ed8 !important; }
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     background: transparent !important;
+    outline: none !important;
 }
 
 #nav-sidebar a:hover {
@@ -268,11 +275,22 @@ a:hover       { color: #1d4ed8 !important; }
     color: #2563eb !important;
 }
 
+/* Active/focus should feel the same as hover — no jarring colour flash */
+#nav-sidebar a:active,
+#nav-sidebar a:focus {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+}
+
 #nav-sidebar .current-app a,
+#nav-sidebar .current-app a:link,
+#nav-sidebar .current-app a:visited,
+#nav-sidebar .current-app a:active,
+#nav-sidebar .current-app a:focus,
 #nav-sidebar a.selected,
 #nav-sidebar tr.selected a {
     background: #dbeafe !important;
-    color: #2563eb !important;
+    color: #1d4ed8 !important;
     font-weight: 600 !important;
 }
 
@@ -941,6 +959,7 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
 .mm-quick-btn--teal    { background: #0d9488; color: #fff !important; }
 .mm-quick-btn--slate   { background: #475569; color: #fff !important; }
 .mm-quick-btn--rose    { background: #e11d48; color: #fff !important; }
+.mm-quick-btn--warning { background: #d97706; color: #fff !important; }
 
 /* ── 17. Primary Stats ───────────────────────────────────────── */
 .mm-stats-primary {
@@ -1058,6 +1077,7 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
 .mm-stat-tile__icon--indigo { background: #e0e7ff; color: #4f46e5; }
 .mm-stat-tile__icon--slate  { background: #f1f5f9; color: #475569; }
 .mm-stat-tile__icon--yellow { background: #fefce8; color: #ca8a04; }
+.mm-stat-tile__icon--red    { background: #fee2e2; color: #dc2626; }
 
 .mm-stat-tile__value {
     font-size: 20px; font-weight: 800;
@@ -1302,6 +1322,14 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
     border-bottom-color: #fecaca;
 }
 
+.mm-recent-card--warning {
+    border-color: #fde68a;
+}
+.mm-recent-card--warning .mm-recent-card__header {
+    background: #fffbeb;
+    border-bottom-color: #fde68a;
+}
+
 .mm-recent-card__sub-label {
     font-size: 11px;
     color: #9ca3af;
@@ -1320,6 +1348,10 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
     font-size: 10px;
     font-weight: 800;
     border-radius: 99px;
+}
+
+.mm-alert-badge--amber {
+    background: #d97706;
 }
 
 .mm-quick-btn--danger {

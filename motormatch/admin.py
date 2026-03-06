@@ -1,14 +1,16 @@
 import csv
 import json
+from datetime import timedelta
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.db.models import Count
+from django.db.models import Avg, Count, Q
 from django.db.models.functions import TruncDate
 from django.http import HttpResponse
+from django.utils import timezone
 from django.utils.html import format_html
 
 try:
@@ -18,7 +20,7 @@ except ImportError:
     _CLOUDINARY_AVAILABLE = False
 
 from motormatch.models import (
-    Bid, LoginEvent, Message, Notification, Review, SavedVehicle,
+    AdminNote, Bid, LoginEvent, Message, Notification, Review, SavedVehicle,
     UserProfile, Vehicle,
 )
 
@@ -55,8 +57,6 @@ class MotorMatchAdminSite(AdminSite):
     index_title = 'Overview'
 
     def index(self, request, extra_context=None):
-        from datetime import timedelta
-        from django.utils import timezone
         extra_context = extra_context or {}
         try:
             now      = timezone.now()
@@ -66,19 +66,31 @@ class MotorMatchAdminSite(AdminSite):
 
             # ── Primary / secondary stats ──────────────────────────
             extra_context.update({
-                'stat_users':           User.objects.count(),
-                'stat_vehicles':        Vehicle.objects.filter(is_removed=False).count(),
-                'stat_bids':            Bid.objects.filter(status=Bid.STATUS_PENDING).count(),
-                'stat_messages':        Message.objects.filter(is_read=False).count(),
-                'stat_reviews':         Review.objects.count(),
-                'stat_saved':           SavedVehicle.objects.count(),
-                'stat_notifications':   Notification.objects.filter(is_read=False).count(),
-                'stat_removed':         Vehicle.objects.filter(is_removed=True).count(),
-                'stat_new_users_today': User.objects.filter(date_joined__date=today).count(),
-                'stat_bids_accepted':   Bid.objects.filter(status=Bid.STATUS_ACCEPTED).count(),
-                'stat_logins_week':     LoginEvent.objects.filter(created_at__gte=week_ago).count(),
-                'stat_active_staff':    User.objects.filter(is_staff=True, is_active=True).count(),
-                'stat_flagged_msgs':    Message.objects.filter(is_flagged=True).count(),
+                'stat_users':             User.objects.count(),
+                'stat_vehicles':          Vehicle.objects.filter(is_removed=False).count(),
+                'stat_bids':              Bid.objects.filter(status=Bid.STATUS_PENDING).count(),
+                'stat_messages':          Message.objects.filter(is_read=False).count(),
+                'stat_reviews':           Review.objects.count(),
+                'stat_saved':             SavedVehicle.objects.count(),
+                'stat_notifications':     Notification.objects.filter(is_read=False).count(),
+                'stat_removed':           Vehicle.objects.filter(is_removed=True).count(),
+                'stat_new_users_today':   User.objects.filter(date_joined__date=today).count(),
+                'stat_bids_accepted':     Bid.objects.filter(status=Bid.STATUS_ACCEPTED).count(),
+                'stat_logins_week':       LoginEvent.objects.filter(created_at__gte=week_ago).count(),
+                'stat_active_staff':      User.objects.filter(is_staff=True, is_active=True).count(),
+                'stat_flagged_msgs':      Message.objects.filter(is_flagged=True).count(),
+                # New moderation stats
+                'stat_pending_listings':  Vehicle.objects.filter(approval_status=Vehicle.APPROVAL_PENDING).count(),
+                'stat_suspended_users':   UserProfile.objects.filter(is_suspended=True).count(),
+                'stat_admin_notes':       AdminNote.objects.count(),
+                'stat_low_reviews':       Review.objects.filter(rating__lte=2).count(),
+                # Marketplace health
+                'stat_bid_success_rate':  (
+                    round(
+                        Bid.objects.filter(status=Bid.STATUS_ACCEPTED).count() /
+                        max(Bid.objects.count(), 1) * 100, 1
+                    )
+                ),
             })
 
             # ── Recent activity ────────────────────────────────────
@@ -96,6 +108,21 @@ class MotorMatchAdminSite(AdminSite):
                 'recent_reviews':  (Review.objects
                                     .select_related('reviewer', 'reviewed_user')
                                     .order_by('-created_at')[:4]),
+                # Pending listings needing admin approval
+                'pending_listings': (Vehicle.objects
+                                     .filter(approval_status=Vehicle.APPROVAL_PENDING)
+                                     .select_related('owner')
+                                     .order_by('-created_at')[:6]),
+                # Suspended / banned users
+                'suspended_users': (UserProfile.objects
+                                    .filter(is_suspended=True)
+                                    .select_related('user')
+                                    .order_by('-created_at')[:6]),
+                # Low-rating reviews
+                'low_reviews': (Review.objects
+                                .filter(rating__lte=2)
+                                .select_related('reviewer', 'reviewed_user')
+                                .order_by('-created_at')[:5]),
             })
 
             # ── Admin activity feed (Django LogEntry) ──────────────
@@ -155,7 +182,7 @@ class MotorMatchAdminSite(AdminSite):
             ('Marketplace',   ['Vehicle', 'Bid', 'SavedVehicle']),
             ('Users',         ['User', 'UserProfile', 'LoginEvent']),
             ('Communication', ['Notification', 'Message']),
-            ('Moderation',    ['Review']),
+            ('Moderation',    ['Review', 'AdminNote']),
         ]
 
         grouped_names = {n for _, names in _GROUPS for n in names}
@@ -214,6 +241,53 @@ def _dash():
     return format_html('<span style="color:#9ca3af;">—</span>')
 
 
+# ── AdminNote Inlines ──────────────────────────────────────────────────────────
+# Defined early so UserProfileAdmin and VehicleAdmin can reference them.
+
+class UserAdminNoteInline(admin.TabularInline):
+    model               = AdminNote
+    fk_name             = 'user'
+    extra               = 1
+    fields              = ('note', 'author', 'created_at')
+    readonly_fields     = ('author', 'created_at')
+    verbose_name        = 'Admin Note'
+    verbose_name_plural = 'Admin Notes'
+    can_delete          = True
+
+    def has_add_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            if not instance.pk:
+                instance.author = request.user
+            instance.save()
+        formset.save_m2m()
+
+
+class VehicleAdminNoteInline(admin.TabularInline):
+    model               = AdminNote
+    fk_name             = 'vehicle'
+    extra               = 1
+    fields              = ('note', 'author', 'created_at')
+    readonly_fields     = ('author', 'created_at')
+    verbose_name        = 'Admin Note'
+    verbose_name_plural = 'Admin Notes'
+    can_delete          = True
+
+    def has_add_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            if not instance.pk:
+                instance.author = request.user
+            instance.save()
+        formset.save_m2m()
+
+
 # ── User + Profile ─────────────────────────────────────────────────────────────
 
 class UserProfileInline(admin.StackedInline):
@@ -225,13 +299,14 @@ class UserProfileInline(admin.StackedInline):
 
 
 class UserAdmin(BaseUserAdmin):
-    inlines       = [UserProfileInline]
-    list_display  = ('email', '_name', 'is_staff', 'is_active', 'date_joined')
+    inlines       = [UserProfileInline, UserAdminNoteInline]
+    list_display  = ('email', '_name', '_trust', 'is_staff', 'is_active', 'date_joined')
     list_filter   = ('is_staff', 'is_superuser', 'is_active')
     search_fields = ('email', 'profile__first_name', 'profile__last_name')
     ordering      = ('-date_joined',)
     list_per_page = 25
-    actions       = ['activate_users', 'deactivate_users', 'make_staff', 'remove_staff']
+    actions       = ['activate_users', 'deactivate_users', 'make_staff', 'remove_staff',
+                     'ban_users_permanently']
 
     def _name(self, obj):
         try:
@@ -239,6 +314,15 @@ class UserAdmin(BaseUserAdmin):
         except UserProfile.DoesNotExist:
             return '—'
     _name.short_description = 'Name'
+
+    def _trust(self, obj):
+        try:
+            if obj.profile.is_suspended:
+                return _pill('Suspended', '#dc2626', '#fee2e2')
+            return _pill('Active', '#16a34a', '#dcfce7')
+        except Exception:
+            return _dash()
+    _trust.short_description = 'Status'
 
     @admin.action(description='✔️ Activate selected users')
     def activate_users(self, request, queryset):
@@ -260,17 +344,29 @@ class UserAdmin(BaseUserAdmin):
         updated = queryset.exclude(pk=request.user.pk).update(is_staff=False)
         self.message_user(request, f'{updated} user(s) had staff status removed.')
 
+    @admin.action(description='🔴 Permanently ban selected users')
+    def ban_users_permanently(self, request, queryset):
+        targets = queryset.exclude(pk=request.user.pk)
+        count = targets.count()
+        targets.update(is_active=False)
+        UserProfile.objects.filter(user__in=targets).update(
+            is_suspended=True, ban_reason='Permanently banned by admin.',
+        )
+        self.message_user(request, f'{count} user(s) permanently banned.')
+
 
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display       = ('_avatar', '_name', '_email', '_badge', 'location', '_rating', '_listings', 'created_at')
+    list_display       = ('_avatar', '_name', '_email', '_badge', '_trust_score',
+                          '_suspended', 'location', '_rating', '_listings', 'created_at')
     list_display_links = ('_avatar', '_name')
-    list_filter        = ('badge',)
+    list_filter        = ('badge', 'is_suspended')
     search_fields      = ('user__email', 'first_name', 'last_name', 'location')
     ordering           = ('-created_at',)
-    readonly_fields    = ('user', 'created_at', '_rating', '_listings', '_avatar_preview')
+    readonly_fields    = ('user', 'created_at', '_rating', '_listings', '_avatar_preview', '_trust_score')
     list_per_page      = 25
     actions            = ['set_badge_verified', 'set_badge_trusted', 'set_badge_top_seller',
-                          'set_badge_dealer', 'set_badge_member', 'remove_badge']
+                          'set_badge_dealer', 'set_badge_member', 'remove_badge',
+                          'suspend_user', 'lift_suspension', 'send_warning']
     fieldsets = (
         ('Identity', {
             'fields': ('user', 'first_name', 'last_name', 'phone', '_avatar_preview', 'avatar', 'location', 'bio'),
@@ -279,8 +375,12 @@ class UserProfileAdmin(admin.ModelAdmin):
             'fields': ('badge',),
             'description': 'Assign a trust level that is visible on seller profiles and listings.',
         }),
+        ('Moderation', {
+            'fields': ('is_suspended', 'suspension_until', 'ban_reason'),
+            'description': 'Suspend or ban this user from the marketplace.',
+        }),
         ('Metrics', {
-            'fields': ('_rating', '_listings', 'created_at'),
+            'fields': ('_rating', '_listings', '_trust_score', 'created_at'),
         }),
     )
 
@@ -348,6 +448,73 @@ class UserProfileAdmin(admin.ModelAdmin):
             return 0
     _listings.short_description = 'Active Listings'
 
+    def _trust_score(self, obj):
+        """
+        Compute a simple trust score 0–100 based on:
+          listings (+5 each, max 40), accepted bids (+4 each, max 20),
+          rating average (+20 max), flagged messages (-15 each, min 0).
+        """
+        try:
+            listings  = min(obj.user.vehicles.filter(is_removed=False).count() * 5, 40)
+            accepted  = min(obj.user.bids_placed.filter(status=Bid.STATUS_ACCEPTED).count() * 4, 20)
+            avg_r     = obj.average_rating() or 0
+            rating_pts = int(avg_r / 5 * 20)
+            flagged   = obj.user.sent_messages.filter(is_flagged=True).count() * 15
+            suspended_pen = 30 if obj.is_suspended else 0
+            score = max(min(listings + accepted + rating_pts - flagged - suspended_pen + 20, 100), 0)
+            if score >= 70:
+                fg, bg, label = '#16a34a', '#dcfce7', f'High ({score})'
+            elif score >= 40:
+                fg, bg, label = '#d97706', '#fef3c7', f'Medium ({score})'
+            else:
+                fg, bg, label = '#dc2626', '#fee2e2', f'Low ({score})'
+            return _pill(label, fg, bg)
+        except Exception:
+            return _dash()
+    _trust_score.short_description = 'Trust'
+
+    def _suspended(self, obj):
+        if obj.is_suspended:
+            until = ''
+            if obj.suspension_until:
+                until = f' until {obj.suspension_until.strftime("%d %b %Y")}'
+            return _pill(f'Suspended{until}', '#dc2626', '#fee2e2')
+        return _pill('Active', '#16a34a', '#dcfce7')
+    _suspended.short_description = 'Status'
+
+    @admin.action(description='⛔ Suspend selected users (30 days)')
+    def suspend_user(self, request, queryset):
+        until = timezone.now() + timedelta(days=30)
+        pks = queryset.values_list('user_id', flat=True)
+        updated = queryset.exclude(user=request.user).update(
+            is_suspended=True, suspension_until=until,
+            ban_reason='Suspended by admin',
+        )
+        # Deactivate user accounts
+        User.objects.filter(pk__in=pks).exclude(pk=request.user.pk).update(is_active=False)
+        self.message_user(request, f'{updated} user(s) suspended for 30 days.')
+
+    @admin.action(description='✅ Lift suspension on selected users')
+    def lift_suspension(self, request, queryset):
+        pks = queryset.values_list('user_id', flat=True)
+        updated = queryset.update(is_suspended=False, suspension_until=None, ban_reason='')
+        User.objects.filter(pk__in=pks).update(is_active=True)
+        self.message_user(request, f'{updated} suspension(s) lifted.')
+
+    @admin.action(description='⚠️ Send warning notification to selected users')
+    def send_warning(self, request, queryset):
+        count = 0
+        for profile in queryset:
+            Notification.objects.create(
+                user=profile.user,
+                title='Warning from Motor Match Admin',
+                message='Your account has received an admin warning. Please review our community guidelines.',
+                notif_type=Notification.TYPE_WARNING,
+                url='/dashboard/',
+            )
+            count += 1
+        self.message_user(request, f'Warning notification sent to {count} user(s).')
+
     @admin.action(description='🔵 Set badge → Verified')
     def set_badge_verified(self, request, queryset):
         queryset.update(badge=UserProfile.BADGE_VERIFIED)
@@ -383,15 +550,17 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 class VehicleAdmin(admin.ModelAdmin):
     list_display       = ('_thumb', 'title', 'variant', '_price', 'year', 'fuel',
-                          'transmission', '_badge', '_owner', 'is_removed', 'created_at')
+                          'transmission', '_badge', '_owner', '_approval', 'is_removed', 'created_at')
     list_display_links = ('_thumb', 'title')
-    list_filter        = ('fuel', 'transmission', 'is_removed', 'year')
+    list_filter        = ('fuel', 'transmission', 'is_removed', 'year', 'approval_status')
     search_fields      = ('title', 'variant', 'owner__email', 'location')
     ordering           = ('-created_at',)
     date_hierarchy     = 'created_at'
     readonly_fields    = ('created_at', '_thumb')
     list_per_page      = 20
-    actions            = ['mark_removed', 'mark_available', 'export_csv']
+    inlines            = [VehicleAdminNoteInline]
+    actions            = ['mark_removed', 'mark_available', 'approve_listings',
+                          'reject_listings', 'export_csv']
     fieldsets          = (
         ('Listing', {
             'fields': ('owner', 'title', 'variant', 'price', 'year', 'mileage',
@@ -402,6 +571,10 @@ class VehicleAdmin(admin.ModelAdmin):
         }),
         ('Status & Badge', {
             'fields': ('badge', 'badge_color', 'is_removed'),
+        }),
+        ('Approval', {
+            'fields': ('approval_status', 'approval_note'),
+            'description': 'Review and approve or reject this listing before it becomes publicly visible.',
         }),
         ('Meta', {
             'fields': ('created_at',),
@@ -448,6 +621,18 @@ class VehicleAdmin(admin.ModelAdmin):
     _owner.short_description = 'Owner'
     _owner.admin_order_field = 'owner__email'
 
+    _APPROVAL_HEX = {
+        'pending':  ('#d97706', '#fef3c7'),
+        'approved': ('#16a34a', '#dcfce7'),
+        'rejected': ('#dc2626', '#fee2e2'),
+    }
+
+    def _approval(self, obj):
+        fg, bg = self._APPROVAL_HEX.get(obj.approval_status, ('#374151', '#f3f4f6'))
+        return _pill(obj.get_approval_status_display(), fg, bg)
+    _approval.short_description = 'Approval'
+    _approval.admin_order_field = 'approval_status'
+
     @admin.action(description='Mark selected listings as removed')
     def mark_removed(self, request, queryset):
         updated = queryset.update(is_removed=True)
@@ -457,6 +642,16 @@ class VehicleAdmin(admin.ModelAdmin):
     def mark_available(self, request, queryset):
         updated = queryset.update(is_removed=False)
         self.message_user(request, f'{updated} listing(s) marked as available.')
+
+    @admin.action(description='✅ Approve selected listings')
+    def approve_listings(self, request, queryset):
+        updated = queryset.update(approval_status=Vehicle.APPROVAL_APPROVED)
+        self.message_user(request, f'{updated} listing(s) approved.')
+
+    @admin.action(description='❌ Reject selected listings')
+    def reject_listings(self, request, queryset):
+        updated = queryset.update(approval_status=Vehicle.APPROVAL_REJECTED, is_removed=True)
+        self.message_user(request, f'{updated} listing(s) rejected and hidden.')
 
     @admin.action(description='📥 Export selected listings to CSV')
     def export_csv(self, request, queryset):
@@ -777,6 +972,33 @@ class MessageModerationAdmin(admin.ModelAdmin):
         pass
 
 
+# ── Admin Notes ────────────────────────────────────────────────────────────────
+
+class AdminNoteAdmin(admin.ModelAdmin):
+    list_display    = ('__str__', 'author', '_target', 'created_at')
+    list_filter     = ('created_at',)
+    search_fields   = ('note', 'author__email', 'user__email', 'vehicle__title')
+    ordering        = ('-created_at',)
+    readonly_fields = ('author', 'created_at')
+    list_per_page   = 30
+
+    def _target(self, obj):
+        if obj.user:
+            return format_html('<span style="color:#2563eb;">User: {}</span>', obj.user.email)
+        if obj.vehicle:
+            return format_html('<span style="color:#16a34a;">Vehicle: {}</span>', obj.vehicle.title)
+        return _dash()
+    _target.short_description = 'Target'
+
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.author = request.user
+        super().save_model(request, obj, form, change)
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+
 # ── Register all models with the custom site ───────────────────────────────────
 
 admin_site.register(User,         UserAdmin)
@@ -787,4 +1009,5 @@ admin_site.register(Bid,          BidAdmin)
 admin_site.register(Notification, NotificationAdmin)
 admin_site.register(Review,       ReviewAdmin)
 admin_site.register(LoginEvent,   LoginEventAdmin)
+admin_site.register(AdminNote,    AdminNoteAdmin)
 

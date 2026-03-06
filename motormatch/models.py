@@ -45,6 +45,10 @@ class UserProfile(models.Model):
     location   = models.CharField(max_length=100, blank=True)
     badge      = models.CharField(max_length=20, choices=BADGE_CHOICES, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
+    # ── Moderation fields ──────────────────────────────────────
+    is_suspended     = models.BooleanField(default=False, db_index=True)
+    suspension_until = models.DateTimeField(null=True, blank=True)
+    ban_reason       = models.CharField(max_length=500, blank=True)
 
     def get_badge_info(self):
         """Returns (label, bg_class, hex) or None if no badge."""
@@ -81,6 +85,15 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 
 class Vehicle(models.Model):
+    APPROVAL_PENDING  = 'pending'
+    APPROVAL_APPROVED = 'approved'
+    APPROVAL_REJECTED = 'rejected'
+    APPROVAL_CHOICES  = [
+        (APPROVAL_PENDING,  'Pending Review'),
+        (APPROVAL_APPROVED, 'Approved'),
+        (APPROVAL_REJECTED, 'Rejected'),
+    ]
+
     owner        = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='vehicles')
     title        = models.CharField(max_length=200)
     variant      = models.CharField(max_length=200)
@@ -96,6 +109,12 @@ class Vehicle(models.Model):
     location     = models.CharField(max_length=100, blank=True)
     description  = models.TextField(blank=True)
     is_removed   = models.BooleanField(default=False)
+    approval_status = models.CharField(
+        max_length=20, choices=APPROVAL_CHOICES,
+        default=APPROVAL_APPROVED,  # existing listings stay visible
+        db_index=True,
+    )
+    approval_note = models.CharField(max_length=500, blank=True)
     created_at   = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     _BADGE_CLASS_MAP = {
@@ -223,6 +242,25 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender.email} → {self.recipient.email}: {self.subject}"
+
+
+class AdminNote(models.Model):
+    """Private notes that staff can attach to users or listings."""
+    author  = models.ForeignKey(User, on_delete=models.SET_NULL, null=True,
+                                related_name='admin_notes_written')
+    user    = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,
+                                related_name='admin_notes')
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, null=True, blank=True,
+                                related_name='admin_notes')
+    note    = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        target = f'User:{self.user_id}' if self.user_id else f'Vehicle:{self.vehicle_id}'
+        return f'Note by {self.author} on {target}'
 
 
 @receiver(post_save, sender=Message)
