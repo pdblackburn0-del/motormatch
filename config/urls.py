@@ -50,7 +50,7 @@ handler404 = handler404_view
 handler500 = handler500_view
 
 urlpatterns = [
-    path('admin/', admin_site.urls),
+    path('control-panel/', admin_site.urls),
     path('accounts/', include('allauth.urls')),
     path('robots.txt', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
 

@@ -1,9 +1,13 @@
 import csv
+import json
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.db.models import Count
+from django.db.models.functions import TruncDate
 from django.http import HttpResponse
 from django.utils.html import format_html
 
@@ -55,25 +59,30 @@ class MotorMatchAdminSite(AdminSite):
         from django.utils import timezone
         extra_context = extra_context or {}
         try:
-            now   = timezone.now()
-            today = now.date()
+            now      = timezone.now()
+            today    = now.date()
             week_ago = now - timedelta(days=7)
+            day30    = today - timedelta(days=29)
+
+            # ── Primary / secondary stats ──────────────────────────
             extra_context.update({
-                # ── Primary stats ──────────────────────────────────
-                'stat_users':         User.objects.count(),
-                'stat_vehicles':      Vehicle.objects.filter(is_removed=False).count(),
-                'stat_bids':          Bid.objects.filter(status=Bid.STATUS_PENDING).count(),
-                'stat_messages':      Message.objects.filter(is_read=False).count(),
-                # ── Secondary stats ────────────────────────────────
-                'stat_reviews':       Review.objects.count(),
-                'stat_saved':         SavedVehicle.objects.count(),
-                'stat_notifications': Notification.objects.filter(is_read=False).count(),
-                'stat_removed':       Vehicle.objects.filter(is_removed=True).count(),
+                'stat_users':           User.objects.count(),
+                'stat_vehicles':        Vehicle.objects.filter(is_removed=False).count(),
+                'stat_bids':            Bid.objects.filter(status=Bid.STATUS_PENDING).count(),
+                'stat_messages':        Message.objects.filter(is_read=False).count(),
+                'stat_reviews':         Review.objects.count(),
+                'stat_saved':           SavedVehicle.objects.count(),
+                'stat_notifications':   Notification.objects.filter(is_read=False).count(),
+                'stat_removed':         Vehicle.objects.filter(is_removed=True).count(),
                 'stat_new_users_today': User.objects.filter(date_joined__date=today).count(),
-                'stat_bids_accepted': Bid.objects.filter(status=Bid.STATUS_ACCEPTED).count(),
-                'stat_logins_week':   LoginEvent.objects.filter(created_at__gte=week_ago).count(),
-                'stat_active_staff':  User.objects.filter(is_staff=True, is_active=True).count(),
-                # ── Recent activity ────────────────────────────────
+                'stat_bids_accepted':   Bid.objects.filter(status=Bid.STATUS_ACCEPTED).count(),
+                'stat_logins_week':     LoginEvent.objects.filter(created_at__gte=week_ago).count(),
+                'stat_active_staff':    User.objects.filter(is_staff=True, is_active=True).count(),
+                'stat_flagged_msgs':    Message.objects.filter(is_flagged=True).count(),
+            })
+
+            # ── Recent activity ────────────────────────────────────
+            extra_context.update({
                 'recent_logins':   (LoginEvent.objects
                                     .select_related('user')
                                     .order_by('-created_at')[:6]),
@@ -88,6 +97,41 @@ class MotorMatchAdminSite(AdminSite):
                                     .select_related('reviewer', 'reviewed_user')
                                     .order_by('-created_at')[:4]),
             })
+
+            # ── Admin activity feed (Django LogEntry) ──────────────
+            extra_context['admin_log'] = (
+                LogEntry.objects
+                .select_related('user', 'content_type')
+                .order_by('-action_time')[:12]
+            )
+
+            # ── Flagged messages ───────────────────────────────────
+            extra_context['flagged_messages'] = (
+                Message.objects
+                .filter(is_flagged=True)
+                .select_related('sender', 'recipient')
+                .order_by('-created_at')[:8]
+            )
+
+            # ── Chart data (30-day, JSON for Chart.js) ─────────────
+            days30  = [today - timedelta(days=i) for i in range(29, -1, -1)]
+            labels  = [d.strftime('%-d %b') for d in days30]
+
+            def _daily(qs, date_field):
+                rows = (qs.filter(**{f'{date_field}__date__gte': day30})
+                          .annotate(_day=TruncDate(date_field))
+                          .values('_day')
+                          .annotate(c=Count('id')))
+                m = {r['_day']: r['c'] for r in rows}
+                return [m.get(d, 0) for d in days30]
+
+            extra_context.update({
+                'chart_labels':   json.dumps(labels),
+                'chart_users':    json.dumps(_daily(User.objects, 'date_joined')),
+                'chart_vehicles': json.dumps(_daily(Vehicle.objects, 'created_at')),
+                'chart_bids':     json.dumps(_daily(Bid.objects, 'created_at')),
+            })
+
         except Exception:
             pass
         return super().index(request, extra_context=extra_context)
@@ -577,6 +621,99 @@ class LoginEventAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+# ── Message Moderation Admin ──────────────────────────────────────────────────
+
+@admin.register(Message, site=admin_site)
+class MessageModerationAdmin(admin.ModelAdmin):
+    """Read-only moderation view — only flagged messages are shown by default."""
+
+    list_display   = ('_from', '_to', '_preview', '_flag_reason', '_flagged', 'created_at')
+    list_filter    = ('is_flagged', 'created_at')
+    search_fields  = ('sender__email', 'recipient__email', 'body', 'subject')
+    readonly_fields = (
+        '_from', '_to', '_vehicle_link',
+        '_body_full', 'flag_reason', 'is_flagged', 'created_at',
+    )
+    actions        = ['flag_messages', 'clear_flag']
+    ordering       = ('-created_at',)
+
+    # Hide add / delete — moderation only
+    def has_add_permission(self, request):          return False
+    def has_delete_permission(self, request, obj=None): return request.user.is_superuser
+
+    def get_queryset(self, request):
+        # Default to showing only flagged; superusers can see all via filter
+        qs = super().get_queryset(request)
+        if not request.user.is_superuser:
+            return qs.filter(is_flagged=True)
+        return qs
+
+    # ── Display helpers ───────────────────────────────────────────
+    @admin.display(description='From')
+    def _from(self, obj):
+        e = obj.sender.email
+        parts = e.split('@')
+        masked = parts[0][:2] + '***@' + parts[1] if len(parts) == 2 else e[:4] + '***'
+        return masked
+
+    @admin.display(description='To')
+    def _to(self, obj):
+        e = obj.recipient.email
+        parts = e.split('@')
+        masked = parts[0][:2] + '***@' + parts[1] if len(parts) == 2 else e[:4] + '***'
+        return masked
+
+    @admin.display(description='Message preview')
+    def _preview(self, obj):
+        text = obj.body or obj.subject or '—'
+        preview = text[:80] + '…' if len(text) > 80 else text
+        color = '#dc2626' if obj.is_flagged else '#374151'
+        return format_html('<span style="color:{};">{}</span>', color, preview)
+
+    @admin.display(description='Flag reason')
+    def _flag_reason(self, obj):
+        if obj.flag_reason:
+            return format_html(
+                '<span style="background:#fee2e2;color:#dc2626;padding:2px 8px;'
+                'border-radius:99px;font-size:11px;font-weight:600;">{}</span>',
+                obj.flag_reason[:60],
+            )
+        return format_html('<span style="color:#9ca3af;">—</span>')
+
+    @admin.display(description='Flagged', boolean=True)
+    def _flagged(self, obj):
+        return obj.is_flagged
+
+    @admin.display(description='Full message')
+    def _body_full(self, obj):
+        return format_html(
+            '<div style="padding:12px;background:#fafafa;border:1px solid #e5e7eb;'
+            'border-radius:6px;white-space:pre-wrap;font-size:13px;">{}</div>',
+            obj.body or '(no body)',
+        )
+
+    @admin.display(description='Vehicle')
+    def _vehicle_link(self, obj):
+        if obj.vehicle:
+            return format_html('<a href="{}">{}</a>',
+                f'../vehicle/{obj.vehicle.pk}/change/', obj.vehicle.title)
+        return '—'
+
+    # ── Actions ───────────────────────────────────────────────────
+    @admin.action(description='🚩 Manually flag selected messages')
+    def flag_messages(self, request, queryset):
+        updated = queryset.update(is_flagged=True, flag_reason='Manually flagged by admin')
+        self.message_user(request, f'{updated} message(s) flagged.')
+
+    @admin.action(description='✅ Clear flag on selected messages')
+    def clear_flag(self, request, queryset):
+        updated = queryset.update(is_flagged=False, flag_reason='')
+        self.message_user(request, f'{updated} message(s) cleared.')
+
+    class Media:
+        pass
 
 
 # ── Register all models with the custom site ───────────────────────────────────

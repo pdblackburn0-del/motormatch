@@ -26,6 +26,12 @@
     <a class="mm-quick-btn mm-quick-btn--rose" href="{% url 'motormatch_admin:motormatch_vehicle_changelist' %}?is_removed__exact=1">
         <i class="bi bi-slash-circle-fill"></i> Removed ({{ stat_removed|default:"0" }})
     </a>
+    {% if stat_flagged_msgs %}
+    <a class="mm-quick-btn mm-quick-btn--danger" href="{% url 'motormatch_admin:motormatch_message_changelist' %}?is_flagged__exact=1">
+        <i class="bi bi-exclamation-triangle-fill"></i> Flagged Messages
+        <span class="mm-alert-badge">{{ stat_flagged_msgs }}</span>
+    </a>
+    {% endif %}
 </div>
 
 {# ── Primary stats ─────────────────────────────────────────────── #}
@@ -156,6 +162,106 @@
 
 {# ── Section label ─────────────────────────────────────────────── #}
 <div class="mm-section-label">
+    <i class="bi bi-bar-chart-fill"></i> Analytics &mdash; Last 30 Days
+</div>
+
+{# ── Charts ───────────────────────────────────────────────────────── #}
+<div class="mm-charts-grid">
+
+    <div class="mm-chart-card">
+        <div class="mm-chart-card__header">
+            <span class="mm-chart-card__title"><i class="bi bi-person-plus-fill"></i> User Registrations</span>
+            <span class="mm-chart-card__sub">30-day trend</span>
+        </div>
+        <div class="mm-chart-card__body">
+            <canvas id="chartUsers" height="110"></canvas>
+        </div>
+    </div>
+
+    <div class="mm-chart-card">
+        <div class="mm-chart-card__header">
+            <span class="mm-chart-card__title"><i class="bi bi-graph-up"></i> Marketplace Activity</span>
+            <span class="mm-chart-card__sub">Listings &amp; Bids — 30 days</span>
+        </div>
+        <div class="mm-chart-card__body">
+            <canvas id="chartMarket" height="110"></canvas>
+        </div>
+    </div>
+
+</div>
+
+{# Inject Chart.js data & render #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    const labels   = {{ chart_labels|safe }};
+    const users    = {{ chart_users|safe }};
+    const vehicles = {{ chart_vehicles|safe }};
+    const bids     = {{ chart_bids|safe }};
+
+    const gridColor = 'rgba(0,0,0,0.05)';
+    const baseOpts  = {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { position: 'top', labels: { font: { family: 'Inter', size: 11 }, boxWidth: 10 } } },
+        scales: {
+            x: { grid: { color: gridColor }, ticks: { font: { size: 10 }, maxTicksLimit: 8 } },
+            y: { grid: { color: gridColor }, ticks: { font: { size: 10 }, stepSize: 1, precision: 0 }, beginAtZero: true },
+        },
+    };
+
+    new Chart(document.getElementById('chartUsers'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'New Users',
+                data: users,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,0.08)',
+                borderWidth: 2,
+                pointRadius: 2,
+                fill: true,
+                tension: 0.35,
+            }]
+        },
+        options: baseOpts,
+    });
+
+    new Chart(document.getElementById('chartMarket'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Listings',
+                    data: vehicles,
+                    borderColor: '#16a34a',
+                    backgroundColor: 'rgba(22,163,74,0.07)',
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    fill: true,
+                    tension: 0.35,
+                },
+                {
+                    label: 'Bids',
+                    data: bids,
+                    borderColor: '#d97706',
+                    backgroundColor: 'rgba(217,119,6,0.07)',
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    fill: true,
+                    tension: 0.35,
+                }
+            ]
+        },
+        options: baseOpts,
+    });
+}());
+</script>
+
+{# ── Section label ─────────────────────────────────────────────── #}
+<div class="mm-section-label">
     <i class="bi bi-activity"></i> Recent Activity
 </div>
 
@@ -276,6 +382,86 @@
 {# ── Section label ─────────────────────────────────────────────── #}
 <div class="mm-section-label">
     <i class="bi bi-grid-fill"></i> Manage Sections
+</div>
+
+{# ── Bottom two-panel row: Moderation + Admin log ───────────────── #}
+<div class="mm-moderation-grid">
+
+    {# Flagged messages panel #}
+    <div class="mm-recent-card mm-recent-card--danger">
+        <div class="mm-recent-card__header">
+            <span class="mm-recent-card__title">
+                <i class="bi bi-exclamation-triangle-fill" style="color:#dc2626;"></i>
+                Message Moderation
+                {% if stat_flagged_msgs %}
+                <span class="mm-alert-badge" style="margin-left:6px;">{{ stat_flagged_msgs }}</span>
+                {% endif %}
+            </span>
+            <a class="mm-recent-card__link" href="{% url 'motormatch_admin:motormatch_message_changelist' %}">View all &rarr;</a>
+        </div>
+        {% for msg in flagged_messages %}
+        <div class="mm-recent-item">
+            <div class="mm-avatar mm-avatar--red" title="Flagged">
+                <i class="bi bi-flag-fill" style="font-size:11px;"></i>
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div class="mm-recent-item__label">
+                    {% with e=msg.sender.email %}
+                    {{ e|slice:":2" }}***@{{ e|slice:"e.find('@')+1:" }}
+                    {% endwith %}
+                    <i class="bi bi-arrow-right" style="font-size:10px;color:#9ca3af;margin:0 2px;"></i>
+                    {% with e=msg.recipient.email %}
+                    {{ e|slice:":2" }}***
+                    {% endwith %}
+                </div>
+                <div class="mm-recent-item__sub" style="color:#dc2626;">
+                    {{ msg.flag_reason|default:"Manually flagged"|truncatechars:55 }}
+                </div>
+                <div class="mm-recent-item__sub">{{ msg.body|truncatechars:60 }}</div>
+            </div>
+            <div class="mm-recent-item__sub" style="white-space:nowrap;">{{ msg.created_at|date:"d M" }}</div>
+        </div>
+        {% empty %}
+        <div class="mm-empty-state" style="color:#16a34a;">
+            <i class="bi bi-check-circle-fill"></i> No flagged messages. All clear.
+        </div>
+        {% endfor %}
+    </div>
+
+    {# Admin Activity log #}
+    <div class="mm-recent-card">
+        <div class="mm-recent-card__header">
+            <span class="mm-recent-card__title"><i class="bi bi-journal-text"></i> Admin Activity Log</span>
+            <span class="mm-recent-card__sub-label">Last 12 actions</span>
+        </div>
+        {% for entry in admin_log %}
+        <div class="mm-recent-item">
+            <div class="mm-avatar
+                {% if entry.is_addition %}mm-avatar--green
+                {% elif entry.is_deletion %}mm-avatar--red
+                {% else %}mm-avatar--slate{% endif %}">
+                {% if entry.is_addition %}<i class="bi bi-plus-lg" style="font-size:10px;"></i>
+                {% elif entry.is_deletion %}<i class="bi bi-trash3-fill" style="font-size:10px;"></i>
+                {% else %}<i class="bi bi-pencil-fill" style="font-size:10px;"></i>
+                {% endif %}
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div class="mm-recent-item__label">
+                    {% if entry.is_addition %}Added{% elif entry.is_deletion %}Deleted{% else %}Changed{% endif %}
+                    <strong>{{ entry.object_repr|truncatechars:28 }}</strong>
+                </div>
+                <div class="mm-recent-item__sub">
+                    {{ entry.content_type.name|capfirst }}
+                    &middot; {{ entry.user.email|default:entry.user.username }}
+                </div>
+            </div>
+            <div class="mm-recent-item__sub" style="white-space:nowrap;">{{ entry.action_time|date:"d M, H:i" }}</div>
+        </div>
+        {% empty %}
+        <div class="mm-empty-state"><i class="bi bi-inbox"></i> No admin actions yet.</div>
+        {% endfor %}
+    </div>
+
 </div>
 
 {# ── Section cards grid (replaces table-based All Sections) ──────── #}

@@ -1250,7 +1250,95 @@ ul.messagelist li.info    { background: #eff6ff !important; border-color: #bfdbf
     border: 1px solid transparent;
 }
 
-/* ── 23. Misc ─────────────────────────────────────────────────── */
+/* ── 23. Chart cards ─────────────────────────────────────────── */
+.mm-charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.mm-chart-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--mm-radius);
+    box-shadow: var(--mm-shadow);
+    overflow: hidden;
+}
+
+.mm-chart-card__header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fafafa;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mm-chart-card__title {
+    font-size: 12.5px; font-weight: 700; color: #111827;
+    display: flex; align-items: center; gap: 6px;
+}
+.mm-chart-card__title i { color: #6b7280; }
+.mm-chart-card__sub { font-size: 11px; color: #9ca3af; font-weight: 500; }
+
+.mm-chart-card__body {
+    padding: 16px 18px 12px;
+}
+
+/* ── 24. Moderation grid ─────────────────────────────────────── */
+.mm-moderation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.mm-recent-card--danger {
+    border-color: #fecaca;
+}
+.mm-recent-card--danger .mm-recent-card__header {
+    background: #fff5f5;
+    border-bottom-color: #fecaca;
+}
+
+.mm-recent-card__sub-label {
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+/* ── 25. Alert badge ─────────────────────────────────────────── */
+.mm-alert-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px; height: 18px;
+    padding: 0 5px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 99px;
+}
+
+.mm-quick-btn--danger {
+    background: #dc2626;
+    color: #fff !important;
+    animation: mm-pulse 2s infinite;
+}
+
+@keyframes mm-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,.4); }
+    50%       { box-shadow: 0 0 0 6px rgba(220,38,38,0); }
+}
+
+/* ── 26. Log avatars (addition/deletion/change) ──────────────── */
+.mm-avatar--green  { background: #dcfce7; color: #16a34a; }
+.mm-avatar--red    { background: #fee2e2; color: #dc2626; }
+.mm-avatar--slate  { background: #f1f5f9; color: #475569; }
+
+/* ── 27. Misc ─────────────────────────────────────────────────── */
 .add-row a { color: #2563eb !important; font-size: 13px !important; font-weight: 500 !important; }
 .related-lookup { color: #2563eb !important; margin-left: 6px !important; }
 .clear_all { color: #dc2626 !important; font-size: 12px !important; }
@@ -1276,14 +1364,16 @@ a.related-widget-wrapper-link { color: #2563eb !important; }
 td.empty { color: #6b7280 !important; }
 .prepopulated_field .help { color: #6b7280 !important; }
 
-/* ── 24. Responsive ───────────────────────────────────────────── */
+/* ── 28. Responsive ───────────────────────────────────────────── */
 @media (max-width: 1400px) {
     .mm-stats-secondary { grid-template-columns: repeat(4, 1fr); }
 }
 
 @media (max-width: 1200px) {
-    .mm-stats-primary   { grid-template-columns: repeat(2, 1fr); }
-    .mm-activity-grid   { grid-template-columns: repeat(2, 1fr); }
+    .mm-stats-primary    { grid-template-columns: repeat(2, 1fr); }
+    .mm-activity-grid    { grid-template-columns: repeat(2, 1fr); }
+    .mm-charts-grid      { grid-template-columns: 1fr; }
+    .mm-moderation-grid  { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 1024px) {
@@ -1294,9 +1384,11 @@ td.empty { color: #6b7280 !important; }
 }
 
 @media (max-width: 768px) {
-    .mm-stats-primary   { grid-template-columns: 1fr 1fr; }
-    .mm-stats-secondary { grid-template-columns: repeat(2, 1fr); }
-    .mm-activity-grid   { grid-template-columns: 1fr; }
-    .mm-section-cards   { grid-template-columns: 1fr 1fr; }
-    .mm-quick-actions   { flex-direction: column; }
+    .mm-stats-primary    { grid-template-columns: 1fr 1fr; }
+    .mm-stats-secondary  { grid-template-columns: repeat(2, 1fr); }
+    .mm-activity-grid    { grid-template-columns: 1fr; }
+    .mm-section-cards    { grid-template-columns: 1fr 1fr; }
+    .mm-quick-actions    { flex-direction: column; }
+    .mm-charts-grid      { grid-template-columns: 1fr; }
+    .mm-moderation-grid  { grid-template-columns: 1fr; }
 }

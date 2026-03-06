@@ -196,22 +196,47 @@ class Review(models.Model):
         return f"{self.reviewer} → {self.reviewed_user} ({self.rating}★)"
 
 
+# ── Message moderation keyword list ─────────────────────────────────────────
+# Extend this list in your env/settings to catch more phrases.
+_FLAG_KEYWORDS = [
+    'hate', 'kill', 'murder', 'rape', 'terrorist', 'bomb',
+    'nigger', 'nigga', 'faggot', 'chink', 'spic', 'kike',
+    'retard', 'whore', 'cunt', 'slut',
+]
+
+
 class Message(models.Model):
-    sender     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
-    recipient  = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
-    vehicle    = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True, blank=True, related_name='messages')
-    subject    = models.CharField(max_length=200, blank=True)
-    body       = models.TextField(blank=True)
-    attachment = CloudinaryField('attachment', folder='message_attachments', blank=True, null=True)
-    gif_url    = models.CharField(max_length=500, blank=True)  # Tenor GIF direct URL
-    is_read    = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    sender      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    recipient   = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    vehicle     = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True, blank=True, related_name='messages')
+    subject     = models.CharField(max_length=200, blank=True)
+    body        = models.TextField(blank=True)
+    attachment  = CloudinaryField('attachment', folder='message_attachments', blank=True, null=True)
+    gif_url     = models.CharField(max_length=500, blank=True)  # Tenor GIF direct URL
+    is_read     = models.BooleanField(default=False)
+    is_flagged  = models.BooleanField(default=False, db_index=True)
+    flag_reason = models.CharField(max_length=500, blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.sender.email} → {self.recipient.email}: {self.subject}"
+
+
+@receiver(post_save, sender=Message)
+def auto_flag_message(sender, instance, created, **kwargs):
+    """Automatically flag messages containing offensive keywords."""
+    if not created:
+        return
+    text = f"{instance.subject} {instance.body}".lower()
+    triggered = [kw for kw in _FLAG_KEYWORDS if kw in text]
+    if triggered:
+        Message.objects.filter(pk=instance.pk).update(
+            is_flagged=True,
+            flag_reason=f"Auto-flagged: {', '.join(triggered[:5])}",
+        )
 
 
 class Bid(models.Model):

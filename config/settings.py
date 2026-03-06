@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'cloudinary',
     'cloudinary_storage',
+    'axes',                    # brute-force login protection
     # Legacy app — keep registered so existing migrations stay valid
     'motormatch',
     # New structured apps
@@ -75,6 +76,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # serve static files in production
+    'axes.middleware.AxesMiddleware',              # must be after SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -201,9 +203,18 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',         # must be first for axes to work
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
+
+# ── django-axes: brute-force protection ───────────────────────────────────────
+AXES_FAILURE_LIMIT       = 5          # lock after 5 failed attempts
+AXES_COOLOFF_TIME        = 1          # hours before lockout expires (int = hours)
+AXES_LOCKOUT_PARAMETERS  = ['username', 'ip_address']   # lock by username+ip
+AXES_RESET_ON_SUCCESS    = True       # reset failure count on successful login
+AXES_ENABLE_ADMIN        = True       # show Access Attempts in admin
+AXES_VERBOSE             = False      # suppress noisy logging
 
 SITE_ID = 1
 
