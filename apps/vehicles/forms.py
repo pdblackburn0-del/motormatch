@@ -2,6 +2,8 @@ from django import forms
 
 from apps.vehicles.models import Vehicle
 
+from motormatch.utils import validate_image_file, validate_image_url
+
 FUEL_CHOICES = [
 
     ('Petrol',         'Petrol'),
@@ -45,6 +47,17 @@ class VehicleEditForm(forms.ModelForm):
         fields = ['title', 'variant', 'price', 'mileage', 'year', 'fuel',
 
                   'transmission', 'location', 'description', 'image_file', 'image']
+
+    def clean_image_file(self):
+        f = self.cleaned_data.get('image_file')
+        if f:
+            validate_image_file(f)
+        return f
+
+    def clean_image(self):
+        url = self.cleaned_data.get('image', '').strip()
+        validate_image_url(url)
+        return url
 
         widgets = {
 
@@ -91,6 +104,17 @@ class SellForm(forms.Form):
     image_file   = forms.ImageField(label='Main Photo', required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
 
     image_url    = forms.CharField(label='Or paste an image URL', required=False, widget=forms.TextInput(attrs={'placeholder': 'https://...', 'class': 'form-control'}))
+
+    def clean_image_file(self):
+        f = self.cleaned_data.get('image_file')
+        if f:
+            validate_image_file(f)
+        return f
+
+    def clean_image_url(self):
+        url = self.cleaned_data.get('image_url', '').strip()
+        validate_image_url(url)
+        return url
 
     location     = forms.CharField(max_length=100, required=False, label='Location', widget=forms.TextInput(attrs={'placeholder': 'e.g. London, UK', 'class': 'form-control'}))
 

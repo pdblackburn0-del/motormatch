@@ -28,6 +28,8 @@ from apps.vehicles.models import Vehicle
 
 from apps.users.middleware import get_online_status, invalidate_poll_cache, check_rate_limit
 
+from motormatch.utils import validate_image_file, _MAX_ATTACHMENT_BYTES, _ALLOWED_ATTACHMENT_TYPES
+
 User = get_user_model()
 
 @login_required
@@ -158,6 +160,12 @@ def send_message_ajax(request, user_pk):
     attach  = request.FILES.get('attachment')
 
     gif_url = request.POST.get('gif_url', '').strip()
+
+    if attach:
+        try:
+            validate_image_file(attach, max_bytes=_MAX_ATTACHMENT_BYTES, allowed_types=_ALLOWED_ATTACHMENT_TYPES)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
 
     if not body and not attach and not gif_url:
 

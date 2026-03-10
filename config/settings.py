@@ -26,7 +26,7 @@ if os.path.isfile("env.py"):
 
     import env
 
-DEBUG = False
+DEBUG = os.environ.get("DEVELOPMENT", "False") == "True"
 
 _secret_key = os.environ.get("SECRET_KEY", "")
 
@@ -393,6 +393,6 @@ if not DEBUG:
 
     X_FRAME_OPTIONS                = 'DENY'
 
-TENOR_API_KEY = os.environ.get('TENOR_API_KEY', 'LIVDSRZULELA')
+TENOR_API_KEY = os.environ.get('TENOR_API_KEY', '')
 
 DVLA_API_KEY  = os.environ.get('DVLA_API_KEY', '')

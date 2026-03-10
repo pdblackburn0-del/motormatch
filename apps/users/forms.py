@@ -4,6 +4,8 @@ from allauth.account.forms import SignupForm
 
 from apps.users.models import UserProfile
 
+from motormatch.utils import validate_image_file, _MAX_AVATAR_BYTES
+
 class ProfileForm(forms.ModelForm):
 
     class Meta:
@@ -27,6 +29,12 @@ class ProfileForm(forms.ModelForm):
             'avatar':     forms.ClearableFileInput(attrs={'class': 'form-control'}),
 
         }
+
+    def clean_avatar(self):
+        f = self.cleaned_data.get('avatar')
+        if f and hasattr(f, 'size'):
+            validate_image_file(f, max_bytes=_MAX_AVATAR_BYTES)
+        return f
 
 class CustomSignupForm(SignupForm):
 
