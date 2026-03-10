@@ -7,7 +7,7 @@
 {{ block.super }}
 
 <meta name="color-scheme" content="light">
-<link rel="icon" type="image/png" href="https://res.cloudinary.com/dwe00uiuy/image/upload/w_32,h_32,c_fit/v1772713194/Screenshot_2026-03-05_at_12.18.45_pcytig.png">
+<link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@
 
 {% block branding %}
 <div id="branding" style="display:flex;align-items:center;gap:12px;">
-    <img src="https://res.cloudinary.com/dwe00uiuy/image/upload/w_28,h_28,c_fit/v1772713194/Screenshot_2026-03-05_at_12.18.45_pcytig.png"
+    <img src="{% static 'images/logo.png' %}"
          alt="Motor Match" style="height:28px;width:auto;border-radius:6px;">
     <h1><a href="{% url 'motormatch_admin:index' %}">Motor Match</a></h1>
     <span style="background:#1e3a5f;color:#60a5fa;font-size:10px;font-weight:700;
