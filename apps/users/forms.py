@@ -8,6 +8,11 @@ from motormatch.utils import validate_image_file, _MAX_AVATAR_BYTES
 
 class ProfileForm(forms.ModelForm):
 
+    avatar = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control'}),
+    )
+
     class Meta:
 
         model = UserProfile
@@ -26,13 +31,11 @@ class ProfileForm(forms.ModelForm):
 
             'location':   forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. London, UK'}),
 
-            'avatar':     forms.ClearableFileInput(attrs={'class': 'form-control'}),
-
         }
 
     def clean_avatar(self):
         f = self.cleaned_data.get('avatar')
-        if f and hasattr(f, 'size'):
+        if f:
             validate_image_file(f, max_bytes=_MAX_AVATAR_BYTES)
         return f
 
