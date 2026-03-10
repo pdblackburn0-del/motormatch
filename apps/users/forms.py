@@ -4,7 +4,7 @@ from allauth.account.forms import SignupForm
 
 from apps.users.models import UserProfile
 
-from motormatch.utils import validate_image_file, _MAX_AVATAR_BYTES
+from motormatch.utils import validate_image_file, _MAX_AVATAR_BYTES, sanitize_plain_text
 
 class ProfileForm(forms.ModelForm):
 
@@ -32,6 +32,21 @@ class ProfileForm(forms.ModelForm):
             'location':   forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. London, UK'}),
 
         }
+
+    def clean_first_name(self):
+        return sanitize_plain_text(self.cleaned_data.get('first_name', ''))
+
+    def clean_last_name(self):
+        return sanitize_plain_text(self.cleaned_data.get('last_name', ''))
+
+    def clean_phone(self):
+        return sanitize_plain_text(self.cleaned_data.get('phone', ''))
+
+    def clean_location(self):
+        return sanitize_plain_text(self.cleaned_data.get('location', ''))
+
+    def clean_bio(self):
+        return sanitize_plain_text(self.cleaned_data.get('bio', ''))
 
     def clean_avatar(self):
         f = self.cleaned_data.get('avatar')
@@ -68,6 +83,15 @@ class CustomSignupForm(SignupForm):
     )
 
     field_order = ['first_name', 'last_name', 'email', 'phone', 'password1', 'password2']
+
+    def clean_first_name(self):
+        return sanitize_plain_text(self.cleaned_data.get('first_name', ''))
+
+    def clean_last_name(self):
+        return sanitize_plain_text(self.cleaned_data.get('last_name', ''))
+
+    def clean_phone(self):
+        return sanitize_plain_text(self.cleaned_data.get('phone', ''))
 
     def save(self, request):
 

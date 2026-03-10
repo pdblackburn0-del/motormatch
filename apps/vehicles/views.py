@@ -4,6 +4,8 @@ import hashlib
 
 import re
 
+from motormatch.utils import sanitize_plain_text
+
 from django.contrib import messages
 
 from django.contrib.auth.decorators import login_required
@@ -484,7 +486,7 @@ def add_review(request, pk):
 
     rating  = request.POST.get('rating')
 
-    comment = request.POST.get('comment', '').strip()
+    comment = sanitize_plain_text(request.POST.get('comment', '').strip())
 
     if not rating or not rating.isdigit() or not (1 <= int(rating) <= 5):
 

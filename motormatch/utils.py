@@ -1,6 +1,14 @@
 import imghdr
 
+import bleach
+
 from django import forms
+
+
+def sanitize_plain_text(value):
+    if not value:
+        return value
+    return bleach.clean(value, tags=[], strip=True)
 
 _ALLOWED_IMAGE_TYPES = {'jpeg', 'png', 'webp'}
 _ALLOWED_ATTACHMENT_TYPES = {'jpeg', 'png', 'webp', 'gif'}

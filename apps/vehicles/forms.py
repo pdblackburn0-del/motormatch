@@ -2,7 +2,7 @@ from django import forms
 
 from apps.vehicles.models import Vehicle
 
-from motormatch.utils import validate_image_file, validate_image_url
+from motormatch.utils import validate_image_file, validate_image_url, sanitize_plain_text
 
 FUEL_CHOICES = [
 
@@ -58,6 +58,9 @@ class VehicleEditForm(forms.ModelForm):
         url = self.cleaned_data.get('image', '').strip()
         validate_image_url(url)
         return url
+
+    def clean_description(self):
+        return sanitize_plain_text(self.cleaned_data.get('description', ''))
 
         widgets = {
 
@@ -115,6 +118,9 @@ class SellForm(forms.Form):
         url = self.cleaned_data.get('image_url', '').strip()
         validate_image_url(url)
         return url
+
+    def clean_description(self):
+        return sanitize_plain_text(self.cleaned_data.get('description', ''))
 
     location     = forms.CharField(max_length=100, required=False, label='Location', widget=forms.TextInput(attrs={'placeholder': 'e.g. London, UK', 'class': 'form-control'}))
 

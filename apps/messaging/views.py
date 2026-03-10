@@ -28,7 +28,7 @@ from apps.vehicles.models import Vehicle
 
 from apps.users.middleware import get_online_status, invalidate_poll_cache, check_rate_limit
 
-from motormatch.utils import validate_image_file, _MAX_ATTACHMENT_BYTES, _ALLOWED_ATTACHMENT_TYPES
+from motormatch.utils import validate_image_file, _MAX_ATTACHMENT_BYTES, _ALLOWED_ATTACHMENT_TYPES, sanitize_plain_text
 
 User = get_user_model()
 
@@ -153,7 +153,7 @@ def send_message_ajax(request, user_pk):
 
     other   = get_object_or_404(User, pk=user_pk)
 
-    body    = request.POST.get('body', '').strip()
+    body    = sanitize_plain_text(request.POST.get('body', '').strip())
 
     vid     = request.POST.get('vehicle_id')
 
@@ -447,7 +447,7 @@ def send_message(request, pk=None):
 
     subject      = request.POST.get('subject', '').strip()
 
-    body         = request.POST.get('body', '').strip()
+    body         = sanitize_plain_text(request.POST.get('body', '').strip())
 
     if not recipient_id or not body:
 
