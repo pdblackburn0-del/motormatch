@@ -2,9 +2,13 @@ import concurrent.futures
 
 import hashlib
 
+import json
+
 import re
 
 from motormatch.utils import sanitize_plain_text
+
+from django.core.cache import cache
 
 from django.contrib import messages
 
@@ -88,6 +92,19 @@ _CO2           = [89, 99, 109, 119, 129, 139, 149, 179]
 
 _VRM_EXECUTOR = concurrent.futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix='dvla_lookup')
 
+
+def _invalidate_listing_caches(vehicle_pk=None):
+    """Clear cached data whenever a vehicle is created, updated, or removed."""
+    cache.delete('homepage:public')
+    cache.delete('browse:facets')
+    try:
+        cache.delete_pattern('browse:qs:*')
+    except Exception:
+        pass
+    if vehicle_pk is not None:
+        cache.delete(f'vd:{vehicle_pk}')
+
+
 def index(request):
 
     query = request.GET.get('q', '').strip()
@@ -130,9 +147,16 @@ def index(request):
 
         saved_pks = set(SavedVehicle.objects.filter(user=request.user).values_list('vehicle_id', flat=True))
 
-    recently_listed = Vehicle.objects.filter(is_removed=False).order_by('-created_at')[:12]
-
-    total_listed    = Vehicle.objects.filter(is_removed=False).count()
+    _home_cached = cache.get('homepage:public')
+    if _home_cached is None:
+        recently_listed = list(
+            Vehicle.objects.filter(is_removed=False).order_by('-created_at')[:12]
+        )
+        total_listed = Vehicle.objects.filter(is_removed=False).count()
+        cache.set('homepage:public', {'recently_listed': recently_listed, 'total_listed': total_listed}, 120)
+    else:
+        recently_listed = _home_cached['recently_listed']
+        total_listed    = _home_cached['total_listed']
 
     return render(request, 'pages/home.html', {
 
@@ -142,7 +166,7 @@ def index(request):
 
         'recently_listed': recently_listed[:4],
 
-        'remaining_cars':  list(recently_listed[4:]),
+        'remaining_cars':  recently_listed[4:],
 
         'query':           query,
 
@@ -154,45 +178,43 @@ def index(request):
 
 def vehicle_detail(request, pk):
 
-    car = get_object_or_404(Vehicle, pk=pk)
+    _vd_key = f'vd:{pk}'
+    _public = cache.get(_vd_key)
+    if _public is None:
+        car = get_object_or_404(Vehicle, pk=pk)
+        _seller_reviews    = []
+        _seller_avg        = None
+        _seller_badge_info = None
+        if car.owner:
+            _seller_reviews    = list(car.owner.reviews_received.select_related('reviewer__profile').all())
+            _prof              = getattr(car.owner, 'profile', None)
+            _seller_avg        = _prof.average_rating() if _prof else None
+            _seller_badge_info = _prof.get_badge_info() if _prof else None
+        _car_bids    = list(car.bids.select_related('bidder', 'bidder__profile').order_by('-amount'))
+        _accepted_bid = next((b for b in _car_bids if b.status == 'accepted'), None)
+        _public = {
+            'car':               car,
+            'seller_reviews':    _seller_reviews,
+            'seller_avg':        _seller_avg,
+            'seller_badge_info': _seller_badge_info,
+            'car_bids':          _car_bids,
+            'accepted_bid':      _accepted_bid,
+        }
+        cache.set(_vd_key, _public, 300)
+    else:
+        car = _public['car']
 
     is_saved = (
-
         request.user.is_authenticated
-
         and SavedVehicle.objects.filter(user=request.user, vehicle=car).exists()
-
     )
-
-    seller_reviews    = []
-
-    seller_avg        = None
-
-    seller_badge_info = None
-
-    if car.owner:
-
-        seller_reviews    = car.owner.reviews_received.select_related('reviewer__profile').all()
-
-        prof              = getattr(car.owner, 'profile', None)
-
-        seller_avg        = prof.average_rating() if prof else None
-
-        seller_badge_info = prof.get_badge_info() if prof else None
 
     user_already_reviewed = (
-
         request.user.is_authenticated and car.owner
-
         and car.owner.reviews_received.filter(reviewer=request.user).exists()
-
     )
 
-    car_bids     = car.bids.select_related('bidder', 'bidder__profile').order_by('-amount')
-
-    user_bid     = car.bids.filter(bidder=request.user).first() if request.user.is_authenticated else None
-
-    accepted_bid = car.bids.filter(status='accepted').select_related('bidder', 'bidder__profile').first()
+    user_bid = car.bids.filter(bidder=request.user).first() if request.user.is_authenticated else None
 
     if request.user.is_authenticated:
 
@@ -204,19 +226,19 @@ def vehicle_detail(request, pk):
 
         'is_saved':              is_saved,
 
-        'seller_reviews':        seller_reviews,
+        'seller_reviews':        _public['seller_reviews'],
 
-        'seller_avg':            seller_avg,
+        'seller_avg':            _public['seller_avg'],
 
         'user_already_reviewed': user_already_reviewed,
 
-        'car_bids':              car_bids,
+        'car_bids':              _public['car_bids'],
 
         'user_bid':              user_bid,
 
-        'accepted_bid':          accepted_bid,
+        'accepted_bid':          _public['accepted_bid'],
 
-        'seller_badge_info':     seller_badge_info,
+        'seller_badge_info':     _public['seller_badge_info'],
 
     })
 
@@ -318,23 +340,43 @@ def browse(request):
 
     qs = qs.order_by(sort_options.get(sort, '-created_at'))
 
+    # Cache per-filter vehicle list & count
+    _browse_key = 'browse:qs:' + hashlib.md5(
+        json.dumps({'q': q, 'fuel': fuel, 'transmission': transmission,
+                    'year_from': year_from, 'year_to': year_to,
+                    'badge': badge, 'sort': sort}, sort_keys=True).encode()
+    ).hexdigest()
+    _browse_cached = cache.get(_browse_key)
+    if _browse_cached is None:
+        vehicles_list = list(qs)
+        total = len(vehicles_list)
+        cache.set(_browse_key, {'vehicles': vehicles_list, 'total': total}, 300)
+    else:
+        vehicles_list = _browse_cached['vehicles']
+        total         = _browse_cached['total']
+
     saved_pks = set()
 
     if request.user.is_authenticated:
 
         saved_pks = set(SavedVehicle.objects.filter(user=request.user).values_list('vehicle_id', flat=True))
 
-    base_qs = Vehicle.objects.filter(is_removed=False)
-
-    fuels         = sorted(set(base_qs.exclude(fuel='').values_list('fuel', flat=True)))
-
-    transmissions = sorted(set(base_qs.exclude(transmission__isnull=True).exclude(transmission='').values_list('transmission', flat=True)))
-
-    years         = sorted(set(base_qs.exclude(year__isnull=True).exclude(year='').values_list('year', flat=True)), reverse=True)
+    # Cache filter facets (fuels / transmissions / years)
+    _facets = cache.get('browse:facets')
+    if _facets is None:
+        _base = Vehicle.objects.filter(is_removed=False)
+        fuels         = sorted(set(_base.exclude(fuel='').values_list('fuel', flat=True)))
+        transmissions = sorted(set(_base.exclude(transmission__isnull=True).exclude(transmission='').values_list('transmission', flat=True)))
+        years         = sorted(set(_base.exclude(year__isnull=True).exclude(year='').values_list('year', flat=True)), reverse=True)
+        cache.set('browse:facets', {'fuels': fuels, 'transmissions': transmissions, 'years': years}, 600)
+    else:
+        fuels         = _facets['fuels']
+        transmissions = _facets['transmissions']
+        years         = _facets['years']
 
     return render(request, 'vehicles/browse.html', {
 
-        'vehicles':      qs,
+        'vehicles':      vehicles_list,
 
         'saved_pks':     saved_pks,
 
@@ -358,7 +400,7 @@ def browse(request):
 
         'sort':          sort,
 
-        'total':         qs.count(),
+        'total':         total,
 
     })
 
@@ -375,6 +417,8 @@ def sell(request):
         if form.is_valid():
 
             vehicle = form.save(owner=request.user)
+
+            _invalidate_listing_caches()
 
             messages.success(request, 'Your listing has been published!')
 
@@ -420,6 +464,8 @@ def edit_vehicle(request, pk):
 
             form.save()
 
+            _invalidate_listing_caches(vehicle_pk=vehicle.pk)
+
             messages.success(request, 'Listing updated successfully.')
 
             return redirect('vehicle_detail', pk=vehicle.pk)
@@ -442,6 +488,8 @@ def delete_vehicle(request, pk):
 
     vehicle.save(update_fields=['is_removed'])
 
+    _invalidate_listing_caches(vehicle_pk=vehicle.pk)
+
     messages.success(request, 'Listing removed successfully.')
 
     return redirect('dashboard')
@@ -457,6 +505,8 @@ def hard_delete_vehicle(request, pk):
     title = vehicle.title
 
     vehicle.delete()
+
+    _invalidate_listing_caches(vehicle_pk=pk)
 
     messages.success(request, f'Listing "{title}" has been permanently deleted.')
 
@@ -532,7 +582,10 @@ def add_review(request, pk):
 
     messages.success(request, 'Review submitted!')
 
+    cache.delete(f'vd:{pk}')
+
     return redirect('vehicle_detail', pk=pk)
+
 
 @login_required
 
@@ -636,7 +689,10 @@ def place_bid(request, pk):
 
     messages.success(request, f'Bid of £{amount_dec:,.0f} placed!' if created else f'Bid updated to £{amount_dec:,.0f}.')
 
+    cache.delete(f'vd:{pk}')
+
     return redirect('vehicle_detail', pk=pk)
+
 
 @login_required
 
@@ -728,6 +784,8 @@ def respond_bid(request, pk):
 
         messages.success(request, f'Bid {verb}.')
 
+    cache.delete(f'vd:{bid.vehicle.pk}')
+
     return redirect('dashboard')
 
 @login_required
@@ -808,7 +866,10 @@ def bidder_respond_bid(request, pk):
 
         messages.error(request, 'Invalid action.')
 
+    cache.delete(f'vd:{bid.vehicle.pk}')
+
     return redirect('dashboard')
+
 
 def seller_profile(request, pk):
 
