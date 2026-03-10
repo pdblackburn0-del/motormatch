@@ -8,6 +8,7 @@ Blocks login for:
 """
 
 from django.utils import timezone
+from django.contrib.auth import get_user_model
 
 from allauth.account.adapter import DefaultAccountAdapter
 
@@ -22,6 +23,30 @@ class AccountAdapter(DefaultAccountAdapter):
     def authentication_error(self, request, credentials, error=None, exception=None, extra_context=None):
 
         pass
+
+    def pre_signup(self, request, user):
+
+        email = getattr(user, 'email', '') or ''
+
+        if email:
+            User = get_user_model()
+            try:
+                existing = User.objects.get(email__iexact=email)
+                if not existing.is_active:
+                    ban_reason = ''
+                    try:
+                        ban_reason = existing.profile.ban_reason or ''
+                    except Exception:
+                        pass
+                    msg = 'This email address is associated with a banned account and cannot be used to register.'
+                    if ban_reason:
+                        msg += f' Reason: {ban_reason}'
+                    django_messages.error(request, msg)
+                    raise ImmediateHttpResponse(redirect('account_signup'))
+            except User.DoesNotExist:
+                pass
+
+        return super().pre_signup(request, user)
 
     def pre_login(self, request, user, **kwargs):
 

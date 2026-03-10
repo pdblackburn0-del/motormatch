@@ -625,6 +625,10 @@ class UserAdmin(BaseUserAdmin):
 
         updated = queryset.update(is_active=True)
 
+        UserProfile.objects.filter(user__in=queryset).update(
+            is_suspended=False, suspension_until=None, ban_reason=''
+        )
+
         self.message_user(request, f'{updated} user(s) activated.')
 
     @admin.action(description='❌ Deactivate selected users')
