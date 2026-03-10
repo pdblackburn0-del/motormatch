@@ -16,6 +16,8 @@ from django.contrib.auth import get_user_model
 
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
+from django.contrib.sessions.models import Session
+
 from django.db.models import Avg, Count, Q
 
 from django.db.models.functions import TruncDate
@@ -51,6 +53,15 @@ from motormatch.models import (
 )
 
 User = get_user_model()
+
+
+def _flush_user_sessions(user_pks):
+    """Delete all DB sessions for the given user PKs for instant logout on ban."""
+    str_pks = {str(pk) for pk in user_pks}
+    for session in Session.objects.all():
+        if session.get_decoded().get('_auth_user_id') in str_pks:
+            session.delete()
+
 
 _BADGE_HEX = {
 
@@ -449,6 +460,12 @@ class MotorMatchAdminSite(AdminSite):
 
             profile.save(update_fields=['is_suspended', 'suspension_until', 'ban_reason'])
 
+            sender.is_active = False
+
+            sender.save(update_fields=['is_active'])
+
+            _flush_user_sessions([sender.pk])
+
             return JsonResponse({'ok': True, 'action': 'suspend_30d',
 
                                  'user': sender.email})
@@ -466,6 +483,8 @@ class MotorMatchAdminSite(AdminSite):
             sender.is_active = False
 
             sender.save(update_fields=['is_active'])
+
+            _flush_user_sessions([sender.pk])
 
             return JsonResponse({'ok': True, 'action': 'ban', 'user': sender.email})
 
@@ -663,6 +682,8 @@ class UserAdmin(BaseUserAdmin):
 
         count = targets.count()
 
+        pks = list(targets.values_list('pk', flat=True))
+
         targets.update(is_active=False)
 
         UserProfile.objects.filter(user__in=targets).update(
@@ -670,6 +691,8 @@ class UserAdmin(BaseUserAdmin):
             is_suspended=True, ban_reason='Permanently banned by admin.',
 
         )
+
+        _flush_user_sessions(pks)
 
         self.message_user(request, f'{count} user(s) permanently banned.')
 
@@ -909,7 +932,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
         until = timezone.now() + timedelta(days=30)
 
-        pks = queryset.values_list('user_id', flat=True)
+        pks = list(queryset.exclude(user=request.user).values_list('user_id', flat=True))
 
         updated = queryset.exclude(user=request.user).update(
 
@@ -919,7 +942,9 @@ class UserProfileAdmin(admin.ModelAdmin):
 
         )
 
-        User.objects.filter(pk__in=pks).exclude(pk=request.user.pk).update(is_active=False)
+        User.objects.filter(pk__in=pks).update(is_active=False)
+
+        _flush_user_sessions(pks)
 
         self.message_user(request, f'{updated} user(s) suspended for 30 days.')
 

@@ -15,12 +15,12 @@
     </div>
     {% elif not seller.is_active or seller_profile.is_suspended %}
     <div class="alert d-flex align-items-center gap-3 mb-4 border-0 shadow-sm rounded-3 p-3"
-         style="background:{% if not seller.is_active or not seller_profile.suspension_until %}#fef2f2{% else %}#fffbeb{% endif %};">
-        <i class="bi bi-{% if not seller.is_active or not seller_profile.suspension_until %}ban{% else %}clock{% endif %} fs-4"
-           style="color:{% if not seller.is_active or not seller_profile.suspension_until %}#dc2626{% else %}#d97706{% endif %};flex-shrink:0;"></i>
+         style="background:{% if not seller.is_active and not seller_profile.suspension_until %}#fef2f2{% else %}#fffbeb{% endif %};">
+        <i class="bi bi-{% if not seller.is_active and not seller_profile.suspension_until %}ban{% else %}clock{% endif %} fs-4"
+           style="color:{% if not seller.is_active and not seller_profile.suspension_until %}#dc2626{% else %}#d97706{% endif %};flex-shrink:0;"></i>
         <div>
-            <span class="fw-bold" style="color:{% if not seller.is_active or not seller_profile.suspension_until %}#b91c1c{% else %}#92400e{% endif %};">
-                {% if not seller.is_active or not seller_profile.suspension_until %}Account Banned{% else %}Account Suspended{% endif %}
+            <span class="fw-bold" style="color:{% if not seller.is_active and not seller_profile.suspension_until %}#b91c1c{% else %}#92400e{% endif %};">
+                {% if not seller.is_active and not seller_profile.suspension_until %}Account Banned{% else %}Account Suspended{% endif %}
             </span>
             {% if seller_profile.ban_reason %}
             <span class="ms-2 text-muted" style="font-size:.875rem;">— {{ seller_profile.ban_reason }}</span>
@@ -44,7 +44,7 @@
                      style="width:90px;height:90px;background:#f3f4f6;">
                     <i class="bi bi-person-slash" style="font-size:2rem;color:#9ca3af;"></i>
                 </div>
-                {% elif not seller.is_active or not seller_profile.suspension_until %}
+                {% elif not seller.is_active and not seller_profile.suspension_until %}
                 <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 flex-shrink-0"
                      style="width:90px;height:90px;background:#fee2e2;">
                     <i class="bi bi-ban" style="font-size:2.2rem;color:#dc2626;"></i>
@@ -70,7 +70,7 @@
                 {% if seller_profile and seller_profile.is_deleted %}
                 <h5 class="fw-bold mb-0 text-muted">Deleted Account</h5>
                 <span class="badge mt-1" style="background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb;">ACCOUNT DELETED</span>
-                {% elif not seller.is_active or not seller_profile.suspension_until %}
+                {% elif not seller.is_active and not seller_profile.suspension_until %}
                 <h5 class="fw-bold mb-0 text-muted">Banned User</h5>
                 <span class="badge bg-danger mt-1">PERMANENTLY BANNED</span>
                 {% elif seller_profile and seller_profile.is_suspended %}
@@ -105,7 +105,7 @@
                         {% endfor %}
                         <span class="text-muted small ms-1">({{ reviews.count }})</span>
                     </div>
-                {% elif not seller.is_active or not seller_profile.suspension_until %}
+                {% elif not seller.is_active and not seller_profile.suspension_until %}
                     <p class="text-muted small mb-3 mt-2">Profile unavailable</p>
                 {% else %}
                     <p class="text-muted small mb-3">No reviews yet</p>
