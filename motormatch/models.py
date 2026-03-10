@@ -172,11 +172,11 @@ class Vehicle(models.Model):
 
     mileage      = models.CharField(max_length=50)
 
-    year         = models.CharField(max_length=4, blank=True, null=True)
+    year         = models.CharField(max_length=4, blank=True, null=True, db_index=True)
 
-    fuel         = models.CharField(max_length=50)
+    fuel         = models.CharField(max_length=50, db_index=True)
 
-    transmission = models.CharField(max_length=50, blank=True, null=True)
+    transmission = models.CharField(max_length=50, blank=True, null=True, db_index=True)
 
     badge        = models.CharField(max_length=50, blank=True, null=True)
 
@@ -190,7 +190,7 @@ class Vehicle(models.Model):
 
     description  = models.TextField(blank=True)
 
-    is_removed   = models.BooleanField(default=False)
+    is_removed   = models.BooleanField(default=False, db_index=True)
 
     approval_status = models.CharField(
 
@@ -204,7 +204,15 @@ class Vehicle(models.Model):
 
     approval_note = models.CharField(max_length=500, blank=True)
 
-    created_at   = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    created_at   = models.DateTimeField(auto_now_add=True, null=True, blank=True, db_index=True)
+
+    class Meta:
+        indexes = [
+            # Primary browse query: active listings sorted by date
+            models.Index(fields=['is_removed', '-created_at'], name='vehicle_active_date_idx'),
+            # Seller profile: listings by owner that are active
+            models.Index(fields=['owner', 'is_removed'], name='vehicle_owner_active_idx'),
+        ]
 
     _BADGE_CLASS_MAP = {
 
@@ -380,7 +388,7 @@ class Message(models.Model):
 
     gif_url     = models.CharField(max_length=500, blank=True)
 
-    is_read          = models.BooleanField(default=False)
+    is_read          = models.BooleanField(default=False, db_index=True)
 
     is_flagged       = models.BooleanField(default=False, db_index=True)
 
@@ -397,6 +405,13 @@ class Message(models.Model):
     class Meta:
 
         ordering = ['-created_at']
+
+        indexes = [
+            # Conversation thread lookup: both directions in one scan
+            models.Index(fields=['sender', 'recipient'], name='msg_sender_recipient_idx'),
+            # Unread count per recipient
+            models.Index(fields=['recipient', 'is_read'], name='msg_recipient_read_idx'),
+        ]
 
     def __str__(self):
 
