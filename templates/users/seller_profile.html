@@ -238,7 +238,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 (function () {
     var btn = document.getElementById('copyLinkBtn');
     if (!btn) return;

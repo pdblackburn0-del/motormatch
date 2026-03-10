@@ -106,6 +106,8 @@ MIDDLEWARE = [
 
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
+    'csp.middleware.CSPMiddleware',
+
     'apps.users.middleware.IpRateLimitMiddleware',
 
     'axes.middleware.AxesMiddleware',
@@ -398,3 +400,15 @@ if not DEBUG:
 TENOR_API_KEY = os.environ.get('TENOR_API_KEY', '')
 
 DVLA_API_KEY  = os.environ.get('DVLA_API_KEY', '')
+
+CSP_DEFAULT_SRC    = ("'self'",)
+CSP_SCRIPT_SRC     = ("'self'", 'cdn.jsdelivr.net')
+CSP_STYLE_SRC      = ("'self'", "'unsafe-inline'", 'cdn.jsdelivr.net', 'fonts.googleapis.com')
+CSP_FONT_SRC       = ("'self'", 'cdn.jsdelivr.net', 'fonts.gstatic.com')
+CSP_IMG_SRC        = ("'self'", 'data:', 'res.cloudinary.com', '*.tenor.com')
+CSP_CONNECT_SRC    = ("'self'",)
+CSP_OBJECT_SRC     = ("'none'",)
+CSP_BASE_URI       = ("'self'",)
+CSP_FRAME_ANCESTORS = ("'none'",)
+CSP_FORM_ACTION    = ("'self'",)
+CSP_INCLUDE_NONCE_IN = ['script-src']

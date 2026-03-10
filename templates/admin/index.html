@@ -199,7 +199,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-<script>
+<script nonce="{{ request.csp_nonce }}">
 (function () {
     const labels   = {{ chart_labels|safe }};
     const users    = {{ chart_users|safe }};
@@ -711,7 +711,7 @@
 </div>
 {% endwith %}
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 (function () {
     document.querySelectorAll('.mm-progress-fill[data-pct]').forEach(function (el) {
         var pct = parseFloat(el.getAttribute('data-pct') || '0');
@@ -720,7 +720,7 @@
 }());
 </script>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 (function () {
     // ── WebSocket live updates ──────────────────────────────────────
     var wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
