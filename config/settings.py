@@ -106,6 +106,8 @@ MIDDLEWARE = [
 
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
+    'apps.users.middleware.IpRateLimitMiddleware',
+
     'axes.middleware.AxesMiddleware',
 
     'django.contrib.sessions.middleware.SessionMiddleware',

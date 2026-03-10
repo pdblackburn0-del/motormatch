@@ -299,3 +299,47 @@ class BanSuspendMiddleware:
                     profile.save(update_fields=['is_suspended', 'suspension_until'])
 
         return self.get_response(request)
+
+
+_IP_RATE_LIMITED_PATHS = {
+    '/accounts/signup/':         (5, 600),
+    '/accounts/password/reset/': (5, 600),
+}
+
+
+def _get_client_ip(request):
+    forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+    if forwarded:
+        return forwarded.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', '0.0.0.0')
+
+
+def _ip_rate_limit(ip, path, max_count, window):
+    import time
+    try:
+        from django_redis import get_redis_connection
+        conn   = get_redis_connection('default')
+        bucket = int(time.time() / window)
+        key    = f'rl:ip:{path}:{ip}:{bucket}'
+        count  = conn.incr(key)
+        if count == 1:
+            conn.expire(key, window * 2)
+        return count > max_count
+    except Exception:
+        return False
+
+
+class IpRateLimitMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.method == 'POST':
+            limit = _IP_RATE_LIMITED_PATHS.get(request.path)
+            if limit:
+                max_count, window = limit
+                ip = _get_client_ip(request)
+                if _ip_rate_limit(ip, request.path, max_count, window):
+                    from django.shortcuts import render
+                    return render(request, 'errors/429.html', status=429)
+        return self.get_response(request)
