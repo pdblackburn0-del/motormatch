@@ -6,9 +6,13 @@ import json
 
 import re
 
+import urllib.parse
+
 from motormatch.utils import sanitize_plain_text
 
 from django.core.cache import cache
+
+from django.core.paginator import Paginator
 
 from django.contrib import messages
 
@@ -355,6 +359,16 @@ def browse(request):
         vehicles_list = _browse_cached['vehicles']
         total         = _browse_cached['total']
 
+    paginator = Paginator(vehicles_list, 12)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    _qp = {k: v for k, v in {
+        'q': q, 'fuel': fuel, 'transmission': transmission,
+        'year_from': year_from, 'year_to': year_to,
+        'badge': badge, 'sort': sort,
+    }.items() if v and (k != 'sort' or v != '-created_at')}
+    query_string = urllib.parse.urlencode(_qp)
+
     saved_pks = set()
 
     if request.user.is_authenticated:
@@ -376,7 +390,11 @@ def browse(request):
 
     return render(request, 'vehicles/browse.html', {
 
-        'vehicles':      vehicles_list,
+        'vehicles':      page_obj.object_list,
+
+        'page_obj':      page_obj,
+
+        'query_string':  query_string,
 
         'saved_pks':     saved_pks,
 

@@ -143,7 +143,7 @@
 
             {% if vehicles %}
             <div class="row g-3">
-                {% for car in vehicles %}
+                {% for car in page_obj %}
                 <div class="col-6 col-lg-4">
                     <div class="vc h-100 position-relative">
 
@@ -197,6 +197,36 @@
                 <p class="text-muted small mb-3">Try removing a filter or broadening your search.</p>
                 <a href="{% url 'browse' %}" class="btn btn-primary btn-sm px-4">Clear all filters</a>
             </div>
+            {% endif %}
+
+            {% if page_obj.has_other_pages %}
+            <nav class="browse-pagination mt-4" aria-label="Page navigation">
+                <ul class="pagination justify-content-center flex-wrap gap-1 mb-0">
+                    <li class="page-item{% if not page_obj.has_previous %} disabled{% endif %}">
+                        {% if page_obj.has_previous %}
+                        <a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Previous"><i class="bi bi-chevron-left"></i></a>
+                        {% else %}
+                        <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                        {% endif %}
+                    </li>
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if num == page_obj.number %}
+                        <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+                        {% elif num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                        <li class="page-item"><a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+                        {% elif num == page_obj.number|add:"-3" or num == page_obj.number|add:"3" %}
+                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item{% if not page_obj.has_next %} disabled{% endif %}">
+                        {% if page_obj.has_next %}
+                        <a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}" aria-label="Next"><i class="bi bi-chevron-right"></i></a>
+                        {% else %}
+                        <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                        {% endif %}
+                    </li>
+                </ul>
+            </nav>
             {% endif %}
 
         </div>
