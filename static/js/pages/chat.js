@@ -504,6 +504,30 @@
 
     setInterval(poll, POLL_MS);
 
+    if ('ontouchstart' in window) {
+        var tapStartY = 0;
+        box.addEventListener('touchstart', function (e) {
+            tapStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        box.addEventListener('touchend', function (e) {
+            if (Math.abs(e.changedTouches[0].clientY - tapStartY) > 10) return;
+            if (e.target.closest('.bact-btn, .bubble-actions, .emoji-picker-panel')) return;
+            var wrap = e.target.closest('.bubble-wrap');
+            document.querySelectorAll('.bubble-wrap.active-actions').forEach(function (el) {
+                el.classList.remove('active-actions');
+            });
+            if (!wrap) return;
+            var bubble = wrap.querySelector('.bubble');
+            if (!bubble) return;
+            var touch = e.changedTouches[0];
+            var rect = bubble.getBoundingClientRect();
+            if (touch.clientX < rect.left || touch.clientX > rect.right ||
+                touch.clientY < rect.top  || touch.clientY > rect.bottom) return;
+            wrap.classList.add('active-actions');
+        }, { passive: true });
+    }
+
     var pendingDeleteId = null;
 
     function openDeleteMsgModal(msgId) {
@@ -562,5 +586,62 @@
             localStorage.setItem(THEME_KEY, t);
         });
     });
+
+    var ptrEl = document.getElementById('ptrIndicator');
+    var chatCard = document.querySelector('.chat-card');
+    var ptrStartY = 0;
+    var ptrDy = 0;
+    var ptrActive = false;
+    var PTR_THRESHOLD = 70;
+
+    if (ptrEl && chatCard) {
+        chatCard.addEventListener('touchstart', function (e) {
+            ptrStartY = e.touches[0].clientY;
+            ptrDy = 0;
+            ptrActive = box.scrollTop < 2;
+        }, { passive: true });
+
+        chatCard.addEventListener('touchmove', function (e) {
+            if (!ptrActive) return;
+            ptrDy = e.touches[0].clientY - ptrStartY;
+            if (ptrDy <= 0) return;
+            var h = Math.min(ptrDy * 0.45, 56);
+            ptrEl.style.transition = 'none';
+            ptrEl.style.height = h + 'px';
+            if (ptrDy >= PTR_THRESHOLD) {
+                ptrEl.classList.add('ptr-ready');
+                ptrEl.innerHTML = '<i class="bi bi-arrow-up-circle"></i> Release to refresh';
+            } else {
+                ptrEl.classList.remove('ptr-ready');
+                ptrEl.innerHTML = '<i class="bi bi-arrow-down-circle"></i> Pull to refresh';
+            }
+        }, { passive: true });
+
+        chatCard.addEventListener('touchend', function () {
+            if (!ptrActive) return;
+            ptrActive = false;
+            ptrEl.style.transition = '';
+            if (ptrDy >= PTR_THRESHOLD) {
+                ptrEl.classList.remove('ptr-ready');
+                ptrEl.style.height = '48px';
+                ptrEl.innerHTML = '<span class="ptr-spin"><i class="bi bi-arrow-repeat"></i></span> Refreshing…';
+                setTimeout(function () { window.location.reload(); }, 500);
+            } else {
+                ptrEl.style.height = '0';
+                ptrEl.classList.remove('ptr-ready');
+                setTimeout(function () { ptrEl.innerHTML = ''; }, 220);
+            }
+            ptrDy = 0;
+        }, { passive: true });
+
+        chatCard.addEventListener('touchcancel', function () {
+            ptrActive = false;
+            ptrDy = 0;
+            ptrEl.style.transition = '';
+            ptrEl.style.height = '0';
+            ptrEl.classList.remove('ptr-ready');
+            setTimeout(function () { ptrEl.innerHTML = ''; }, 220);
+        }, { passive: true });
+    }
 
 })();

@@ -25,13 +25,13 @@
     background: #f5f6fb;
     background-image: radial-gradient(circle at 1px 1px, #e8eaf6 1px, transparent 0);
     background-size: 24px 24px;
-    padding: 20px 28px;
+    padding: 16px 12px;
     height: calc(100vh - 300px);
     max-height: 540px;
     min-height: 300px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overscroll-behavior: none;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -345,12 +345,13 @@
 .chat-delete-link:hover { color: #dc2626; }
 
 @media (max-width: 576px) {
-    .chat-outer  { padding-left: 0; padding-right: 0; padding-bottom: 0; }
+    .chat-outer  { padding: 0 !important; }
+    .chat-messages { padding: 12px 10px; height: calc(100dvh - 270px); max-height: none; }
     .bubble-col  { max-width: min(320px, 85%); }
     .chat-vehicle-chip { display: none; }
     .chat-header { border-radius: 0; }
     .chat-card   { border-radius: 0; }
-    .chat-messages { height: calc(100vh - 220px); max-height: none; }
+    .bubble-wrap.active-actions .bubble-actions { visibility: visible; }
 }
 
 .theme-swatch {
@@ -406,10 +407,11 @@
     border: 1px dashed #d1d5db !important;
     font-style: italic;
     box-shadow: none !important;
+    pointer-events: none;
+    transform: none !important;
+    transition: none !important;
 }
-.bubble--deleted.mine {
-    background: #f3f4f6 !important;
-}
+
 .bubble__deleted-notice {
     display: flex;
     align-items: center;
@@ -425,22 +427,27 @@
 .bubble-row {
     display: flex;
     align-items: flex-end;
-    gap: 6px;
+    gap: 0;
 }
 .bubble-wrap.mine   .bubble-row { flex-direction: row-reverse; }
 .bubble-wrap.theirs .bubble-row { flex-direction: row; }
 
 .bubble-actions {
-    display: none;
+    display: flex;
+    visibility: hidden;
     flex-direction: column;
     align-items: center;
     gap: 2px;
     flex-shrink: 0;
     position: relative;
     align-self: flex-end;
-    padding-bottom: 2px;
+    padding: 0 5px 2px;
 }
-.bubble-wrap:hover .bubble-actions { display: flex; }
+@media (hover: hover) {
+    .bubble { transition: transform .2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .bubble-row:has(.bubble:hover, .bubble-actions:hover, .bact-btn:hover) .bubble-actions { visibility: visible; }
+    .bubble-row:has(.bubble:hover, .bubble-actions:hover, .bact-btn:hover) .bubble { transform: translateY(-2px); }
+}
 
 .bact-btn {
     background: none;
@@ -585,3 +592,28 @@
 .chat-outer.theme-dark .reaction-chip.mine { background: #312e81; border-color: #4f46e5; }
 .chat-outer.theme-dark .reaction-chip .r-count { color: #94a3b8; }
 .chat-outer.theme-dark .reaction-chip.mine .r-count { color: #a5b4fc; }
+
+/* ── Pull-to-refresh ──────────────────────────────────── */
+.ptr-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    height: 0;
+    overflow: hidden;
+    flex-shrink: 0;
+    font-size: .8rem;
+    color: #9ca3af;
+    transition: height .2s ease;
+    will-change: height;
+}
+.ptr-indicator.ptr-ready { color: #4f46e5; }
+.ptr-spin {
+    display: inline-block;
+    animation: ptr-rotate .75s linear infinite;
+    line-height: 1;
+    font-size: .95rem;
+}
+@keyframes ptr-rotate {
+    to { transform: rotate(360deg); }
+}

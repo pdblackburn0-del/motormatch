@@ -4,6 +4,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/pages/chat.css' %}">
+<style>body { overscroll-behavior-y: none; }</style>
 {% endblock extra_css %}
 
 {% block content %}
@@ -93,7 +94,7 @@
             </a>
         </div>
 
-        
+        <div id="ptrIndicator" class="ptr-indicator"></div>
         <div class="chat-messages" id="chatMessages">
             {% if thread %}
             {% for msg in thread %}

@@ -415,6 +415,22 @@
     flex-shrink: 0;
     position: relative;
     z-index: 2;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+    .db-listing {
+        flex-wrap: wrap;
+        row-gap: .4rem;
+        align-items: flex-start;
+    }
+    .db-listing__status {
+        flex-shrink: 0;
+    }
+    .db-listing__actions {
+        flex-basis: 100%;
+        margin-left: calc(60px + .9rem);
+    }
 }
 
 .db-act {
