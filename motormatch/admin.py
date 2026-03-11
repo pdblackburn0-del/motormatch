@@ -1038,11 +1038,11 @@ class VehicleAdmin(admin.ModelAdmin):
 
     list_display       = ('_thumb', 'title', 'variant', '_price', 'year', 'fuel',
 
-                          'transmission', '_badge', '_owner', '_approval', 'is_removed', 'created_at')
+                          'transmission', '_badge', '_owner', '_approval', 'listing_status', 'is_removed', 'created_at')
 
     list_display_links = ('_thumb', 'title')
 
-    list_filter        = ('fuel', 'transmission', 'is_removed', 'year', 'approval_status')
+    list_filter        = ('fuel', 'transmission', 'listing_status', 'is_removed', 'year', 'approval_status')
 
     search_fields      = ('title', 'variant', 'owner__email', 'location')
 
@@ -1058,7 +1058,7 @@ class VehicleAdmin(admin.ModelAdmin):
 
     actions            = ['mark_removed', 'mark_available', 'approve_listings',
 
-                          'reject_listings', 'export_csv']
+                          'reject_listings', 'export_csv', 'mark_sold']
 
     fieldsets          = (
 
@@ -1078,7 +1078,7 @@ class VehicleAdmin(admin.ModelAdmin):
 
         ('Status & Badge', {
 
-            'fields': ('badge', 'badge_color', 'is_removed'),
+            'fields': ('badge', 'badge_color', 'listing_status', 'is_removed'),
 
         }),
 
@@ -1192,7 +1192,7 @@ class VehicleAdmin(admin.ModelAdmin):
 
     def mark_removed(self, request, queryset):
 
-        updated = queryset.update(is_removed=True)
+        updated = queryset.update(is_removed=True, listing_status=Vehicle.STATUS_REMOVED)
 
         self.message_user(request, f'{updated} listing(s) marked as removed.')
 
@@ -1200,7 +1200,7 @@ class VehicleAdmin(admin.ModelAdmin):
 
     def mark_available(self, request, queryset):
 
-        updated = queryset.update(is_removed=False)
+        updated = queryset.update(is_removed=False, listing_status=Vehicle.STATUS_ACTIVE)
 
         self.message_user(request, f'{updated} listing(s) marked as available.')
 
@@ -1216,9 +1216,17 @@ class VehicleAdmin(admin.ModelAdmin):
 
     def reject_listings(self, request, queryset):
 
-        updated = queryset.update(approval_status=Vehicle.APPROVAL_REJECTED, is_removed=True)
+        updated = queryset.update(approval_status=Vehicle.APPROVAL_REJECTED, is_removed=True, listing_status=Vehicle.STATUS_REMOVED)
 
         self.message_user(request, f'{updated} listing(s) rejected and hidden.')
+
+    @admin.action(description='💰 Mark selected listings as sold')
+
+    def mark_sold(self, request, queryset):
+
+        updated = queryset.update(listing_status=Vehicle.STATUS_SOLD)
+
+        self.message_user(request, f'{updated} listing(s) marked as sold.')
 
     @admin.action(description='📥 Export selected listings to CSV')
 

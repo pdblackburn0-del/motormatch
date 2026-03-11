@@ -288,7 +288,9 @@ def clear_saved_vehicles(request):
 
 def browse(request):
 
-    qs = Vehicle.objects.filter(is_removed=False)
+    qs = Vehicle.objects.filter(is_removed=False, listing_status__in=[
+        Vehicle.STATUS_ACTIVE, Vehicle.STATUS_PENDING_SALE,
+    ])
 
     q            = request.GET.get('q', '').strip()
 
@@ -502,9 +504,11 @@ def delete_vehicle(request, pk):
 
     vehicle = get_object_or_404(Vehicle, pk=pk, owner=request.user)
 
-    vehicle.is_removed = True
+    vehicle.is_removed    = True
 
-    vehicle.save(update_fields=['is_removed'])
+    vehicle.listing_status = Vehicle.STATUS_REMOVED
+
+    vehicle.save(update_fields=['is_removed', 'listing_status'])
 
     _invalidate_listing_caches(vehicle_pk=vehicle.pk)
 
@@ -621,15 +625,9 @@ def place_bid(request, pk):
 
         return redirect('vehicle_detail', pk=pk)
 
-    if vehicle.is_removed:
+    if vehicle.listing_status != Vehicle.STATUS_ACTIVE:
 
-        messages.error(request, 'This listing has been removed and is no longer accepting bids.')
-
-        return redirect('vehicle_detail', pk=pk)
-
-    if vehicle.bids.filter(status='accepted').exists():
-
-        messages.error(request, 'A bid has already been accepted on this listing.')
+        messages.error(request, 'This listing is no longer accepting bids.')
 
         return redirect('vehicle_detail', pk=pk)
 
@@ -783,6 +781,12 @@ def respond_bid(request, pk):
         bid.status = 'accepted' if action == 'accept' else 'declined'
 
         bid.save()
+
+        if action == 'accept':
+
+            bid.vehicle.listing_status = Vehicle.STATUS_PENDING_SALE
+
+            bid.vehicle.save(update_fields=['listing_status'])
 
         verb = 'accepted' if action == 'accept' else 'declined'
 

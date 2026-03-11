@@ -162,6 +162,18 @@ class Vehicle(models.Model):
 
     ]
 
+    STATUS_ACTIVE       = 'active'
+    STATUS_PENDING_SALE = 'pending_sale'
+    STATUS_SOLD         = 'sold'
+    STATUS_REMOVED      = 'removed'
+
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE,       'Active'),
+        (STATUS_PENDING_SALE, 'Pending Sale'),
+        (STATUS_SOLD,         'Sold'),
+        (STATUS_REMOVED,      'Removed'),
+    ]
+
     owner        = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='vehicles')
 
     title        = models.CharField(max_length=200)
@@ -191,6 +203,12 @@ class Vehicle(models.Model):
     description  = models.TextField(blank=True)
 
     is_removed   = models.BooleanField(default=False, db_index=True)
+
+    listing_status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES,
+        default=STATUS_ACTIVE,
+        db_index=True,
+    )
 
     approval_status = models.CharField(
 
