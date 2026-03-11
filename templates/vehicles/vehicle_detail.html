@@ -99,8 +99,7 @@
                         <button id="saveBtn" type="button" class="btn btn-light border-0" title="{% if is_saved %}Unsave{% else %}Save{% endif %}"
                             data-saved="{% if is_saved %}1{% else %}0{% endif %}"
                             data-url="{% url 'save_vehicle' car.pk %}"
-                            data-csrf="{{ csrf_token }}"
-                            onclick="toggleSave(this)">
+                            data-csrf="{{ csrf_token }}">
                             <i id="saveIcon" class="bi {% if is_saved %}bi-heart-fill text-danger{% else %}bi-heart text-muted{% endif %}"></i>
                         </button>
                     </div>

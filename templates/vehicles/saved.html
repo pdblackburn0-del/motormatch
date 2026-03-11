@@ -39,8 +39,7 @@
         <div class="col-sm-6 col-lg-4 saved-item" id="item-{{ record.vehicle.pk }}">
             <div class="card border-0 shadow-sm h-100 saved-card"
                  data-pk="{{ record.vehicle.pk }}"
-                 data-title="{{ record.vehicle.title }}"
-                 onclick="toggleSelect(this)">
+                 data-title="{{ record.vehicle.title }}">
 
                 <div class="position-relative">
                     <span class="select-badge"><i class="bi bi-check2"></i></span>
@@ -61,8 +60,7 @@
                         class="btn btn-sm border-0 rounded-circle bg-white shadow-sm p-1 position-absolute top-0 end-0 m-2"
                         title="Remove from saved"
                         data-saved="1"
-                        data-url="{% url 'save_vehicle' record.vehicle.pk %}"
-                        onclick="event.stopPropagation(); toggleSaveCard(this)">
+                        data-url="{% url 'save_vehicle' record.vehicle.pk %}">
                         <i class="bi bi-heart-fill text-danger" style="font-size: 0.75rem"></i>
                     </button>
 
@@ -92,8 +90,7 @@
                 </div>
                 <div class="card-footer bg-transparent border-top-0 px-3 pb-3 pt-0" style="pointer-events:auto;">
                     <a href="{% url 'vehicle_detail' record.vehicle.pk %}"
-                       class="btn btn-outline-primary btn-sm w-100"
-                       onclick="event.stopPropagation()">View Listing</a>
+                       class="btn btn-outline-primary btn-sm w-100 js-stop-prop">View Listing</a>
                 </div>
             </div>
         </div>
@@ -159,4 +156,18 @@ window.CLEAR_SAVED_URL  = '{% url "clear_saved_vehicles" %}';
 window.BROWSE_URL       = '{% url "browse" %}';
 </script>
 <script src="{% static 'js/pages/saved.js' %}"></script>
+<script nonce="{{ request.csp_nonce }}">
+document.querySelectorAll('.saved-card').forEach(function (c) {
+    c.addEventListener('click', function () { toggleSelect(this); });
+});
+document.querySelectorAll('[data-url][data-saved]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleSaveCard(this);
+    });
+});
+document.querySelectorAll('.js-stop-prop').forEach(function (el) {
+    el.addEventListener('click', function (e) { e.stopPropagation(); });
+});
+</script>
 {% endblock %}

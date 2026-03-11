@@ -117,7 +117,7 @@
                     <div class="mm-toast__body">
                         <span class="mm-toast__msg">{{ message }}</span>
                     </div>
-                    <button class="mm-toast__close" onclick="this.closest('.mm-toast').remove()" aria-label="Close"><i class="bi bi-x"></i></button>
+                    <button class="mm-toast__close" aria-label="Close"><i class="bi bi-x"></i></button>
                     <div class="mm-toast__progress"></div>
                 </div>
                 {% endfor %}
@@ -465,5 +465,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'js/pages/dashboard.js' %}"></script>
+<script nonce="{{ request.csp_nonce }}">
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.mm-toast__close');
+    if (btn) btn.closest('.mm-toast').remove();
+});
+</script>
 </body>
 </html>

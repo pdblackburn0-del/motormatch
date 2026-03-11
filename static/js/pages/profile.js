@@ -16,3 +16,10 @@ if (avatarInput) {
         reader.readAsDataURL(file);
     });
 }
+
+var avatarEditBtn = document.getElementById('avatarEditBtn');
+if (avatarEditBtn) {
+    avatarEditBtn.addEventListener('click', function () {
+        document.getElementById('id_avatar').click();
+    });
+}

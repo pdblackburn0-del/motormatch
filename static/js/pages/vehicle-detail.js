@@ -29,7 +29,10 @@
         paint(initIdx >= 0 ? initIdx : 4);
     }
 })();
-
+var saveBtn = document.getElementById('saveBtn');
+if (saveBtn) {
+    saveBtn.addEventListener('click', function () { toggleSave(this); });
+}
 function toggleSave(btn) {
     var icon   = document.getElementById('saveIcon');
     var isSaved = btn.dataset.saved === '1';

@@ -139,9 +139,13 @@
         toast.innerHTML =
             '<div class="mm-toast__icon"><i class="bi ' + icon + '"></i></div>' +
             '<div class="mm-toast__body"><span class="mm-toast__msg">' + msg + '</span></div>' +
-            '<button class="mm-toast__close" onclick="this.closest(\'.mm-toast\').remove()" aria-label="Close"><i class="bi bi-x"></i></button>' +
+            '<button class="mm-toast__close" aria-label="Close"><i class="bi bi-x"></i></button>' +
             '<div class="mm-toast__progress"></div>';
         container.appendChild(toast);
+        toast.querySelector('.mm-toast__close').addEventListener('click', function () {
+            toast.style.animation = 'mmToastOut .3s ease forwards';
+            setTimeout(function () { toast.remove(); }, 300);
+        });
         setTimeout(function () {
             toast.style.animation = 'mmToastOut .28s ease forwards';
             setTimeout(function () { toast.remove(); }, 280);

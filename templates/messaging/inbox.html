@@ -71,8 +71,9 @@
                     </li>
                     <li><hr class="dropdown-divider my-1"></li>
                     <li>
-                        <button class="dropdown-item py-2 text-danger"
-                                onclick="openDeleteModal('{{ conv.user.pk }}', '{{ conv.user.profile.get_display_name }}')">
+                        <button class="dropdown-item py-2 text-danger inbox-delete-btn"
+                                data-user-pk="{{ conv.user.pk }}"
+                                data-user-name="{{ conv.user.profile.get_display_name }}">
                             <i class="bi bi-trash3 me-2"></i>Delete Chat
                         </button>
                     </li>

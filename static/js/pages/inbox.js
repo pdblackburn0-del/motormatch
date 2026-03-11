@@ -6,3 +6,8 @@ function openDeleteModal(userPk, name) {
     document.getElementById('inboxDeleteForm').action = '/inbox/' + userPk + '/delete/';
     new bootstrap.Modal(document.getElementById('inboxDeleteModal')).show();
 }
+
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.inbox-delete-btn');
+    if (btn) openDeleteModal(btn.dataset.userPk, btn.dataset.userName);
+});

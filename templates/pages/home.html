@@ -143,8 +143,7 @@
                     style="top: 8px; right: 8px; z-index: 10;"
                     title="{% if car.pk in saved_pks %}Unsave{% else %}Save{% endif %}"
                     data-saved="{% if car.pk in saved_pks %}1{% else %}0{% endif %}"
-                    data-url="{% url 'save_vehicle' car.pk %}"
-                    onclick="toggleSaveCard(this)">
+                    data-url="{% url 'save_vehicle' car.pk %}">
                     <i class="bi {% if car.pk in saved_pks %}bi-heart-fill text-danger{% else %}bi-heart text-muted{% endif %}" style="font-size: 0.75rem"></i>
                 </button>
             </div>
@@ -180,8 +179,7 @@
                         />
                         <button type="button" class="btn btn-sm btn-light border-0 rounded-circle p-1 position-absolute top-0 end-0 m-2" style="z-index:2;" title="{% if car.pk in saved_pks %}Unsave{% else %}Save{% endif %}"
                             data-saved="{% if car.pk in saved_pks %}1{% else %}0{% endif %}"
-                            data-url="{% url 'save_vehicle' car.pk %}"
-                            onclick="event.stopPropagation();toggleSaveCard(this)">
+                            data-url="{% url 'save_vehicle' car.pk %}">
                             <i class="bi {% if car.pk in saved_pks %}bi-heart-fill text-danger{% else %}bi-heart text-muted{% endif %}" style="font-size: 0.75rem"></i>
                         </button>
                         <span
@@ -224,8 +222,7 @@
                         />
                         <button type="button" class="btn btn-sm btn-light border-0 rounded-circle p-1 position-absolute top-0 end-0 m-2" style="z-index:2;" title="{% if car.pk in saved_pks %}Unsave{% else %}Save{% endif %}"
                             data-saved="{% if car.pk in saved_pks %}1{% else %}0{% endif %}"
-                            data-url="{% url 'save_vehicle' car.pk %}"
-                            onclick="event.stopPropagation();toggleSaveCard(this)">
+                            data-url="{% url 'save_vehicle' car.pk %}">
                             <i class="bi {% if car.pk in saved_pks %}bi-heart-fill text-danger{% else %}bi-heart text-muted{% endif %}" style="font-size: 0.75rem"></i>
                         </button>
                         <span
@@ -264,4 +261,12 @@
 
 {% block extra_js %}
 <script src="{% static 'js/pages/home.js' %}"></script>
+<script nonce="{{ request.csp_nonce }}">
+document.querySelectorAll('[data-url][data-saved]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleSaveCard(this);
+    });
+});
+</script>
 {% endblock %}

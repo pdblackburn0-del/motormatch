@@ -54,7 +54,7 @@
 
         
         <aside class="filter-panel">
-            <button class="mobile-filter-btn" type="button" onclick="document.querySelector('.filter-panel__card').classList.toggle('open')">
+            <button class="mobile-filter-btn" type="button">
                 <i class="bi bi-sliders"></i>
                 Filters
                 {% if q or fuel or transmission or year_from or year_to or badge %}<span class="badge bg-primary rounded-pill ms-auto" style="font-size:.62rem; padding:.25rem .55rem;">On</span>{% endif %}
@@ -131,7 +131,7 @@
                     {% if year_to %}<input type="hidden" name="year_to" value="{{ year_to }}">{% endif %}
                     {% if badge %}<input type="hidden" name="badge" value="{{ badge }}">{% endif %}
                     <label>Sort:</label>
-                    <select name="sort" class="f-sort" onchange="this.form.submit()">
+                    <select name="sort" class="f-sort">
                         <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Newest first</option>
                         <option value="created_at" {% if sort == 'created_at' %}selected{% endif %}>Oldest first</option>
                         <option value="-year" {% if sort == '-year' %}selected{% endif %}>Year &#x2193;</option>
@@ -150,8 +150,7 @@
                         <button type="button" class="vc__heart"
                             title="{% if car.pk in saved_pks %}Remove from saved{% else %}Save car{% endif %}"
                             data-saved="{% if car.pk in saved_pks %}1{% else %}0{% endif %}"
-                            data-url="{% url 'save_vehicle' car.pk %}"
-                            onclick="toggleSaveCard(this)">
+                            data-url="{% url 'save_vehicle' car.pk %}">
                             <i class="bi {% if car.pk in saved_pks %}bi-heart-fill vc__heart-icon--saved{% else %}bi-heart vc__heart-icon{% endif %}"></i>
                         </button>
 
@@ -232,4 +231,18 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ request.csp_nonce }}">
+document.querySelector('.mobile-filter-btn').addEventListener('click', function () {
+    document.querySelector('.filter-panel__card').classList.toggle('open');
+});
+document.querySelector('.f-sort').addEventListener('change', function () {
+    this.closest('form').submit();
+});
+document.querySelectorAll('[data-url][data-saved]').forEach(function (btn) {
+    btn.addEventListener('click', function () { toggleSaveCard(this); });
+});
+</script>
 {% endblock %}

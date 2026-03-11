@@ -1,0 +1,21 @@
+fix: remove CSP-blocked inline event handlers sitewide (#49)
+
+Templates fixed (all onclick/onchange attrs removed):
+- home.html: heart buttons on featured/recent/remaining car cards
+- browse.html: mobile filter toggle, sort select, heart button
+- vehicle_detail.html: save/heart button
+- saved.html: card select, heart button, view listing link
+- conversation.html: attachment/GIF image clicks, remove-attach button
+- inbox.html: delete chat button (data attrs + delegation)
+- profile.html: avatar camera button
+- dashboard.html: toast close button
+- admin/index.html: moderation buttons static + WS-injected
+
+JS changes:
+- vehicle-detail.js: saveBtn via addEventListener
+- profile.js: avatarEditBtn via addEventListener
+- chat.js: img.attach delegation; removeAttachBtn listener
+- inbox.js: .inbox-delete-btn delegation
+- saved.js: toast close bound after appendChild
+
+config: enable SQLite WAL mode to reduce lock contention in dev

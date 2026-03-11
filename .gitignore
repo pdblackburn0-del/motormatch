@@ -7,3 +7,4 @@ db.sqlite3
 media/
 fix_car_images.py
 add_more_cars.py
+python-3.12

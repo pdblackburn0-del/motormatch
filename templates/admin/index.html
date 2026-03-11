@@ -593,22 +593,22 @@
                 <div class="mm-recent-item__sub" style="white-space:nowrap;">{{ msg.created_at|date:"d M" }}</div>
                 <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
                     {% if not msg.is_deleted %}
-                    <button onclick="mmModerate({{ msg.pk }},'delete_msg',this)"
+                    <button data-msgid="{{ msg.pk }}" data-action="delete_msg"
                             class="mm-mod-btn mm-mod-btn--slate" title="Delete message">
                         <i class="bi bi-trash3-fill"></i>
                     </button>
                     {% endif %}
-                    <button onclick="mmModerate({{ msg.pk }},'suspend_30d',this)"
+                    <button data-msgid="{{ msg.pk }}" data-action="suspend_30d"
                             class="mm-mod-btn mm-mod-btn--amber" title="Suspend sender 30 days"
                             data-user="{{ msg.sender.email }}">
                         <i class="bi bi-clock-fill"></i> 30d
                     </button>
-                    <button onclick="mmModerate({{ msg.pk }},'ban',this)"
+                    <button data-msgid="{{ msg.pk }}" data-action="ban"
                             class="mm-mod-btn mm-mod-btn--red" title="Permanently ban sender"
                             data-user="{{ msg.sender.email }}">
                         <i class="bi bi-person-x-fill"></i>
                     </button>
-                    <button onclick="mmModerate({{ msg.pk }},'dismiss',this)"
+                    <button data-msgid="{{ msg.pk }}" data-action="dismiss"
                             class="mm-mod-btn mm-mod-btn--green" title="Dismiss flag">
                         <i class="bi bi-check-lg"></i>
                     </button>
@@ -781,10 +781,10 @@
             + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
             + '<div class="mm-recent-item__sub">Just now</div>'
             + '<div style="display:flex;gap:4px;">'
-            + (d.auto_deleted ? '' : '<button onclick="mmModerate(' + d.message_id + ',\'delete_msg\',this)" class="mm-mod-btn mm-mod-btn--slate" title="Delete message"><i class="bi bi-trash3-fill"></i></button>')
-            + '<button onclick="mmModerate(' + d.message_id + ',\'suspend_30d\',this)" class="mm-mod-btn mm-mod-btn--amber" title="Suspend 30d"><i class="bi bi-clock-fill"></i> 30d</button>'
-            + '<button onclick="mmModerate(' + d.message_id + ',\'ban\',this)" class="mm-mod-btn mm-mod-btn--red" title="Ban"><i class="bi bi-person-x-fill"></i></button>'
-            + '<button onclick="mmModerate(' + d.message_id + ',\'dismiss\',this)" class="mm-mod-btn mm-mod-btn--green" title="Dismiss"><i class="bi bi-check-lg"></i></button>'
+            + (d.auto_deleted ? '' : '<button data-msgid="' + d.message_id + '" data-action="delete_msg" class="mm-mod-btn mm-mod-btn--slate" title="Delete message"><i class="bi bi-trash3-fill"></i></button>')
+            + '<button data-msgid="' + d.message_id + '" data-action="suspend_30d" class="mm-mod-btn mm-mod-btn--amber" title="Suspend 30d"><i class="bi bi-clock-fill"></i> 30d</button>'
+            + '<button data-msgid="' + d.message_id + '" data-action="ban" class="mm-mod-btn mm-mod-btn--red" title="Ban"><i class="bi bi-person-x-fill"></i></button>'
+            + '<button data-msgid="' + d.message_id + '" data-action="dismiss" class="mm-mod-btn mm-mod-btn--green" title="Dismiss"><i class="bi bi-check-lg"></i></button>'
             + '</div></div>'
             + '</div>';
 
@@ -878,7 +878,7 @@
                         if (avatar) { avatar.className = 'mm-avatar mm-avatar--slate'; avatar.innerHTML = '<i class="bi bi-slash-circle-fill" style="font-size:11px;"></i>'; }
                         var bodyDiv = row.querySelectorAll('.mm-recent-item__sub')[1];
                         if (bodyDiv) { bodyDiv.innerHTML = '<em style="color:#9ca3af;font-style:italic;">Message deleted by staff</em>'; }
-                        var delBtn = row.querySelector('[onclick*="delete_msg"]');
+                        var delBtn = row.querySelector('[data-action="delete_msg"]');
                         if (delBtn) delBtn.remove();
                     }
                 } else {
@@ -906,6 +906,12 @@
     var style = document.createElement('style');
     style.textContent = '@keyframes mm-flash { 0%{background:#fef3c7} 100%{background:transparent} }';
     document.head.appendChild(style);
+
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.mm-mod-btn');
+        if (!btn || !btn.dataset.msgid) return;
+        window.mmModerate(btn.dataset.msgid, btn.dataset.action, btn);
+    });
 }());
 </script>
 

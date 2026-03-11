@@ -65,6 +65,16 @@
         pendingGif = null;
     };
 
+    var removeAttachBtn = document.querySelector('.remove-attach');
+    if (removeAttachBtn) {
+        removeAttachBtn.addEventListener('click', function () { window.clearAttachment(); });
+    }
+
+    document.addEventListener('click', function (e) {
+        var img = e.target.closest('img.attach');
+        if (img) window.open(img.src);
+    });
+
     if (gifBtn && gifPicker) {
         gifBtn.addEventListener('click', function () {
             var isOpen = !gifPicker.classList.contains('d-none');
@@ -381,9 +391,9 @@
             var notice = m.deleted_by_staff ? 'Message deleted by staff' : 'Message deleted';
             bubbleContent = '<span class="bubble__deleted-notice"><i class="bi bi-slash-circle"></i> ' + notice + '</span>';
         } else {
-            var gifHtml  = m.gif_url ? '<img src="' + m.gif_url + '" class="attach gif-attach" onclick="window.open(this.src)" alt="GIF">' : '';
+            var gifHtml  = m.gif_url ? '<img src="' + m.gif_url + '" class="attach gif-attach" alt="GIF">' : '';
             var bodyHtml = (!m.gif_url && m.body) ? esc(m.body) : '';
-            var imgHtml  = (!m.gif_url && m.attachment_url) ? '<img src="' + m.attachment_url + '" class="attach" onclick="window.open(this.src)" alt="attachment">' : '';
+            var imgHtml  = (!m.gif_url && m.attachment_url) ? '<img src="' + m.attachment_url + '" class="attach" alt="attachment">' : '';
             bubbleContent = gifHtml + bodyHtml + imgHtml;
         }
         var tick = m.is_mine
