@@ -11,6 +11,10 @@
     margin-bottom: .25rem; letter-spacing: -.02em;
 }
 .browse-hero__sub { font-size: .85rem; color: #94a3b8; margin-bottom: 0; }
+.browse-hero .breadcrumb-item + .breadcrumb-item::before { color: rgba(255,255,255,0.6) !important; }
+.browse-hero .breadcrumb-item a { color: #60a5fa !important; text-decoration: none; }
+.browse-hero .breadcrumb-item a:hover { text-decoration: underline; }
+.browse-hero .breadcrumb-item.active { color: rgba(255,255,255,0.95) !important; }
 .browse-hero__search { position: relative; max-width: 520px; }
 .browse-hero__search input {
     width: 100%;

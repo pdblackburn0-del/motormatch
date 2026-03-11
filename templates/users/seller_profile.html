@@ -4,6 +4,13 @@
 
 {% block content %}
 <div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-primary">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'browse' %}" class="text-decoration-none text-primary">Used Cars</a></li>
+            <li class="breadcrumb-item active">{{ seller.profile.get_display_name|default:seller.username }}</li>
+        </ol>
+    </nav>
 
     {% if seller_profile and seller_profile.is_deleted %}
     <div class="alert d-flex align-items-center gap-3 mb-4 border-0 shadow-sm rounded-3 p-3" style="background:#f3f4f6;">
