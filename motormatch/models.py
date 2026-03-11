@@ -246,7 +246,7 @@ class Vehicle(models.Model):
 
     def get_image(self):
 
-        if self.image_file and self.image_file.name:
+        if self.image_file and self.image_file.public_id:
 
             return self.image_file.url
 
@@ -273,6 +273,23 @@ class SavedVehicle(models.Model):
     def __str__(self):
 
         return f"{self.user.email} → {self.vehicle.title}"
+
+class VehicleImage(models.Model):
+
+    vehicle    = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='images')
+    image_file = CloudinaryField('image', folder='car_images', blank=True, null=True)
+    order      = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def get_url(self):
+        if self.image_file and self.image_file.public_id:
+            return self.image_file.url
+        return ''
+
+    def __str__(self):
+        return f'Image {self.order} for {self.vehicle}'
 
 class Notification(models.Model):
 

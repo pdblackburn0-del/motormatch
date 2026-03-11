@@ -26,7 +26,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from django.views.decorators.http import require_POST
 
-from apps.vehicles.models import Bid, SavedVehicle, Vehicle
+from apps.vehicles.models import Bid, SavedVehicle, Vehicle, VehicleImage
+from motormatch.utils import validate_image_file
 
 from apps.notifications.models import Notification
 
@@ -196,6 +197,7 @@ def vehicle_detail(request, pk):
             _seller_badge_info = _prof.get_badge_info() if _prof else None
         _car_bids    = list(car.bids.select_related('bidder', 'bidder__profile').order_by('-amount'))
         _accepted_bid = next((b for b in _car_bids if b.status == 'accepted'), None)
+        _extra_images = list(car.images.all())
         _public = {
             'car':               car,
             'seller_reviews':    _seller_reviews,
@@ -203,6 +205,7 @@ def vehicle_detail(request, pk):
             'seller_badge_info': _seller_badge_info,
             'car_bids':          _car_bids,
             'accepted_bid':      _accepted_bid,
+            'extra_images':      _extra_images,
         }
         cache.set(_vd_key, _public, 300)
     else:
@@ -243,6 +246,8 @@ def vehicle_detail(request, pk):
         'accepted_bid':          _public['accepted_bid'],
 
         'seller_badge_info':     _public['seller_badge_info'],
+
+        'extra_images':          _public['extra_images'],
 
     })
 
@@ -429,6 +434,7 @@ def browse(request):
 def sell(request):
 
     from apps.vehicles.forms import SellForm
+    from django import forms as dj_forms
 
     if request.method == 'POST':
 
@@ -437,6 +443,18 @@ def sell(request):
         if form.is_valid():
 
             vehicle = form.save(owner=request.user)
+
+            # Process extra photos (up to 9; main cover is already saved)
+            extra_photos = request.FILES.getlist('extra_photos')
+            order = 0
+            for photo in extra_photos[:9]:
+                try:
+                    validate_image_file(photo)
+                    photo.seek(0)
+                    VehicleImage.objects.create(vehicle=vehicle, image_file=photo, order=order)
+                    order += 1
+                except dj_forms.ValidationError:
+                    pass  # skip invalid files silently; user sees server-side form errors only on the main image field
 
             _invalidate_listing_caches()
 
@@ -473,16 +491,51 @@ def save_vehicle(request, pk):
 def edit_vehicle(request, pk):
 
     from apps.vehicles.forms import VehicleEditForm
+    from django import forms as dj_forms
 
     vehicle = get_object_or_404(Vehicle, pk=pk, owner=request.user)
 
     if request.method == 'POST':
 
-        form = VehicleEditForm(request.POST, request.FILES, instance=vehicle)
+        # Pre-validate the cover image before Cloudinary's form field processes it,
+        # ensuring magic-byte validation runs regardless of CloudinaryField behaviour.
+        cover_file = request.FILES.get('image_file')
+        cover_error = None
+        if cover_file:
+            try:
+                validate_image_file(cover_file)
+                cover_file.seek(0)
+            except dj_forms.ValidationError as exc:
+                cover_error = exc
 
-        if form.is_valid():
+        # Pass empty FILES when cover is invalid so Cloudinary never receives bad data.
+        files = request.FILES if not cover_error else {}
+        form = VehicleEditForm(request.POST, files, instance=vehicle)
+        form_valid = form.is_valid()
+        if cover_error:
+            form.add_error('image_file', cover_error)
+
+        if form_valid and not cover_error:
 
             form.save()
+
+            # Handle new extra photos
+            new_photos = request.FILES.getlist('new_photos')
+            existing_count = vehicle.images.count()
+            for i, photo in enumerate(new_photos):
+                if existing_count + i >= 9:
+                    break
+                try:
+                    validate_image_file(photo)
+                    photo.seek(0)
+                    VehicleImage.objects.create(vehicle=vehicle, image_file=photo, order=existing_count + i)
+                except dj_forms.ValidationError:
+                    pass
+
+            # Handle photo deletions
+            delete_ids = request.POST.getlist('delete_image')
+            if delete_ids:
+                vehicle.images.filter(pk__in=delete_ids, vehicle=vehicle).delete()
 
             _invalidate_listing_caches(vehicle_pk=vehicle.pk)
 

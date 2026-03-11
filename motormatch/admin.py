@@ -48,7 +48,7 @@ from motormatch.models import (
 
     AdminNote, BannedKeyword, Bid, LoginEvent, Message, Notification, Review,
 
-    SavedVehicle, UserProfile, Vehicle,
+    SavedVehicle, UserProfile, Vehicle, VehicleImage,
 
 )
 
@@ -543,6 +543,16 @@ class UserAdminNoteInline(admin.TabularInline):
             instance.save()
 
         formset.save_m2m()
+
+class VehicleImageInlineAdmin(admin.TabularInline):
+
+    model   = VehicleImage
+    extra   = 0
+    fields  = ('image_file', 'order')
+    ordering = ('order',)
+    verbose_name        = 'Extra Photo'
+    verbose_name_plural = 'Extra Photos'
+
 
 class VehicleAdminNoteInline(admin.TabularInline):
 
@@ -1054,7 +1064,7 @@ class VehicleAdmin(admin.ModelAdmin):
 
     list_per_page      = 20
 
-    inlines            = [VehicleAdminNoteInline]
+    inlines            = [VehicleAdminNoteInline, VehicleImageInlineAdmin]
 
     actions            = ['mark_removed', 'mark_available', 'approve_listings',
 

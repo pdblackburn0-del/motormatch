@@ -31,28 +31,27 @@ TRANSMISSION_CHOICES = [
 class VehicleEditForm(forms.ModelForm):
 
     image = forms.CharField(
-
         required=False,
-
         label='Image URL (alternative to upload)',
-
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'https://...'}),
-
     )
 
     class Meta:
-
         model  = Vehicle
-
         fields = ['title', 'variant', 'price', 'mileage', 'year', 'fuel',
-
                   'transmission', 'location', 'description', 'image_file', 'image']
-
-    def clean_image_file(self):
-        f = self.cleaned_data.get('image_file')
-        if f:
-            validate_image_file(f)
-        return f
+        widgets = {
+            'title':        forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 2019 Ford Focus'}),
+            'variant':      forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. ST-Line 5dr'}),
+            'price':        forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. £7,500'}),
+            'mileage':      forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 32,000 miles'}),
+            'year':         forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 2019'}),
+            'fuel':         forms.Select(choices=FUEL_CHOICES, attrs={'class': 'form-select'}),
+            'transmission': forms.Select(choices=TRANSMISSION_CHOICES, attrs={'class': 'form-select'}),
+            'location':     forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. London, UK'}),
+            'description':  forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'image_file':   forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/jpeg,image/png,image/webp'}),
+        }
 
     def clean_image(self):
         url = self.cleaned_data.get('image', '').strip()
@@ -62,29 +61,6 @@ class VehicleEditForm(forms.ModelForm):
     def clean_description(self):
         return sanitize_plain_text(self.cleaned_data.get('description', ''))
 
-        widgets = {
-
-            'title':        forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 2019 Ford Focus'}),
-
-            'variant':      forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. ST-Line 5dr'}),
-
-            'price':        forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. £7,500'}),
-
-            'mileage':      forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 32,000 miles'}),
-
-            'year':         forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 2019'}),
-
-            'fuel':         forms.Select(choices=FUEL_CHOICES, attrs={'class': 'form-select'}),
-
-            'transmission': forms.Select(choices=TRANSMISSION_CHOICES, attrs={'class': 'form-select'}),
-
-            'location':     forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. London, UK'}),
-
-            'description':  forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-
-            'image_file':   forms.ClearableFileInput(attrs={'class': 'form-control'}),
-
-        }
 
 class SellForm(forms.Form):
 
@@ -104,7 +80,7 @@ class SellForm(forms.Form):
 
     transmission = forms.ChoiceField(choices=TRANSMISSION_CHOICES, label='Transmission', widget=forms.Select(attrs={'class': 'form-select'}))
 
-    image_file   = forms.ImageField(label='Main Photo', required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
+    image_file   = forms.ImageField(label='Main Photo', required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/jpeg,image/png,image/webp'}))
 
     image_url    = forms.CharField(label='Or paste an image URL', required=False, widget=forms.TextInput(attrs={'placeholder': 'https://...', 'class': 'form-control'}))
 

@@ -164,7 +164,7 @@
                                 <p class="mb-1 text-muted" style="font-size:.8rem;">
                                     {{ car.year }} &bull; {{ car.mileage|default:"—" }} mi &bull; {{ car.fuel|default:"" }}
                                 </p>
-                                <div class="fw-bold text-primary mb-2">£{{ car.price|floatformat:0 }}</div>
+                                <div class="fw-bold text-primary mb-2">{{ car.price }}</div>
                                 <a href="{% url 'vehicle_detail' car.pk %}"
                                    class="btn btn-sm btn-outline-primary w-100">View</a>
                             </div>
