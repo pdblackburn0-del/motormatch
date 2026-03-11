@@ -46,8 +46,12 @@
                     </div>
                     <div class="d-flex align-items-center justify-content-between gap-2 mt-1">
                         <p class="mb-0 text-truncate {% if conv.unread %}fw-semibold text-dark{% else %}text-muted{% endif %}" style="font-size:.82rem; max-width:380px;">
-                            {% if conv.last_message.sender == request.user %}<span class="text-muted me-1">You:</span>{% endif %}
-                            {{ conv.last_message.body|truncatechars:60 }}
+                            {% if conv.last_message.is_deleted %}
+                                <span class="fst-italic text-muted"><i class="bi bi-x-circle me-1"></i>Message deleted</span>
+                            {% else %}
+                                {% if conv.last_message.sender == request.user %}<span class="text-muted me-1">You:</span>{% endif %}
+                                {{ conv.last_message.body|truncatechars:60 }}
+                            {% endif %}
                         </p>
                         {% if conv.unread %}<span class="badge bg-primary rounded-pill flex-shrink-0" style="font-size:.7rem;">{{ conv.unread }}</span>{% endif %}
                     </div>
