@@ -1614,13 +1614,11 @@ class LoginEventAdmin(admin.ModelAdmin):
 
 class MessageModerationAdmin(admin.ModelAdmin):
 
-    """Read-only moderation view — flagged and auto-deleted messages."""
-
     list_display   = ('_from', '_to', '_preview', '_flag_reason', '_status_col', 'created_at')
 
     list_filter    = ('is_flagged', 'is_deleted', 'deleted_by_staff', 'created_at')
 
-    search_fields  = ('sender__email', 'recipient__email', 'body', 'subject')
+    search_fields  = ('sender__email', 'recipient__email', 'subject')
 
     readonly_fields = (
 
@@ -1684,7 +1682,7 @@ class MessageModerationAdmin(admin.ModelAdmin):
 
         color = '#dc2626' if obj.is_flagged else '#374151'
 
-        return format_html('<span style="color:{};">{}</span>', color, preview)
+        return format_html('<span style="color:{}">{}</span>', color, preview)
 
     @admin.display(description='Flag reason')
 
@@ -1723,6 +1721,32 @@ class MessageModerationAdmin(admin.ModelAdmin):
             return format_html('<span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">Flagged</span>')
 
         return format_html('<span style="color:#9ca3af;">—</span>')
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+
+        from django.contrib.contenttypes.models import ContentType
+
+        obj = self.get_object(request, object_id)
+
+        if obj and obj.is_flagged:
+
+            LogEntry.objects.log_action(
+
+                user_id=request.user.pk,
+
+                content_type_id=ContentType.objects.get_for_model(Message).pk,
+
+                object_id=object_id,
+
+                object_repr=f'Message #{object_id}',
+
+                action_flag=2,
+
+                change_message=f'Staff viewed flagged message #{object_id}',
+
+            )
+
+        return super().change_view(request, object_id, form_url, extra_context)
 
     @admin.display(description='Full message')
 
@@ -1799,6 +1823,27 @@ class MessageModerationAdmin(admin.ModelAdmin):
     class Media:
 
         pass
+
+
+class FlaggedMessage(Message):
+
+    class Meta:
+
+        proxy = True
+
+        verbose_name = 'Flagged message'
+
+        verbose_name_plural = 'Flagged messages'
+
+
+@admin.register(FlaggedMessage, site=admin_site)
+
+class FlaggedMessageAdmin(MessageModerationAdmin):
+
+    def get_queryset(self, request):
+
+        return Message.objects.filter(is_flagged=True).select_related('sender', 'recipient', 'vehicle')
+
 
 class AdminNoteAdmin(admin.ModelAdmin):
 
