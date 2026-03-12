@@ -42,15 +42,39 @@ class VehicleEditForm(forms.ModelForm):
         widgets = {
             'title':        forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 2019 Ford Focus'}),
             'variant':      forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. ST-Line 5dr'}),
-            'price':        forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. £7,500'}),
-            'mileage':      forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 32,000 miles'}),
-            'year':         forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 2019'}),
+            'price':        forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '7500', 'min': '0'}),
+            'mileage':      forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '32000', 'min': '0'}),
+            'year':         forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 2019', 'min': '1900', 'max': str(_CURRENT_YEAR + 1)}),
             'fuel':         forms.Select(choices=FUEL_CHOICES, attrs={'class': 'form-select'}),
             'transmission': forms.Select(choices=TRANSMISSION_CHOICES, attrs={'class': 'form-select'}),
             'location':     forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. London, UK'}),
             'description':  forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'image_file':   forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/jpeg,image/png,image/webp'}),
         }
+
+    def clean_year(self):
+        year = self.cleaned_data.get('year')
+        if year is not None and not (1900 <= year <= _CURRENT_YEAR + 1):
+            raise ValidationError('Enter a valid year between 1900 and %(max)s.', params={'max': _CURRENT_YEAR + 1})
+        return year
+
+    def clean_price(self):
+        price = self.cleaned_data.get('price')
+        if price is not None and price < 0:
+            raise ValidationError('Price cannot be negative.')
+        return price
+
+    def clean_mileage(self):
+        mileage = self.cleaned_data.get('mileage')
+        if mileage is not None and mileage < 0:
+            raise ValidationError('Mileage cannot be negative.')
+        return mileage
+
+    def clean_location(self):
+        loc = self.cleaned_data.get('location', '').strip()
+        if loc and not _LOCATION_RE.match(loc):
+            raise ValidationError('Location contains invalid characters.')
+        return loc
 
     def clean_image(self):
         url = self.cleaned_data.get('image', '').strip()
@@ -80,7 +104,7 @@ class SellForm(forms.Form):
 
     year = forms.IntegerField(
         label='Year', min_value=1900, max_value=_CURRENT_YEAR + 1,
-        widget=forms.NumberInput(attrs={'placeholder': 'e.g., 2022', 'class': 'form-control'}),
+        widget=forms.NumberInput(attrs={'placeholder': 'e.g., 2022', 'class': 'form-control', 'min': '1900', 'max': str(_CURRENT_YEAR + 1)}),
         error_messages={'invalid': 'Enter a valid 4-digit year (e.g. 2022).'},
     )
 
