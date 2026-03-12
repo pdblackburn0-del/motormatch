@@ -138,6 +138,7 @@
                 </div>
                 </a>
                 
+                {% if user.is_authenticated %}
                 <button type="button"
                     class="btn btn-sm btn-light border-0 rounded-circle p-1 position-absolute"
                     style="top: 8px; right: 8px; z-index: 10;"
@@ -146,6 +147,7 @@
                     data-url="{% url 'save_vehicle' car.pk %}">
                     <i class="bi {% if car.pk in saved_pks %}bi-heart-fill text-danger{% else %}bi-heart text-muted{% endif %}" style="font-size: 0.75rem"></i>
                 </button>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
@@ -177,11 +179,13 @@
                             alt="{{ car.title }}"
                             style="height: 175px; object-fit: cover"
                         />
+                        {% if user.is_authenticated %}
                         <button type="button" class="btn btn-sm btn-light border-0 rounded-circle p-1 position-absolute top-0 end-0 m-2" style="z-index:2;" title="{% if car.pk in saved_pks %}Unsave{% else %}Save{% endif %}"
                             data-saved="{% if car.pk in saved_pks %}1{% else %}0{% endif %}"
                             data-url="{% url 'save_vehicle' car.pk %}">
                             <i class="bi {% if car.pk in saved_pks %}bi-heart-fill text-danger{% else %}bi-heart text-muted{% endif %}" style="font-size: 0.75rem"></i>
                         </button>
+                        {% endif %}
                         <span
                             class="position-absolute bottom-0 start-0 m-2 text-white fw-bold"
                             style="font-size: 0.95rem; text-shadow: 0 1px 4px rgba(0,0,0,0.7); z-index:1;"
@@ -220,11 +224,13 @@
                             alt="{{ car.title }}"
                             style="height: 175px; object-fit: cover"
                         />
+                        {% if user.is_authenticated %}
                         <button type="button" class="btn btn-sm btn-light border-0 rounded-circle p-1 position-absolute top-0 end-0 m-2" style="z-index:2;" title="{% if car.pk in saved_pks %}Unsave{% else %}Save{% endif %}"
                             data-saved="{% if car.pk in saved_pks %}1{% else %}0{% endif %}"
                             data-url="{% url 'save_vehicle' car.pk %}">
                             <i class="bi {% if car.pk in saved_pks %}bi-heart-fill text-danger{% else %}bi-heart text-muted{% endif %}" style="font-size: 0.75rem"></i>
                         </button>
+                        {% endif %}
                         <span
                             class="position-absolute bottom-0 start-0 m-2 text-white fw-bold"
                             style="font-size: 0.95rem; text-shadow: 0 1px 4px rgba(0,0,0,0.7); z-index:1;"

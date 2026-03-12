@@ -158,12 +158,14 @@
                             <h1 class="h4 fw-bold mb-0">{{ car.title }}</h1>
                             <p class="text-muted small mb-0"><i class="bi bi-speedometer2 me-1"></i>{{ car.mileage }}</p>
                         </div>
+                        {% if user.is_authenticated %}
                         <button id="saveBtn" type="button" class="btn btn-light border-0" title="{% if is_saved %}Unsave{% else %}Save{% endif %}"
                             data-saved="{% if is_saved %}1{% else %}0{% endif %}"
                             data-url="{% url 'save_vehicle' car.pk %}"
                             data-csrf="{{ csrf_token }}">
                             <i id="saveIcon" class="bi {% if is_saved %}bi-heart-fill text-danger{% else %}bi-heart text-muted{% endif %}"></i>
                         </button>
+                        {% endif %}
                     </div>
 
                     <h2 class="fw-bold my-3" style="font-size:1.7rem;">{{ car.price }}</h2>

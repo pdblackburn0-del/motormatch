@@ -153,12 +153,14 @@
                 <div class="col-6 col-lg-4">
                     <div class="vc h-100 position-relative">
 
+                        {% if user.is_authenticated %}
                         <button type="button" class="vc__heart"
                             title="{% if car.pk in saved_pks %}Remove from saved{% else %}Save car{% endif %}"
                             data-saved="{% if car.pk in saved_pks %}1{% else %}0{% endif %}"
                             data-url="{% url 'save_vehicle' car.pk %}">
                             <i class="bi {% if car.pk in saved_pks %}bi-heart-fill vc__heart-icon--saved{% else %}bi-heart vc__heart-icon{% endif %}"></i>
                         </button>
+                        {% endif %}
 
                         <a href="{% url 'vehicle_detail' car.pk %}" class="text-decoration-none d-flex flex-column h-100">
                             <div class="vc__img-wrap">
