@@ -7,7 +7,7 @@
 }
 .saved-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.1) !important; transform: translateY(-2px); }
 .saved-card.is-selected {
-    border: 2px solid #2563eb !important;
+    border: 2px solid var(--mm-primary) !important;
     box-shadow: 0 0 0 4px rgba(37,99,235,.12) !important;
 }
 .select-badge {
@@ -20,7 +20,7 @@
     pointer-events: none;
 }
 .saved-card.is-selected .select-badge {
-    background: #2563eb; border-color: #2563eb; color: #fff;
+    background: var(--mm-primary); border-color: var(--mm-primary); color: #fff;
 }
 .compare-bar {
     background: #f0f5ff; border-radius: 14px;
@@ -36,7 +36,7 @@
     transition: all .2s; overflow: hidden;
 }
 .compare-slot.filled {
-    border-style: solid; border-color: #2563eb;
+    border-style: solid; border-color: var(--mm-primary);
     color: #1e40af; font-weight: 600; background: #eff6ff;
     padding: 0 .6rem; text-align: center; font-size: .76rem; line-height: 1.2;
 }

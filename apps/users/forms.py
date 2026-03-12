@@ -56,8 +56,6 @@ class ProfileForm(forms.ModelForm):
 
 class CustomSignupForm(SignupForm):
 
-    """Extends allauth SignupForm to capture first name, last name, and phone."""
-
     first_name = forms.CharField(
 
         max_length=100, label='First Name',

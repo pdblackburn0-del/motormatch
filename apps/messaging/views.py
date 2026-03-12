@@ -29,6 +29,7 @@ from apps.vehicles.models import Vehicle
 from apps.users.middleware import get_online_status, invalidate_poll_cache, check_rate_limit
 
 from motormatch.utils import validate_image_file, _MAX_ATTACHMENT_BYTES, _ALLOWED_ATTACHMENT_TYPES, sanitize_plain_text
+from apps.messaging import services as msg_svc
 
 User = get_user_model()
 
@@ -177,55 +178,11 @@ def send_message_ajax(request, user_pk):
 
     vehicle = Vehicle.objects.filter(pk=vid).first() if vid else None
 
-    msg = Message.objects.create(
-
-        sender=request.user,
-
-        recipient=other,
-
-        vehicle=vehicle,
-
-        subject='',
-
-        body=body,
-
-        attachment=attach or None,
-
-        gif_url=gif_url,
-
+    msg = msg_svc.create_message(
+        request.user, other, body,
+        vehicle=vehicle, attachment=attach, gif_url=gif_url,
     )
-
-    referer            = request.META.get('HTTP_REFERER', '')
-
-    recipient_on_chat  = f'/inbox/{request.user.pk}/' in referer
-
-    if not recipient_on_chat:
-
-        sender_name = (
-
-            request.user.profile.get_display_name()
-
-            if hasattr(request.user, 'profile')
-
-            else request.user.email.split('@')[0]
-
-        )
-
-        Notification.objects.create(
-
-            user=other,
-
-            title='New message',
-
-            message=f'{sender_name} sent you a message.',
-
-            notif_type='info',
-
-            url=f'/inbox/{request.user.pk}/',
-
-        )
-
-        invalidate_poll_cache(other.pk)
+    msg_svc.notify_new_message(request.user, other, referer=request.META.get('HTTP_REFERER', ''))
 
     initials = request.user.profile.get_initials() if hasattr(request.user, 'profile') else request.user.email[:2].upper()
 
@@ -625,15 +582,7 @@ def toggle_reaction(request, user_pk, msg_pk):
     emoji = request.POST.get('emoji', '').strip()
     if not emoji or len(emoji) > 12:
         return JsonResponse({'error': 'Invalid emoji'}, status=400)
-    existing = MessageReaction.objects.filter(message=msg, user=request.user).first()
-    if existing:
-        if existing.emoji == emoji:
-            existing.delete()
-        else:
-            existing.emoji = emoji
-            existing.save(update_fields=['emoji'])
-    else:
-        MessageReaction.objects.create(message=msg, user=request.user, emoji=emoji)
+    msg_svc.upsert_reaction(request.user, msg, emoji)
     a, b = sorted([request.user.pk, int(user_pk)])
     conv_key = f'react_v_{a}_{b}'
     v = cache.get(conv_key, 0)

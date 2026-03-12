@@ -28,7 +28,7 @@
 }
 
 .gallery-strip-thumb { transition: border-color 0.15s; }
-.gallery-strip-thumb.active { border-color: #2563eb !important; }
+.gallery-strip-thumb.active { border-color: var(--mm-primary) !important; }
 
 .gallery-open-btn:hover { background: rgba(0,0,0,0.88) !important; }
 
@@ -48,7 +48,7 @@
 .lb-thumb:hover { opacity: 0.85; }
 .lb-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .lb-thumb.active {
-    border-color: #2563eb;
-    outline-color: #2563eb;
+    border-color: var(--mm-primary);
+    outline-color: var(--mm-primary);
     opacity: 1;
 }

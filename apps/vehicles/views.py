@@ -8,6 +8,8 @@ import re
 
 import urllib.parse
 
+from django.contrib.auth import get_user_model
+
 from motormatch.utils import sanitize_plain_text
 
 from django.core.cache import cache
@@ -33,7 +35,10 @@ from apps.notifications.models import Notification
 
 from apps.users.models import Review
 
+from decimal import Decimal
+
 from apps.users.middleware import push_recently_viewed, check_rate_limit
+from apps.vehicles import services as vehicle_svc
 
 _MAKES = ['Ford', 'Vauxhall', 'BMW', 'Audi', 'Toyota', 'Honda', 'Volkswagen',
 
@@ -85,9 +90,9 @@ _MODELS = {
 
 }
 
-_FUELS         = ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'Petrol', 'Diesel']
+_FUELS         = ['Petrol', 'Diesel', 'Hybrid', 'Electric']
 
-_TRANSMISSIONS = ['Manual', 'Automatic', 'Manual', 'Manual', 'Automatic']
+_TRANSMISSIONS = ['Manual', 'Automatic']
 
 _COLOURS       = ['White', 'Black', 'Silver', 'Grey', 'Blue', 'Red', 'Green', 'Orange']
 
@@ -96,18 +101,6 @@ _ENGINES       = ['1.0', '1.2', '1.4', '1.6', '1.8', '2.0', '2.5', '3.0']
 _CO2           = [89, 99, 109, 119, 129, 139, 149, 179]
 
 _VRM_EXECUTOR = concurrent.futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix='dvla_lookup')
-
-
-def _invalidate_listing_caches(vehicle_pk=None):
-    """Clear cached data whenever a vehicle is created, updated, or removed."""
-    cache.delete('homepage:public')
-    cache.delete('browse:facets')
-    try:
-        cache.delete_pattern('browse:qs:*')
-    except Exception:
-        pass
-    if vehicle_pk is not None:
-        cache.delete(f'vd:{vehicle_pk}')
 
 
 def index(request):
@@ -351,7 +344,6 @@ def browse(request):
 
     qs = qs.order_by(sort_options.get(sort, '-created_at'))
 
-    # Cache per-filter vehicle list & count
     _browse_key = 'browse:qs:' + hashlib.md5(
         json.dumps({'q': q, 'fuel': fuel, 'transmission': transmission,
                     'year_from': year_from, 'year_to': year_to,
@@ -382,7 +374,6 @@ def browse(request):
 
         saved_pks = set(SavedVehicle.objects.filter(user=request.user).values_list('vehicle_id', flat=True))
 
-    # Cache filter facets (fuels / transmissions / years)
     _facets = cache.get('browse:facets')
     if _facets is None:
         _base = Vehicle.objects.filter(is_removed=False)
@@ -434,7 +425,6 @@ def browse(request):
 def sell(request):
 
     from apps.vehicles.forms import SellForm
-    from django import forms as dj_forms
 
     if request.method == 'POST':
 
@@ -443,23 +433,9 @@ def sell(request):
         if form.is_valid():
 
             vehicle = form.save(owner=request.user)
-
-            # Process extra photos (up to 9; main cover is already saved)
-            extra_photos = request.FILES.getlist('extra_photos')
-            order = 0
-            for photo in extra_photos[:9]:
-                try:
-                    validate_image_file(photo)
-                    photo.seek(0)
-                    VehicleImage.objects.create(vehicle=vehicle, image_file=photo, order=order)
-                    order += 1
-                except dj_forms.ValidationError:
-                    pass  # skip invalid files silently; user sees server-side form errors only on the main image field
-
-            _invalidate_listing_caches()
-
+            vehicle_svc.process_extra_photos(vehicle, request.FILES.getlist('extra_photos'))
+            vehicle_svc.invalidate_listing_caches()
             messages.success(request, 'Your listing has been published!')
-
             return redirect('vehicle_detail', pk=vehicle.pk)
 
     else:
@@ -497,8 +473,6 @@ def edit_vehicle(request, pk):
 
     if request.method == 'POST':
 
-        # Pre-validate the cover image before Cloudinary's form field processes it,
-        # ensuring magic-byte validation runs regardless of CloudinaryField behaviour.
         cover_file = request.FILES.get('image_file')
         cover_error = None
         if cover_file:
@@ -508,7 +482,6 @@ def edit_vehicle(request, pk):
             except dj_forms.ValidationError as exc:
                 cover_error = exc
 
-        # Pass empty FILES when cover is invalid so Cloudinary never receives bad data.
         files = request.FILES if not cover_error else {}
         form = VehicleEditForm(request.POST, files, instance=vehicle)
         form_valid = form.is_valid()
@@ -518,29 +491,13 @@ def edit_vehicle(request, pk):
         if form_valid and not cover_error:
 
             form.save()
-
-            # Handle new extra photos
-            new_photos = request.FILES.getlist('new_photos')
-            existing_count = vehicle.images.count()
-            for i, photo in enumerate(new_photos):
-                if existing_count + i >= 9:
-                    break
-                try:
-                    validate_image_file(photo)
-                    photo.seek(0)
-                    VehicleImage.objects.create(vehicle=vehicle, image_file=photo, order=existing_count + i)
-                except dj_forms.ValidationError:
-                    pass
-
-            # Handle photo deletions
-            delete_ids = request.POST.getlist('delete_image')
-            if delete_ids:
-                vehicle.images.filter(pk__in=delete_ids, vehicle=vehicle).delete()
-
-            _invalidate_listing_caches(vehicle_pk=vehicle.pk)
-
+            vehicle_svc.add_photos_to_vehicle(
+                vehicle,
+                new_photos=request.FILES.getlist('new_photos'),
+                delete_ids=request.POST.getlist('delete_image'),
+            )
+            vehicle_svc.invalidate_listing_caches(vehicle_pk=vehicle.pk)
             messages.success(request, 'Listing updated successfully.')
-
             return redirect('vehicle_detail', pk=vehicle.pk)
 
     else:
@@ -563,7 +520,7 @@ def delete_vehicle(request, pk):
 
     vehicle.save(update_fields=['is_removed', 'listing_status'])
 
-    _invalidate_listing_caches(vehicle_pk=vehicle.pk)
+    vehicle_svc.invalidate_listing_caches(vehicle_pk=vehicle.pk)
 
     messages.success(request, 'Listing removed successfully.')
 
@@ -581,7 +538,7 @@ def hard_delete_vehicle(request, pk):
 
     vehicle.delete()
 
-    _invalidate_listing_caches(vehicle_pk=pk)
+    vehicle_svc.invalidate_listing_caches(vehicle_pk=pk)
 
     messages.success(request, f'Listing "{title}" has been permanently deleted.')
 
@@ -619,45 +576,9 @@ def add_review(request, pk):
 
         return redirect('vehicle_detail', pk=pk)
 
-    _, created = Review.objects.update_or_create(
-
-        reviewed_user=seller,
-
-        reviewer=request.user,
-
-        defaults={'rating': int(rating), 'comment': comment},
-
-    )
-
-    reviewer_name = (
-
-        request.user.profile.get_display_name()
-
-        if hasattr(request.user, 'profile')
-
-        else request.user.email.split('@')[0]
-
-    )
-
-    verb = 'left' if created else 'updated'
-
-    Notification.objects.create(
-
-        user=seller,
-
-        title='New review on your profile',
-
-        message=f'{reviewer_name} {verb} you a {rating}★ review.',
-
-        notif_type=Notification.TYPE_SUCCESS if int(rating) >= 4 else Notification.TYPE_INFO,
-
-        url=f'/vehicle/{pk}/',
-
-    )
+    vehicle_svc.submit_review(request.user, vehicle, int(rating), comment)
 
     messages.success(request, 'Review submitted!')
-
-    cache.delete(f'vd:{pk}')
 
     return redirect('vehicle_detail', pk=pk)
 
@@ -668,8 +589,6 @@ def add_review(request, pk):
 
 def place_bid(request, pk):
 
-    from decimal import Decimal
-
     vehicle = get_object_or_404(Vehicle, pk=pk)
 
     if check_rate_limit(request.user.pk, 'place_bid', max_count=5, window=600):
@@ -678,15 +597,9 @@ def place_bid(request, pk):
 
         return redirect('vehicle_detail', pk=pk)
 
-    if vehicle.listing_status != Vehicle.STATUS_ACTIVE:
-
-        messages.error(request, 'This listing is no longer accepting bids.')
-
-        return redirect('vehicle_detail', pk=pk)
-
     amount = request.POST.get('amount', '').strip()
 
-    note   = request.POST.get('note', '').strip()
+    note = request.POST.get('note', '').strip()
 
     try:
 
@@ -698,67 +611,17 @@ def place_bid(request, pk):
 
         return redirect('vehicle_detail', pk=pk)
 
-    highest = (
+    try:
 
-        vehicle.bids
+        bid, created = vehicle_svc.place_bid(request.user, vehicle, amount_dec, note)
 
-        .exclude(bidder=request.user)
+    except ValueError as exc:
 
-        .exclude(status__in=['declined'])
-
-        .order_by('-amount')
-
-        .values_list('amount', flat=True)
-
-        .first()
-
-    )
-
-    if highest and amount_dec <= highest:
-
-        messages.error(request, f'Your bid must be higher than the current top bid of £{highest:,.0f}.')
+        messages.error(request, str(exc))
 
         return redirect('vehicle_detail', pk=pk)
 
-    bid, created = Bid.objects.update_or_create(
-
-        vehicle=vehicle,
-
-        bidder=request.user,
-
-        defaults={'amount': amount_dec, 'note': note, 'status': 'pending'},
-
-    )
-
-    if vehicle.owner:
-
-        bidder_name = (
-
-            request.user.profile.get_display_name()
-
-            if hasattr(request.user, 'profile')
-
-            else request.user.email.split('@')[0]
-
-        )
-
-        Notification.objects.create(
-
-            user=vehicle.owner,
-
-            title='New bid on your listing',
-
-            message=f'{bidder_name} placed a bid of £{amount_dec:,.0f} on {vehicle.title}.',
-
-            notif_type='success',
-
-            url=f'/vehicle/{vehicle.pk}/',
-
-        )
-
     messages.success(request, f'Bid of £{amount_dec:,.0f} placed!' if created else f'Bid updated to £{amount_dec:,.0f}.')
-
-    cache.delete(f'vd:{pk}')
 
     return redirect('vehicle_detail', pk=pk)
 
@@ -779,19 +642,7 @@ def respond_bid(request, pk):
 
         return redirect('dashboard')
 
-    seller_name = (
-
-        request.user.profile.get_display_name()
-
-        if hasattr(request.user, 'profile')
-
-        else request.user.email.split('@')[0]
-
-    )
-
     if action == 'counter':
-
-        from decimal import Decimal
 
         counter_str = request.POST.get('counter_amount', '').strip()
 
@@ -805,61 +656,18 @@ def respond_bid(request, pk):
 
             return redirect('dashboard')
 
-        bid.status         = 'countered'
-
-        bid.counter_amount = ca
-
-        bid.note           = request.POST.get('counter_note', '').strip() or bid.note
-
-        bid.save()
-
-        Notification.objects.create(
-
-            user=bid.bidder,
-
-            title='Counter offer received',
-
-            message=f'{seller_name} countered with £{ca:,.0f} on {bid.vehicle.title}. Go to your dashboard to respond.',
-
-            notif_type='info',
-
-            url='/dashboard/#bids-section',
-
+        vehicle_svc.respond_bid(
+            request.user, bid, action,
+            counter_amount=ca,
+            counter_note=request.POST.get('counter_note', '').strip(),
         )
-
         messages.success(request, f'Counter offer of £{ca:,.0f} sent.')
 
     else:
 
-        bid.status = 'accepted' if action == 'accept' else 'declined'
-
-        bid.save()
-
-        if action == 'accept':
-
-            bid.vehicle.listing_status = Vehicle.STATUS_PENDING_SALE
-
-            bid.vehicle.save(update_fields=['listing_status'])
-
+        vehicle_svc.respond_bid(request.user, bid, action)
         verb = 'accepted' if action == 'accept' else 'declined'
-
-        Notification.objects.create(
-
-            user=bid.bidder,
-
-            title=f'Bid {verb}',
-
-            message=f'{seller_name} {verb} your bid of £{bid.amount:,.0f} on {bid.vehicle.title}.',
-
-            notif_type='success' if action == 'accept' else 'warning',
-
-            url=f'/vehicle/{bid.vehicle.pk}/',
-
-        )
-
         messages.success(request, f'Bid {verb}.')
-
-    cache.delete(f'vd:{bid.vehicle.pk}')
 
     return redirect('dashboard')
 
@@ -873,107 +681,51 @@ def bidder_respond_bid(request, pk):
 
     action = request.POST.get('action')
 
-    bidder_name = (
+    try:
 
-        request.user.profile.get_display_name()
+        vehicle_svc.bidder_respond_bid(request.user, bid, action)
 
-        if hasattr(request.user, 'profile')
-
-        else request.user.email.split('@')[0]
-
-    )
-
-    if action == 'accept_counter':
-
-        if bid.counter_amount:
-
-            bid.amount = bid.counter_amount
-
-        bid.status         = 'accepted'
-
-        bid.counter_amount = None
-
-        bid.save()
-
-        if bid.vehicle.owner:
-
-            Notification.objects.create(
-
-                user=bid.vehicle.owner,
-
-                title='Counter offer accepted',
-
-                message=f'{bidder_name} accepted your counter offer of £{bid.amount:,.0f} on {bid.vehicle.title}.',
-
-                notif_type='success',
-
-                url=f'/vehicle/{bid.vehicle.pk}/',
-
-            )
-
-        messages.success(request, f'You accepted the counter offer of £{bid.amount:,.0f}.')
-
-    elif action == 'decline':
-
-        bid.status = 'declined'
-
-        bid.save()
-
-        if bid.vehicle.owner:
-
-            Notification.objects.create(
-
-                user=bid.vehicle.owner,
-
-                title='Counter offer declined',
-
-                message=f'{bidder_name} declined your counter offer on {bid.vehicle.title}.',
-
-                notif_type='warning',
-
-                url=f'/vehicle/{bid.vehicle.pk}/',
-
-            )
-
-        messages.success(request, 'You declined the counter offer.')
-
-    else:
+    except ValueError:
 
         messages.error(request, 'Invalid action.')
 
-    cache.delete(f'vd:{bid.vehicle.pk}')
+        return redirect('dashboard')
+
+    if action == 'accept_counter':
+
+        messages.success(request, f'You accepted the counter offer of £{bid.amount:,.0f}.')
+
+    else:
+
+        messages.success(request, 'You declined the counter offer.')
 
     return redirect('dashboard')
 
 
 def seller_profile(request, pk):
-
-    from django.contrib.auth import get_user_model
-
     User = get_user_model()
-
-    seller             = get_object_or_404(User, pk=pk)
-
+    seller = get_object_or_404(User, pk=pk)
     seller_profile_obj = getattr(seller, 'profile', None)
+    listings = Vehicle.objects.filter(owner=seller, is_removed=False).order_by('-created_at')
+    reviews = seller.reviews_received.select_related('reviewer__profile').order_by('-created_at')
+    avg = seller_profile_obj.average_rating() if seller_profile_obj else None
 
-    listings           = Vehicle.objects.filter(owner=seller, is_removed=False).order_by('-created_at')
-
-    reviews            = seller.reviews_received.select_related('reviewer__profile').order_by('-created_at')
-
-    avg                = seller_profile_obj.average_rating() if seller_profile_obj else None
+    if seller_profile_obj and seller_profile_obj.is_deleted:
+        display_state = 'deleted'
+    elif not seller.is_active and not getattr(seller_profile_obj, 'suspension_until', None):
+        display_state = 'banned'
+    elif seller_profile_obj and seller_profile_obj.is_suspended:
+        display_state = 'suspended'
+    else:
+        display_state = 'active'
 
     return render(request, 'users/seller_profile.html', {
-
-        'seller':         seller,
-
+        'seller': seller,
         'seller_profile': seller_profile_obj,
-
-        'listings':       listings,
-
-        'reviews':        reviews,
-
-        'avg':            avg,
-
+        'listings': listings,
+        'reviews': reviews,
+        'avg': avg,
+        'display_state': display_state,
     })
 
 def _do_vrm_lookup(reg):

@@ -146,7 +146,7 @@ body {
     content: '';
     flex: 1;
     height: 1px;
-    background: #f3f4f6;
+    background: var(--mm-bg-alt);
 }
 
 .dvla-group {
@@ -188,7 +188,7 @@ body {
 }
 .form-control, .form-select {
     border-radius: 8px;
-    border-color: #e5e7eb;
+    border-color: var(--mm-border);
     font-size: .875rem;
     padding: 8px 12px;
     transition: border-color .15s, box-shadow .15s;
@@ -199,9 +199,9 @@ body {
 }
 .input-group .form-control:focus { z-index: 3; }
 .input-group-text {
-    border-color: #e5e7eb;
-    background: #f9fafb;
-    color: #6b7280;
+    border-color: var(--mm-border);
+    background: var(--mm-bg);
+    color: var(--mm-text-muted);
     font-size: .875rem;
 }
 
@@ -235,7 +235,7 @@ body {
 }
 .photo-dropzone-text {
     font-size: .83rem;
-    color: #6b7280;
+    color: var(--mm-text-muted);
     line-height: 1.5;
 }
 .photo-dropzone-text strong {
@@ -326,7 +326,7 @@ body {
     align-items: center;
     gap: 5px;
     font-size: .72rem;
-    color: #6b7280;
+    color: var(--mm-text-muted);
 }
 .trust-badge i { color: #22c55e; }
 
