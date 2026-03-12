@@ -127,7 +127,7 @@
                     {% if car.description %}
                     <p class="text-muted" style="font-size:.92rem; white-space:pre-line;">{{ car.description }}</p>
                     {% else %}
-                    <p class="text-muted mb-1" style="font-size:.92rem;">{{ car.title }} — {{ car.variant }}. {{ car.mileage }}, {{ car.fuel }}, {{ car.transmission }}.</p>
+                    <p class="text-muted mb-1" style="font-size:.92rem;">{{ car.title }} — {{ car.variant }}. {{ car.mileage_display }}, {{ car.fuel }}, {{ car.transmission }}.</p>
                     <p class="text-muted small">The seller hasn't added a description for this listing.</p>
                     {% endif %}
                 </div>
@@ -156,7 +156,7 @@
                     <div class="d-flex justify-content-between align-items-start mb-1">
                         <div>
                             <h1 class="h4 fw-bold mb-0">{{ car.title }}</h1>
-                            <p class="text-muted small mb-0"><i class="bi bi-speedometer2 me-1"></i>{{ car.mileage }}</p>
+                            <p class="text-muted small mb-0"><i class="bi bi-speedometer2 me-1"></i>{{ car.mileage_display }}</p>
                         </div>
                         {% if user.is_authenticated %}
                         <button id="saveBtn" type="button" class="btn btn-light border-0" title="{% if is_saved %}Unsave{% else %}Save{% endif %}"
@@ -168,7 +168,7 @@
                         {% endif %}
                     </div>
 
-                    <h2 class="fw-bold my-3" style="font-size:1.7rem;">{{ car.price }}</h2>
+                    <h2 class="fw-bold my-3" style="font-size:1.7rem;">{{ car.price_display }}</h2>
 
                     <p class="text-muted fw-semibold mb-2" style="font-size:.75rem; letter-spacing:.05em;">VEHICLE DETAILS</p>
                     <div class="row g-2 mb-3">
@@ -186,7 +186,7 @@
                                 <i class="bi bi-speedometer2 text-primary"></i>
                                 <div>
                                     <p class="mb-0 text-muted" style="font-size:.72rem;">Mileage</p>
-                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">{{ car.mileage }}</p>
+                                    <p class="mb-0 fw-semibold" style="font-size:.85rem;">{{ car.mileage_display }}</p>
                                 </div>
                             </div>
                         </div>

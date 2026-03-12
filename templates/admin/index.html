@@ -302,7 +302,7 @@
             <div style="flex:1;min-width:0;">
                 <div class="mm-recent-item__label">{{ v.title }} {{ v.variant }}</div>
                 <div class="mm-recent-item__sub">
-                    {{ v.price }} &nbsp;&middot;&nbsp;
+                    {{ v.price_display }} &nbsp;&middot;&nbsp;
                     {% if v.owner %}{{ v.owner.email }}{% else %}No owner{% endif %}
                 </div>
             </div>
@@ -476,7 +476,7 @@
                 <div class="mm-recent-item__label">{{ v.title }} {{ v.variant }}</div>
                 <div class="mm-recent-item__sub">
                     {% if v.owner %}{{ v.owner.email }}{% else %}No owner{% endif %}
-                    &nbsp;&middot;&nbsp; {{ v.price }}
+                    &nbsp;&middot;&nbsp; {{ v.price_display }}
                 </div>
             </div>
             <div class="mm-recent-item__sub" style="white-space:nowrap;">{{ v.created_at|date:"d M" }}</div>

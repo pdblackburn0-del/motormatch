@@ -118,6 +118,7 @@
                         <div class="col-4">
                             <label class="form-label">Mileage</label>
                             {{ form.mileage }}
+                            {% if form.mileage.errors %}<div class="text-danger small mt-1">{{ form.mileage.errors }}</div>{% endif %}
                         </div>
                         <div class="col-4">
                             <label class="form-label">Fuel Type</label>
@@ -149,6 +150,7 @@
                     <div class="sell-section-title"><i class="bi bi-pin-map-fill"></i> Location</div>
                     <label class="form-label">{{ form.location.label }}</label>
                     {{ form.location }}
+                    {% if form.location.errors %}<div class="text-danger small mt-1">{{ form.location.errors }}</div>{% endif %}
                 </div>
             </div>
 
@@ -195,7 +197,11 @@
                     <div class="sell-section-title"><i class="bi bi-card-text"></i> Description</div>
                     <label class="form-label">{{ form.description.label }}</label>
                     {{ form.description }}
-                    <div class="form-text text-muted" style="font-size:.72rem;">Include service history, modifications, reason for sale, any faults.</div>
+                    {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+                        <small class="form-text text-muted" style="font-size:.72rem;">Include service history, modifications, reason for sale, any faults.</small>
+                        <small class="text-muted char-counter" id="descCounter" style="font-size:.72rem;"></small>
+                    </div>
                 </div>
 
                 <div class="sell-cta-block">

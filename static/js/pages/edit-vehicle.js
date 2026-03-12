@@ -132,3 +132,21 @@
         });
     }
 })();
+
+(function () {
+    'use strict';
+    document.querySelectorAll('[data-maxlength]').forEach(function (el) {
+        var max = parseInt(el.getAttribute('data-maxlength'), 10);
+        var ctr = document.createElement('small');
+        ctr.className = 'form-text text-muted d-block text-end';
+        ctr.style.fontSize = '.72rem';
+        el.insertAdjacentElement('afterend', ctr);
+        function update() {
+            var n = el.value.length;
+            ctr.textContent = n + ' / ' + max;
+            ctr.style.color = n >= max ? '#dc2626' : '';
+        }
+        el.addEventListener('input', update);
+        update();
+    });
+}());

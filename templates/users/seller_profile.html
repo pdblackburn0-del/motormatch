@@ -104,9 +104,13 @@
                 {% endif %}
                 {% endif %}
                 {% if seller_profile and seller_profile.location %}
-                    <p class="text-muted small mb-2 mt-1">
+                    <p class="text-muted small mb-1 mt-1">
                         <i class="bi bi-geo-alt me-1"></i>{{ seller_profile.location }}
                     </p>
+                {% endif %}
+
+                {% if seller_profile and seller_profile.bio and display_state == 'active' %}
+                    <p class="text-muted small mb-2 px-1" style="font-size:.8rem;line-height:1.45;">{{ seller_profile.bio }}</p>
                 {% endif %}
 
                 {% if avg and display_state == 'active' %}
@@ -177,9 +181,9 @@
                             <div class="card-body p-3">
                                 <h6 class="card-title fw-semibold mb-1 text-truncate">{{ car.title }}</h6>
                                 <p class="mb-1 text-muted" style="font-size:.8rem;">
-                                    {{ car.year }} &bull; {{ car.mileage|default:"—" }} mi &bull; {{ car.fuel|default:"" }}
+                                    {{ car.year }} &bull; {{ car.mileage_display }} mi &bull; {{ car.fuel|default:"" }}
                                 </p>
-                                <div class="fw-bold text-primary mb-2">{{ car.price }}</div>
+                                <div class="fw-bold text-primary mb-2">{{ car.price_display }}</div>
                                 <a href="{% url 'vehicle_detail' car.pk %}"
                                    class="btn btn-sm btn-outline-primary w-100">View</a>
                             </div>

@@ -182,7 +182,7 @@
                             <div style="padding:.5rem .65rem;">
                                 <p style="margin:0;font-size:.76rem;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ car.title }}</p>
                                 <p style="margin:0;font-size:.72rem;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ car.variant }}</p>
-                                <p style="margin:.3rem 0 0;font-size:.78rem;font-weight:700;color:#2563eb;">{{ car.price }}</p>
+                                <p style="margin:.3rem 0 0;font-size:.78rem;font-weight:700;color:#2563eb;">{{ car.price_display }}</p>
                             </div>
                         </a>
                         {% endfor %}
@@ -212,7 +212,7 @@
                                 </div>
                                 <div class="db-listing__info">
                                     <p class="db-listing__title">{{ car.title }}</p>
-                                    <p class="db-listing__price">{{ car.price }}</p>
+                                    <p class="db-listing__price">{{ car.price_display }}</p>
                                 </div>
                                 <span class="db-listing__status {% if car.is_removed %}db-listing__status--removed{% else %}db-listing__status--live{% endif %}">
                                     <i class="bi bi-circle-fill" style="font-size:.4rem;"></i>

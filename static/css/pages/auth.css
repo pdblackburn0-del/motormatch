@@ -106,7 +106,8 @@ html, body { height: 100%; margin: 0; }
     box-shadow: 0 0 0 3px rgba(37,99,235,.12);
     outline: none;
 }
-.auth-input-group .form-control.is-invalid { border-color: var(--mm-danger); }
+.auth-input-group .form-control.is-invalid { border-color: var(--mm-danger);  background-image: none; }
+.auth-input-group .form-control.is-valid   { border-color: var(--mm-success); background-image: none; }
 .auth-input-group .input-group .form-control { border-radius: 9px 0 0 9px; }
 .auth-input-group .input-group .btn {
     border-radius: 0 9px 9px 0; border: 1.5px solid #e2e8f0;

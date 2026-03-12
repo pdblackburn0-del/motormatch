@@ -247,3 +247,19 @@
     }
 
 })();
+
+(function () {
+    'use strict';
+    var textarea = document.querySelector('[data-maxlength]');
+    if (!textarea) return;
+    var max     = parseInt(textarea.getAttribute('data-maxlength'), 10);
+    var counter = document.getElementById('descCounter') || textarea.nextElementSibling;
+    function update() {
+        if (!counter) return;
+        var n = textarea.value.length;
+        counter.textContent = n + ' / ' + max;
+        counter.style.color = n >= max ? '#dc2626' : '';
+    }
+    textarea.addEventListener('input', update);
+    update();
+}());

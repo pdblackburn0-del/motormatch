@@ -65,14 +65,18 @@
                     <div class="col-sm-6">
                         <label class="form-label small fw-medium">Phone <span class="text-muted fw-normal">(Optional)</span></label>
                         {{ form.phone }}
+                        {% if form.phone.errors %}<div class="text-danger small">{{ form.phone.errors }}</div>{% endif %}
                     </div>
                     <div class="col-sm-6">
                         <label class="form-label small fw-medium">Location <span class="text-muted fw-normal">(Optional)</span></label>
                         {{ form.location }}
+                        {% if form.location.errors %}<div class="text-danger small">{{ form.location.errors }}</div>{% endif %}
                     </div>
                     <div class="col-12">
                         <label class="form-label small fw-medium">Bio <span class="text-muted fw-normal">(Optional)</span></label>
                         {{ form.bio }}
+                        {% if form.bio.errors %}<div class="text-danger small">{{ form.bio.errors }}</div>{% endif %}
+                        <small class="form-text text-muted d-block text-end bio-counter" style="font-size:.7rem;"></small>
                     </div>
                     
                     <div class="d-none">

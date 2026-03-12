@@ -179,12 +179,12 @@
                                         <p class="vc__title text-truncate mb-0">{{ car.title }}</p>
                                         <p class="vc__variant text-truncate mb-0">{{ car.variant }}</p>
                                     </div>
-                                    <span class="vc__price flex-shrink-0 ms-1">{{ car.price }}</span>
+                                    <span class="vc__price flex-shrink-0 ms-1">{{ car.price_display }}</span>
                                 </div>
                                 <div class="vc__divider"></div>
                                 <div class="vc__pills mt-auto">
                                     {% if car.year %}<span class="vc__pill"><i class="bi bi-calendar3"></i>{{ car.year }}</span>{% endif %}
-                                    {% if car.mileage %}<span class="vc__pill"><i class="bi bi-speedometer2"></i>{{ car.mileage }}</span>{% endif %}
+                                    {% if car.mileage %}<span class="vc__pill"><i class="bi bi-speedometer2"></i>{{ car.mileage_display }}</span>{% endif %}
                                     {% if car.fuel %}<span class="vc__pill"><i class="bi bi-fuel-pump"></i>{{ car.fuel }}</span>{% endif %}
                                     {% if car.transmission %}<span class="vc__pill"><i class="bi bi-gear"></i>{{ car.transmission }}</span>{% endif %}
                                 </div>

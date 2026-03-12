@@ -100,15 +100,29 @@
                     <div class="col-6">
                         <div class="auth-input-group mb-0">
                             <label>First Name</label>
-                            <input type="text" name="first_name" class="form-control" placeholder="John" required
+                            <input type="text" name="first_name" id="id_first_name" class="form-control{% if form.first_name.errors %} is-invalid{% endif %}"
+                                   placeholder="John" required minlength="2" maxlength="50"
+                                   autocomplete="given-name"
                                    value="{{ form.first_name.value|default:'' }}">
+                            {% if form.first_name.errors %}
+                            <div class="text-danger mt-1" style="font-size:.78rem;">{{ form.first_name.errors.0 }}</div>
+                            {% else %}
+                            <div class="text-danger mt-1 rt-err" id="err_first_name" style="font-size:.78rem;display:none;"></div>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="auth-input-group mb-0">
                             <label>Last Name</label>
-                            <input type="text" name="last_name" class="form-control" placeholder="Doe" required
+                            <input type="text" name="last_name" id="id_last_name" class="form-control{% if form.last_name.errors %} is-invalid{% endif %}"
+                                   placeholder="Smith" required minlength="2" maxlength="50"
+                                   autocomplete="family-name"
                                    value="{{ form.last_name.value|default:'' }}">
+                            {% if form.last_name.errors %}
+                            <div class="text-danger mt-1" style="font-size:.78rem;">{{ form.last_name.errors.0 }}</div>
+                            {% else %}
+                            <div class="text-danger mt-1 rt-err" id="err_last_name" style="font-size:.78rem;display:none;"></div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -117,7 +131,7 @@
 
                 <div class="auth-input-group">
                     <label>Email Address</label>
-                    <input type="email" name="email"
+                    <input type="email" name="email" id="id_email"
                            class="form-control{% if form.email.errors %} is-invalid{% endif %}"
                            placeholder="name@example.com" required
                            value="{{ form.email.value|default:'' }}"
@@ -126,8 +140,14 @@
 
                 <div class="auth-input-group">
                     <label>Phone <span style="font-weight:400;color:#94a3b8;font-size:.76rem;">— Optional</span></label>
-                    <input type="tel" name="phone" class="form-control" placeholder="+44 7000 000000"
+                    <input type="tel" name="phone" id="id_phone_signup" class="form-control{% if form.phone.errors %} is-invalid{% endif %}"
+                           placeholder="+44 7000 000000" autocomplete="tel"
                            value="{{ form.phone.value|default:'' }}">
+                    {% if form.phone.errors %}
+                    <div class="text-danger mt-1" style="font-size:.78rem;">{{ form.phone.errors.0 }}</div>
+                    {% else %}
+                    <div class="text-danger mt-1 rt-err" id="err_phone_signup" style="font-size:.78rem;display:none;"></div>
+                    {% endif %}
                 </div>
 
                 <p class="form-section-label mt-1">Security</p>
@@ -142,6 +162,23 @@
                             <i class="bi bi-eye-slash"></i>
                         </button>
                     </div>
+                    <div id="pwStrength" style="display:none;margin-top:7px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+                            <div style="display:flex;gap:3px;flex:1;">
+                                <div class="pw-seg" style="height:5px;flex:1;border-radius:3px;background:#e5e7eb;transition:background .2s;"></div>
+                                <div class="pw-seg" style="height:5px;flex:1;border-radius:3px;background:#e5e7eb;transition:background .2s;"></div>
+                                <div class="pw-seg" style="height:5px;flex:1;border-radius:3px;background:#e5e7eb;transition:background .2s;"></div>
+                                <div class="pw-seg" style="height:5px;flex:1;border-radius:3px;background:#e5e7eb;transition:background .2s;"></div>
+                            </div>
+                            <span id="pwStrengthLabel" style="font-size:.72rem;font-weight:600;min-width:38px;text-align:right;"></span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;" id="pwChecks">
+                            <span class="pw-check" data-rule="length" style="font-size:.72rem;color:#9ca3af;"><i class="bi bi-circle me-1" style="font-size:.6rem;"></i>8+ characters</span>
+                            <span class="pw-check" data-rule="upper"  style="font-size:.72rem;color:#9ca3af;"><i class="bi bi-circle me-1" style="font-size:.6rem;"></i>Uppercase letter</span>
+                            <span class="pw-check" data-rule="number" style="font-size:.72rem;color:#9ca3af;"><i class="bi bi-circle me-1" style="font-size:.6rem;"></i>Number</span>
+                            <span class="pw-check" data-rule="symbol" style="font-size:.72rem;color:#9ca3af;"><i class="bi bi-circle me-1" style="font-size:.6rem;"></i>Symbol (!@#…)</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="auth-input-group">
@@ -154,6 +191,7 @@
                             <i class="bi bi-eye-slash"></i>
                         </button>
                     </div>
+                    <div id="pwMatchMsg" style="display:none;margin-top:4px;font-size:.72rem;"></div>
                 </div>
 
                 <div class="terms-group">

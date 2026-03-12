@@ -36,9 +36,9 @@ class Vehicle(models.Model):
     owner        = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='vehicles')
     title        = models.CharField(max_length=200)
     variant      = models.CharField(max_length=200)
-    price        = models.CharField(max_length=50)
-    mileage      = models.CharField(max_length=50)
-    year         = models.CharField(max_length=4, blank=True, null=True, db_index=True)
+    price        = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    mileage      = models.PositiveIntegerField(null=True, blank=True)
+    year         = models.PositiveSmallIntegerField(null=True, blank=True, db_index=True)
     fuel         = models.CharField(max_length=50, db_index=True)
     transmission = models.CharField(max_length=50, blank=True, null=True, db_index=True)
     badge        = models.CharField(max_length=50, blank=True, null=True)
@@ -74,6 +74,18 @@ class Vehicle(models.Model):
 
     def get_badge_class(self):
         return self._BADGE_CLASS_MAP.get((self.badge_color or '').lower(), 'badge-default')
+
+    @property
+    def price_display(self):
+        if self.price is None:
+            return '—'
+        return f'£{self.price:,.0f}'
+
+    @property
+    def mileage_display(self):
+        if self.mileage is None:
+            return '—'
+        return f'{self.mileage:,}'
 
     def get_image(self):
         if self.image_file and self.image_file.public_id:

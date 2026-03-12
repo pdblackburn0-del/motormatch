@@ -22,7 +22,7 @@
                 <select name="car1" class="form-select form-select-sm">
                     <option value="">— Choose a car —</option>
                     {% for v in all_vehicles %}
-                    <option value="{{ v.pk }}" {% if car1 and car1.pk == v.pk %}selected{% endif %}>{{ v.title }} ({{ v.year }}) — {{ v.price }}</option>
+                    <option value="{{ v.pk }}" {% if car1 and car1.pk == v.pk %}selected{% endif %}>{{ v.title }} ({{ v.year }}) — {{ v.price_display }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -31,7 +31,7 @@
                 <select name="car2" class="form-select form-select-sm">
                     <option value="">— Choose a car —</option>
                     {% for v in all_vehicles %}
-                    <option value="{{ v.pk }}" {% if car2 and car2.pk == v.pk %}selected{% endif %}>{{ v.title }} ({{ v.year }}) — {{ v.price }}</option>
+                    <option value="{{ v.pk }}" {% if car2 and car2.pk == v.pk %}selected{% endif %}>{{ v.title }} ({{ v.year }}) — {{ v.price_display }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -68,7 +68,7 @@
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-0">{{ car.title }}</h5>
                     <p class="text-muted small mb-1">{{ car.variant }}</p>
-                    <p class="fw-bold fs-5 mb-3" style="color:#2563eb;">{{ car.price }}</p>
+                    <p class="fw-bold fs-5 mb-3" style="color:#2563eb;">{{ car.price_display }}</p>
 
                     <hr class="my-3">
 
@@ -79,7 +79,7 @@
                     </div>
                     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                         <span class="text-muted small d-flex align-items-center gap-2"><i class="bi bi-speedometer2"></i> Mileage</span>
-                        <span class="fw-semibold small">{{ car.mileage|default:"—" }}</span>
+                        <span class="fw-semibold small">{{ car.mileage_display }}</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                         <span class="text-muted small d-flex align-items-center gap-2"><i class="bi bi-fuel-pump"></i> Fuel</span>

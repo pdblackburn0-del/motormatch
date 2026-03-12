@@ -316,13 +316,13 @@ def browse(request):
 
         qs = qs.filter(transmission__iexact=transmission)
 
-    if year_from:
+    if year_from and year_from.isdigit():
 
-        qs = qs.filter(year__gte=year_from)
+        qs = qs.filter(year__gte=int(year_from))
 
-    if year_to:
+    if year_to and year_to.isdigit():
 
-        qs = qs.filter(year__lte=year_to)
+        qs = qs.filter(year__lte=int(year_to))
 
     if badge:
 
@@ -379,7 +379,7 @@ def browse(request):
         _base = Vehicle.objects.filter(is_removed=False)
         fuels         = sorted(set(_base.exclude(fuel='').values_list('fuel', flat=True)))
         transmissions = sorted(set(_base.exclude(transmission__isnull=True).exclude(transmission='').values_list('transmission', flat=True)))
-        years         = sorted(set(_base.exclude(year__isnull=True).exclude(year='').values_list('year', flat=True)), reverse=True)
+        years         = sorted(set(_base.exclude(year__isnull=True).values_list('year', flat=True)), reverse=True)
         cache.set('browse:facets', {'fuels': fuels, 'transmissions': transmissions, 'years': years}, 600)
     else:
         fuels         = _facets['fuels']
