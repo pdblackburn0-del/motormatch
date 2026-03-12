@@ -10,7 +10,14 @@
 {% block content %}
 <div class="chat-outer container py-3">
 
-    
+    <nav aria-label="breadcrumb" class="mb-2">
+        <ol class="breadcrumb small mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-primary">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'inbox' %}" class="text-decoration-none text-primary">Messages</a></li>
+            <li class="breadcrumb-item active">{{ other_profile.get_display_name }}</li>
+        </ol>
+    </nav>
+
     <div class="d-flex align-items-center gap-2 mb-3">
         <a href="{% url 'inbox' %}" class="btn btn-dark btn-sm px-3 fw-semibold">
             <i class="bi bi-arrow-left me-1"></i>Messages
@@ -88,7 +95,7 @@
             </a>
             {% endif %}
 
-            <a href="{% url 'seller_profile' other.pk %}"
+            <a href="{% url 'seller_profile' other.pk %}?from=inbox"
                class="btn btn-dark btn-sm ms-1 flex-shrink-0" title="View profile">
                 <i class="bi bi-person"></i>
             </a>

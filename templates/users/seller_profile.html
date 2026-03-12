@@ -7,7 +7,11 @@
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb small">
             <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-primary">Home</a></li>
+            {% if request.GET.from == 'inbox' %}
+            <li class="breadcrumb-item"><a href="{% url 'inbox' %}" class="text-decoration-none text-primary">Messages</a></li>
+            {% else %}
             <li class="breadcrumb-item"><a href="{% url 'browse' %}" class="text-decoration-none text-primary">Used Cars</a></li>
+            {% endif %}
             <li class="breadcrumb-item active">{{ seller.profile.get_display_name|default:seller.username }}</li>
         </ol>
     </nav>
